@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Models\IspSetting;
+use App\Services\Notification\OneSignalService;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\TextInput;
@@ -43,6 +44,12 @@ class MobileAppSettings extends Page implements HasForms
     public string $currentApiKey = '';
 
     public bool $isOneSignalActive = false;
+
+    public ?string $oneSignalAppName = null;
+
+    public ?int $oneSignalSubscribers = null;
+
+    public ?string $oneSignalStatusMessage = null;
 
     public function mount(): void
     {
@@ -128,46 +135,108 @@ class MobileAppSettings extends Page implements HasForms
 
     protected function getHeaderActions(): array
     {
-        return [
-            Action::make('generateKey')
-                ->label('Buat API Key Baru')
-                ->icon('heroicon-o-arrow-path')
-                ->color('warning')
-                ->requiresConfirmation()
-                ->modalHeading('Buat Kunci API Mobile Baru?')
-                ->modalDescription('PERINGATAN: Membuat API Key baru akan membatalkan kunci lama. Anda harus memperbarui konfigurasi di aplikasi Flutter & STB pelanggan agar tetap dapat terhubung.')
-                ->action(function () {
-                    $newKey = 'isp_'.Str::random(32);
-                    $this->data['app_api_key'] = $newKey;
-                    IspSetting::set('app_api_key', $newKey);
-                    $this->currentApiKey = $newKey;
+        return [];
+    }
 
-                    Notification::make()
-                        ->title('✅ API Key Baru Berhasil Dibuat!')
-                        ->body("Kunci: {$newKey}")
-                        ->success()
-                        ->duration(10000)
-                        ->send();
-                }),
+    public function generateKeyAction(): Action
+    {
+        return Action::make('generateKey')
+            ->label('Buat API Key Baru')
+            ->icon('heroicon-o-arrow-path')
+            ->color('warning')
+            ->requiresConfirmation()
+            ->modalHeading('Buat Kunci API Mobile Baru?')
+            ->modalDescription('PERINGATAN: Membuat API Key baru akan membatalkan kunci lama. Anda harus memperbarui konfigurasi di aplikasi Flutter & STB pelanggan agar tetap dapat terhubung.')
+            ->action(function () {
+                $this->generateNewApiKey();
+            });
+    }
 
-            Action::make('openBroadcastHub')
-                ->label('Hub Broadcast OneSignal')
-                ->icon('heroicon-o-megaphone')
-                ->color('info')
-                ->url(url('/admin/onesignal')),
+    public function generateNewApiKey(): void
+    {
+        $newKey = 'isp_'.Str::random(32);
+        IspSetting::set('app_api_key', $newKey);
+        $this->currentApiKey = $newKey;
 
-            Action::make('backToSettings')
-                ->label('Kembali ke Pengaturan')
-                ->icon('heroicon-o-arrow-left')
-                ->color('gray')
-                ->url(url('/admin/settings')),
+        $this->data['app_api_key'] = $newKey;
+        $this->form->fill([
+            'app_api_base_url' => $this->data['app_api_base_url'] ?? IspSetting::get('app_api_base_url', url('/api')),
+            'app_api_key' => $newKey,
+            'fcm_server_key' => $this->data['fcm_server_key'] ?? IspSetting::get('fcm_server_key', ''),
+            'onesignal_app_id' => $this->data['onesignal_app_id'] ?? IspSetting::get('onesignal_app_id', ''),
+            'onesignal_rest_api_key' => $this->data['onesignal_rest_api_key'] ?? IspSetting::get('onesignal_rest_api_key', ''),
+        ]);
 
-            Action::make('save')
-                ->label('Simpan Pengaturan Mobile')
-                ->icon('heroicon-o-check')
-                ->color('primary')
-                ->action(fn () => $this->save()),
-        ];
+        Notification::make()
+            ->title('API Key Baru Berhasil Dibuat!')
+            ->body("Kunci baru: {$newKey}")
+            ->success()
+            ->duration(10000)
+            ->send();
+    }
+
+    public function copyBaseUrl(): void
+    {
+        Notification::make()
+            ->title('URL Disalin!')
+            ->body('Base URL API Backend telah disalin ke clipboard.')
+            ->success()
+            ->send();
+    }
+
+    public function testOneSignalConnection(): void
+    {
+        $appId = trim($this->data['onesignal_app_id'] ?? IspSetting::get('onesignal_app_id', ''));
+        $apiKey = trim($this->data['onesignal_rest_api_key'] ?? IspSetting::get('onesignal_rest_api_key', ''));
+
+        if (empty($appId) || empty($apiKey)) {
+            $this->isOneSignalActive = false;
+            $this->oneSignalStatusMessage = 'App ID & REST API Key belum diisi';
+
+            Notification::make()
+                ->title('OneSignal Belum Dikonfigurasi!')
+                ->body('Silakan isi OneSignal App ID dan REST API Key pada form di bawah terlebih dahulu.')
+                ->warning()
+                ->send();
+
+            return;
+        }
+
+        try {
+            $service = app(OneSignalService::class);
+            $res = $service->testConnection($appId, $apiKey);
+
+            if (! empty($res['success'])) {
+                $this->isOneSignalActive = true;
+                $this->oneSignalAppName = $res['app_name'] ?? 'OneSignal App';
+                $this->oneSignalSubscribers = $res['players_count'] ?? 0;
+                $this->oneSignalStatusMessage = "Terkoneksi ke {$this->oneSignalAppName}";
+
+                Notification::make()
+                    ->title('Koneksi OneSignal Sukses!')
+                    ->body("Terhubung ke {$this->oneSignalAppName} ({$this->oneSignalSubscribers} Subscriber aktif).")
+                    ->success()
+                    ->send();
+            } else {
+                $this->isOneSignalActive = false;
+                $this->oneSignalStatusMessage = $res['message'] ?? 'Koneksi gagal';
+
+                Notification::make()
+                    ->title('Koneksi OneSignal Gagal')
+                    ->body($res['message'] ?? 'Tidak dapat menghubungi server OneSignal.')
+                    ->danger()
+                    ->send();
+            }
+        } catch (\Throwable $e) {
+            $this->isOneSignalActive = false;
+            $this->oneSignalStatusMessage = $e->getMessage();
+
+            Notification::make()
+                ->title('Error Uji Koneksi')
+                ->body($e->getMessage())
+                ->danger()
+                ->send();
+        }
     }
 
     public function save(): void
