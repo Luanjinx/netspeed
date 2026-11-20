@@ -88,16 +88,13 @@
         <form wire:submit="save" class="space-y-6">
             {{ $this->form }}
 
-            <div class="flex items-center justify-between pt-4 border-t border-[#232826]">
-                <a href="{{ url('/admin/settings') }}"
-                   class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg bg-[#1a1e1c] text-[#9aa49f] border border-[#232826] hover:text-[#eef1f0] hover:border-[#00e07e] transition-colors">
-                    <span class="material-symbols-rounded" style="font-size: 18px;">arrow_back</span>
-                    Kembali ke Pengaturan Sistem
-                </a>
-
-                <x-filament::button type="submit" size="lg" icon="heroicon-o-check" color="primary">
-                    Simpan Pengaturan Gateway &amp; QRIS
-                </x-filament::button>
+            <div class="flex items-center justify-end pt-5 border-t border-[#232826]">
+                <button type="submit"
+                        class="inline-flex items-center justify-center gap-2 px-7 py-2.5 text-sm font-bold text-white transition-all duration-200 rounded-lg shadow-lg bg-[#00e07e] hover:bg-[#00c56e] active:scale-[0.98] shadow-[0_4px_16px_rgba(0,224,126,0.35)] cursor-pointer"
+                        style="color: #ffffff !important;">
+                    <span class="material-symbols-rounded" style="font-size: 20px; color: #ffffff !important; line-height: 1;">check</span>
+                    <span style="color: #ffffff !important; font-weight: 700; font-size: 0.925rem;">Simpan</span>
+                </button>
             </div>
         </form>
     </div>
