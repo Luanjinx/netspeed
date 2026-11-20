@@ -295,8 +295,4 @@
         </div>
     </div>
 
-    <!-- 3. TABS PENGATURAN LAINNYA (PROFIL ISP & BILLING/ISOLIR) -->
-    <div>
-        {{ $this->form }}
-    </div>
 </x-filament-panels::page>

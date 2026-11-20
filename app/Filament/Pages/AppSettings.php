@@ -19,9 +19,6 @@ use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
-use Filament\Schemas\Components\Tabs;
-use Filament\Schemas\Components\Tabs\Tab;
-use Filament\Schemas\Components\View;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -120,16 +117,7 @@ class AppSettings extends Page implements HasForms
     {
         return $schema
             ->statePath('data')
-            ->components([
-                Tabs::make('Pengaturan Sistem')
-                    ->tabs([
-                        Tab::make('Billing, QRIS & Isolir')
-                            ->icon('heroicon-o-currency-dollar')
-                            ->schema([
-                                View::make('filament.pages.settings.billing-cards'),
-                            ]),
-                    ]),
-            ]);
+            ->components([]);
     }
 
     protected function getHeaderActions(): array
