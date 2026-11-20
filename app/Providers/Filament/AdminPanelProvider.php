@@ -69,7 +69,7 @@ class AdminPanelProvider extends PanelProvider
                 fn () => view('filament.components.custom-styles'),
             )
             ->renderHook(
-                PanelsRenderHook::BODY_START,
+                PanelsRenderHook::BODY_END,
                 fn () => view('filament.components.demo-banner'),
             )
             ->renderHook(

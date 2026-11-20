@@ -8,54 +8,55 @@
          x-show="open"
          x-cloak
          style="display: none;"
-         class="fixed inset-0 z-50 overflow-y-auto"
          role="dialog"
          aria-modal="true">
         
         <!-- Backdrop Blur Overlay -->
         <div x-show="open"
-             x-transition:enter="ease-out duration-200"
+             x-transition:enter="transition-opacity ease-out duration-200"
              x-transition:enter-start="opacity-0"
              x-transition:enter-end="opacity-100"
-             x-transition:leave="ease-in duration-150"
+             x-transition:leave="transition-opacity ease-in duration-150"
              x-transition:leave-start="opacity-100"
              x-transition:leave-end="opacity-0"
-             class="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
+             style="position: fixed; inset: 0; background: rgba(0, 0, 0, 0.78); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); z-index: 999998;"
              @click="open = false"></div>
 
-        <!-- Popup Modal Card -->
-        <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+        <!-- Centered Popup Modal Container -->
+        <div x-show="open"
+             style="position: fixed; inset: 0; z-index: 999999; display: flex; align-items: center; justify-content: center; padding: 1.25rem; pointer-events: none;">
+            
             <div x-show="open"
-                 x-transition:enter="ease-out duration-200"
-                 x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                 x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
-                 x-transition:leave="ease-in duration-150"
-                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
-                 x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                 class="relative transform overflow-hidden rounded-2xl bg-[#131615] border border-[#232826] text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-md p-6"
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 scale-95"
+                 x-transition:enter-end="opacity-100 scale-100"
+                 x-transition:leave="transition ease-in duration-150"
+                 x-transition:leave-start="opacity-100 scale-100"
+                 x-transition:leave-end="opacity-0 scale-95"
+                 style="pointer-events: auto; width: 100%; max-width: 440px; background: #131615; border: 1px solid #282f2c; border-radius: 1.25rem; padding: 1.75rem; box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.9), 0 0 25px rgba(0, 224, 126, 0.12); color: #eef1f0; font-family: 'Plus Jakarta Sans', sans-serif;"
                  @click.stop>
                 
                 <!-- Header Icon & Title -->
-                <div class="flex items-center gap-3.5 mb-4">
-                    <div class="w-12 h-12 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 text-2xl font-bold shadow-inner flex-shrink-0">
+                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.1rem;">
+                    <div style="width: 3rem; height: 3rem; border-radius: 0.875rem; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.35); display: flex; align-items: center; justify-content: center; color: #fbbf24; font-size: 1.6rem; flex-shrink: 0;">
                         ⚡
                     </div>
                     <div>
-                        <h3 class="text-base font-bold text-white tracking-wide">Mode Demo Aktif</h3>
-                        <p class="text-xs text-amber-400/90 font-medium">Akun Demonstrasi Read-Only</p>
+                        <h3 style="font-size: 1.05rem; font-weight: 800; color: #ffffff; margin: 0; line-height: 1.3;">Mode Demo Aktif</h3>
+                        <p style="font-size: 0.75rem; color: #fbbf24; margin: 3px 0 0 0; font-weight: 600;">Akun Demonstrasi Read-Only</p>
                     </div>
                 </div>
 
                 <!-- Explanation Box -->
-                <div class="mt-2 text-sm text-slate-300 leading-relaxed bg-[#1a1e1c] p-4 rounded-xl border border-[#232826]">
+                <div style="font-size: 0.85rem; color: #cbd5e1; line-height: 1.55; background: #1a1e1c; padding: 1rem 1.1rem; border-radius: 0.875rem; border: 1px solid #232826; margin-bottom: 1.5rem;">
                     Anda sedang menjelajahi akun demonstrasi. Fitur penambahan, perubahan, dan penghapusan data dinonaktifkan (Read-Only).
                 </div>
 
                 <!-- Action Button -->
-                <div class="mt-5 flex justify-end">
+                <div style="display: flex; justify-content: flex-end;">
                     <button type="button"
                             @click="open = false; if (redirectUrl && (window.location.pathname.includes('/edit') || window.location.pathname.includes('/create'))) { window.location.href = redirectUrl; }"
-                            class="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-lg shadow-emerald-500/20 transition cursor-pointer">
+                            style="padding: 0.65rem 1.4rem; border-radius: 0.75rem; background: #00e07e; color: #06261a; font-weight: 800; font-size: 0.8125rem; border: none; cursor: pointer; box-shadow: 0 4px 15px rgba(0, 224, 126, 0.35); transition: all 0.2s ease;">
                         Saya Mengerti
                     </button>
                 </div>
