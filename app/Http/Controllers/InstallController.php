@@ -1,0 +1,246 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Services\InstallationService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\View\View;
+
+class InstallController extends Controller
+{
+    /**
+     * Entrypoint: Redirect to Step 1.
+     */
+    public function index(): RedirectResponse
+    {
+        if (InstallationService::isInstalled()) {
+            return redirect('/admin');
+        }
+
+        return redirect()->route('install.step1');
+    }
+
+    /**
+     * Step 1: System requirements and directory permissions check.
+     */
+    public function step1(): View|RedirectResponse
+    {
+        if (InstallationService::isInstalled()) {
+            return redirect('/admin');
+        }
+
+        $requirements = InstallationService::checkRequirements();
+
+        return view('install.step1', [
+            'requirements' => $requirements,
+            'currentStep' => 1,
+        ]);
+    }
+
+    /**
+     * Action to automatically fix directory permissions.
+     */
+    public function fixPermissions(Request $request): JsonResponse|RedirectResponse
+    {
+        $result = InstallationService::autoFixPermissions();
+
+        if ($request->wantsJson()) {
+            return response()->json($result);
+        }
+
+        return redirect()->route('install.step1')
+            ->with($result['success'] ? 'success' : 'error', $result['message']);
+    }
+
+    /**
+     * Step 2: Environment and Database configuration form.
+     */
+    public function step2(): View|RedirectResponse
+    {
+        if (InstallationService::isInstalled()) {
+            return redirect('/admin');
+        }
+
+        $requirements = InstallationService::checkRequirements();
+        if (! $requirements['all_passed']) {
+            return redirect()->route('install.step1')
+                ->with('error', 'Harap lengkapi semua persyaratan server dan permission terlebih dahulu.');
+        }
+
+        $appUrl = request()->getSchemeAndHttpHost();
+
+        return view('install.step2', [
+            'appUrl' => $appUrl,
+            'currentStep' => 2,
+        ]);
+    }
+
+    /**
+     * AJAX endpoint to test database connection before saving.
+     */
+    public function testDb(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'db_host' => 'required|string',
+            'db_port' => 'required|numeric',
+            'db_database' => 'required|string',
+            'db_username' => 'required|string',
+            'db_password' => 'nullable|string',
+        ]);
+
+        $result = InstallationService::testDbConnection([
+            'host' => $validated['db_host'],
+            'port' => $validated['db_port'],
+            'database' => $validated['db_database'],
+            'username' => $validated['db_username'],
+            'password' => $validated['db_password'] ?? '',
+        ]);
+
+        return response()->json($result);
+    }
+
+    /**
+     * Save Step 2 configuration to .env.
+     */
+    public function saveStep2(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'app_name' => 'required|string|max:100',
+            'app_url' => 'required|url',
+            'db_host' => 'required|string',
+            'db_port' => 'required|numeric',
+            'db_database' => 'required|string',
+            'db_username' => 'required|string',
+            'db_password' => 'nullable|string',
+        ]);
+
+        // Test DB connection before saving
+        $dbTest = InstallationService::testDbConnection([
+            'host' => $validated['db_host'],
+            'port' => $validated['db_port'],
+            'database' => $validated['db_database'],
+            'username' => $validated['db_username'],
+            'password' => $validated['db_password'] ?? '',
+        ]);
+
+        if (! $dbTest['success']) {
+            return back()->withInput()->with('error', $dbTest['message']);
+        }
+
+        InstallationService::updateEnv([
+            'APP_NAME' => $validated['app_name'],
+            'APP_URL' => $validated['app_url'],
+            'APP_ENV' => 'production',
+            'APP_DEBUG' => 'false',
+            'DB_CONNECTION' => 'mysql',
+            'DB_HOST' => $validated['db_host'],
+            'DB_PORT' => $validated['db_port'],
+            'DB_DATABASE' => $validated['db_database'],
+            'DB_USERNAME' => $validated['db_username'],
+            'DB_PASSWORD' => $validated['db_password'] ?? '',
+        ]);
+
+        return redirect()->route('install.step3')
+            ->with('success', 'Konfigurasi database & environment berhasil disimpan!');
+    }
+
+    /**
+     * Step 3: Run Database Migrations.
+     */
+    public function step3(): View|RedirectResponse
+    {
+        if (InstallationService::isInstalled()) {
+            return redirect('/admin');
+        }
+
+        return view('install.step3', [
+            'currentStep' => 3,
+        ]);
+    }
+
+    /**
+     * AJAX endpoint to execute database migrations.
+     */
+    public function runMigrate(): JsonResponse
+    {
+        $result = InstallationService::runMigrations();
+
+        return response()->json($result);
+    }
+
+    /**
+     * Step 4: Super Admin account and ISP profile setup.
+     */
+    public function step4(): View|RedirectResponse
+    {
+        if (InstallationService::isInstalled()) {
+            return redirect('/admin');
+        }
+
+        return view('install.step4', [
+            'currentStep' => 4,
+        ]);
+    }
+
+    /**
+     * Save Step 4 (Create Super Admin & ISP Settings).
+     */
+    public function saveStep4(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'admin_name' => 'required|string|max:100',
+            'admin_email' => 'required|email|max:150',
+            'admin_password' => 'required|string|min:8|confirmed',
+            'admin_phone' => 'nullable|string|max:30',
+            'company_name' => 'required|string|max:150',
+            'company_phone' => 'nullable|string|max:30',
+            'company_address' => 'nullable|string|max:255',
+            'seed_sample_data' => 'nullable|boolean',
+        ]);
+
+        $result = InstallationService::createAdminAndSettings([
+            'admin_name' => $validated['admin_name'],
+            'admin_email' => $validated['admin_email'],
+            'admin_password' => $validated['admin_password'],
+            'admin_phone' => $validated['admin_phone'] ?? null,
+            'company_name' => $validated['company_name'],
+            'company_phone' => $validated['company_phone'] ?? null,
+            'company_address' => $validated['company_address'] ?? null,
+            'seed_sample_data' => $request->boolean('seed_sample_data'),
+        ]);
+
+        if (! $result['success']) {
+            return back()->withInput()->with('error', $result['message']);
+        }
+
+        return redirect()->route('install.step5')
+            ->with('success', 'Akun Super Admin & Profil ISP berhasil dikonfigurasi!');
+    }
+
+    /**
+     * Step 5: Finish & Security Lock.
+     */
+    public function step5(): View|RedirectResponse
+    {
+        if (InstallationService::isInstalled()) {
+            return redirect('/admin');
+        }
+
+        return view('install.step5', [
+            'currentStep' => 5,
+        ]);
+    }
+
+    /**
+     * Finalize installation and redirect to Filament Admin.
+     */
+    public function finish(): RedirectResponse
+    {
+        InstallationService::finalizeInstallation();
+
+        return redirect('/admin')
+            ->with('success', 'Instalasi selesai! Silakan login menggunakan akun Admin yang baru saja Anda buat.');
+    }
+}

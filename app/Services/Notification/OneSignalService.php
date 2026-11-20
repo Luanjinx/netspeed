@@ -1,0 +1,402 @@
+<?php
+
+namespace App\Services\Notification;
+
+use App\Models\Customer;
+use App\Models\Invoice;
+use App\Models\IspSetting;
+use App\Models\Payment;
+use App\Models\PushNotification;
+use App\Models\SupportTicket;
+use Exception;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+
+class OneSignalService
+{
+    protected string $apiUrl = 'https://onesignal.com/api/v1';
+
+    /**
+     * Get configured OneSignal App ID.
+     */
+    public function getAppId(): string
+    {
+        return (string) IspSetting::get('onesignal_app_id', '');
+    }
+
+    /**
+     * Get configured OneSignal REST API Key.
+     */
+    public function getRestApiKey(): string
+    {
+        return (string) IspSetting::get('onesignal_rest_api_key', '');
+    }
+
+    /**
+     * Check if OneSignal is enabled and configured.
+     */
+    public function isEnabled(): bool
+    {
+        $enabled = IspSetting::get('onesignal_enabled', '1') === '1';
+
+        return $enabled && ! empty($this->getAppId()) && ! empty($this->getRestApiKey());
+    }
+
+    /**
+     * Test connection to OneSignal and retrieve app summary info.
+     */
+    public function testConnection(?string $appId = null, ?string $apiKey = null): array
+    {
+        $appId = $appId ?: $this->getAppId();
+        $apiKey = $apiKey ?: $this->getRestApiKey();
+
+        if (empty($appId) || empty($apiKey)) {
+            return [
+                'success' => false,
+                'message' => 'App ID dan REST API Key OneSignal belum diisi.',
+            ];
+        }
+
+        try {
+            $response = Http::timeout(10)
+                ->withHeaders([
+                    'Authorization' => "Key {$apiKey}",
+                    'Accept' => 'application/json',
+                ])
+                ->get("{$this->apiUrl}/apps/{$appId}");
+
+            // Fallback to Basic header if Key header fails with 401
+            if ($response->status() === 401) {
+                $response = Http::timeout(10)
+                    ->withHeaders([
+                        'Authorization' => "Basic {$apiKey}",
+                        'Accept' => 'application/json',
+                    ])
+                    ->get("{$this->apiUrl}/apps/{$appId}");
+            }
+
+            if ($response->successful()) {
+                $data = $response->json();
+
+                return [
+                    'success' => true,
+                    'message' => 'Koneksi ke OneSignal Berhasil!',
+                    'app_name' => $data['name'] ?? 'OneSignal App',
+                    'players_count' => $data['players'] ?? 0,
+                    'messageable_players' => $data['messageable_players'] ?? 0,
+                    'updated_at' => $data['updated_at'] ?? now()->toIso8601String(),
+                ];
+            }
+
+            $errorMsg = $response->json('errors')[0] ?? "HTTP {$response->status()} - {$response->body()}";
+
+            return [
+                'success' => false,
+                'message' => "Gagal terhubung ke OneSignal: {$errorMsg}",
+            ];
+        } catch (Exception $e) {
+            Log::error('OneSignal connection test error: '.$e->getMessage());
+
+            return [
+                'success' => false,
+                'message' => 'Koneksi error: '.$e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Send push notification via OneSignal API.
+     *
+     * @param  array{
+     *     title: string,
+     *     message: string,
+     *     target_type?: string,
+     *     target_label?: string,
+     *     external_ids?: array,
+     *     player_ids?: array,
+     *     action_url?: string|null,
+     *     image_url?: string|null,
+     *     data?: array
+     * }  $params
+     */
+    public function sendPushNotification(array $params): array
+    {
+        $appId = $this->getAppId();
+        $apiKey = $this->getRestApiKey();
+
+        if (! $this->isEnabled()) {
+            return [
+                'success' => false,
+                'message' => 'Layanan OneSignal belum aktif atau kredensial API belum dikonfigurasi.',
+            ];
+        }
+
+        $title = trim($params['title'] ?? 'Pemberitahuan ISP');
+        $message = trim($params['message'] ?? '');
+        $targetType = $params['target_type'] ?? 'all';
+        $actionUrl = $params['action_url'] ?? null;
+        $imageUrl = $params['image_url'] ?? null;
+        $dataPayload = $params['data'] ?? [];
+
+        if (empty($message)) {
+            return [
+                'success' => false,
+                'message' => 'Isi pesan notifikasi tidak boleh kosong.',
+            ];
+        }
+
+        $payload = [
+            'app_id' => $appId,
+            'headings' => ['en' => $title],
+            'contents' => ['en' => $message],
+        ];
+
+        if (! empty($actionUrl)) {
+            $payload['url'] = $actionUrl;
+        }
+
+        if (! empty($imageUrl)) {
+            $payload['big_picture'] = $imageUrl;
+            $payload['ios_attachments'] = ['media_id' => $imageUrl];
+        }
+
+        if (! empty($dataPayload)) {
+            $payload['data'] = $dataPayload;
+        }
+
+        // Configure recipient targeting
+        $targetLabel = $params['target_label'] ?? 'Semua Pengguna';
+        $externalIds = $params['external_ids'] ?? [];
+
+        switch ($targetType) {
+            case 'customer':
+            case 'external_user_ids':
+                if (! empty($externalIds)) {
+                    $stringIds = array_map('strval', $externalIds);
+                    $payload['include_aliases'] = ['external_id' => $stringIds];
+                    $payload['include_external_user_ids'] = $stringIds;
+                }
+                break;
+
+            case 'player_ids':
+                if (! empty($params['player_ids'])) {
+                    $payload['include_player_ids'] = $params['player_ids'];
+                }
+                break;
+
+            case 'active_customers':
+                $targetLabel = 'Pelanggan Aktif';
+                $payload['filters'] = [
+                    ['field' => 'tag', 'key' => 'status', 'relation' => '=', 'value' => 'active'],
+                ];
+                break;
+
+            case 'isolated_customers':
+                $targetLabel = 'Pelanggan Diisolir';
+                $payload['filters'] = [
+                    ['field' => 'tag', 'key' => 'status', 'relation' => '=', 'value' => 'isolated'],
+                ];
+                break;
+
+            case 'all':
+            default:
+                $targetLabel = 'Semua Perangkat Pelanggan (Broadcast)';
+                $payload['included_segments'] = ['Subscribed Users'];
+                break;
+        }
+
+        try {
+            $response = Http::timeout(12)
+                ->withHeaders([
+                    'Authorization' => "Key {$apiKey}",
+                    'Content-Type' => 'application/json',
+                    'Accept' => 'application/json',
+                ])
+                ->post("{$this->apiUrl}/notifications", $payload);
+
+            if ($response->status() === 401) {
+                $response = Http::timeout(12)
+                    ->withHeaders([
+                        'Authorization' => "Basic {$apiKey}",
+                        'Content-Type' => 'application/json',
+                        'Accept' => 'application/json',
+                    ])
+                    ->post("{$this->apiUrl}/notifications", $payload);
+            }
+
+            $resJson = $response->json();
+            $isSuccess = $response->successful() && ! isset($resJson['errors']);
+            $onesignalId = $resJson['id'] ?? null;
+            $recipients = (int) ($resJson['recipients'] ?? 0);
+
+            // Log record into push_notifications table
+            $log = PushNotification::create([
+                'title' => $title,
+                'message' => $message,
+                'target_type' => $targetType,
+                'target_label' => $targetLabel,
+                'external_ids' => $externalIds,
+                'image_url' => $imageUrl,
+                'action_url' => $actionUrl,
+                'data_payload' => $dataPayload,
+                'status' => $isSuccess ? 'sent' : 'failed',
+                'recipients_count' => $recipients,
+                'onesignal_id' => $onesignalId,
+                'response_summary' => json_encode($resJson),
+            ]);
+
+            if ($isSuccess) {
+                return [
+                    'success' => true,
+                    'message' => "Notifikasi berhasil dikirim ke {$recipients} penerima.",
+                    'notification_id' => $onesignalId,
+                    'recipients' => $recipients,
+                    'log_id' => $log->id,
+                ];
+            }
+
+            $errorMsg = is_array($resJson['errors'] ?? null)
+                ? implode(', ', $resJson['errors'])
+                : ($resJson['errors'] ?? "HTTP {$response->status()}");
+
+            return [
+                'success' => false,
+                'message' => "Gagal mengirim notifikasi OneSignal: {$errorMsg}",
+                'log_id' => $log->id,
+            ];
+        } catch (Exception $e) {
+            Log::error('OneSignal Send Exception: '.$e->getMessage());
+
+            PushNotification::create([
+                'title' => $title,
+                'message' => $message,
+                'target_type' => $targetType,
+                'target_label' => $targetLabel,
+                'external_ids' => $externalIds,
+                'image_url' => $imageUrl,
+                'action_url' => $actionUrl,
+                'data_payload' => $dataPayload,
+                'status' => 'failed',
+                'recipients_count' => 0,
+                'response_summary' => $e->getMessage(),
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Terjadi kesalahan sistem: '.$e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Send push notification to a specific customer.
+     */
+    public function sendToCustomer(Customer $customer, string $title, string $message, ?string $url = null, ?string $image = null, array $data = []): array
+    {
+        $externalId = "customer_{$customer->id}";
+        $data['customer_id'] = $customer->id;
+
+        return $this->sendPushNotification([
+            'title' => $title,
+            'message' => $message,
+            'target_type' => 'customer',
+            'target_label' => "{$customer->name} ({$customer->customer_number})",
+            'external_ids' => [$externalId],
+            'action_url' => $url,
+            'image_url' => $image,
+            'data' => $data,
+        ]);
+    }
+
+    /**
+     * Send broadcast notification to all devices.
+     */
+    public function sendBroadcast(string $title, string $message, ?string $url = null, ?string $image = null, array $data = []): array
+    {
+        return $this->sendPushNotification([
+            'title' => $title,
+            'message' => $message,
+            'target_type' => 'all',
+            'target_label' => 'Semua Perangkat Pelanggan (Broadcast)',
+            'action_url' => $url,
+            'image_url' => $image,
+            'data' => $data,
+        ]);
+    }
+
+    /**
+     * Trigger push notification when a new invoice is generated.
+     */
+    public function notifyInvoiceCreated(Invoice $invoice): array
+    {
+        if (IspSetting::get('onesignal_notify_invoice', '1') !== '1') {
+            return ['success' => false, 'message' => 'Otomasi notifikasi tagihan OneSignal dinonaktifkan.'];
+        }
+
+        $customer = $invoice->customer;
+        if (! $customer) {
+            return ['success' => false, 'message' => 'Customer tidak ditemukan.'];
+        }
+
+        $formattedAmount = 'Rp '.number_format($invoice->total_amount, 0, ',', '.');
+        $dueDate = $invoice->due_date?->format('d M Y') ?? 'Segera';
+
+        $title = '📄 Tagihan Internet Baru Terbit';
+        $message = "Halo {$customer->name}, tagihan periode {$invoice->period} sebesar {$formattedAmount} telah terbit. Jatuh tempo: {$dueDate}. Silakan lakukan pembayaran.";
+
+        return $this->sendToCustomer($customer, $title, $message, "/invoices/{$invoice->id}", null, [
+            'type' => 'invoice',
+            'invoice_id' => $invoice->id,
+            'amount' => $invoice->total_amount,
+        ]);
+    }
+
+    /**
+     * Trigger push notification when payment is confirmed.
+     */
+    public function notifyPaymentReceived(Payment $payment): array
+    {
+        if (IspSetting::get('onesignal_notify_payment', '1') !== '1') {
+            return ['success' => false, 'message' => 'Otomasi notifikasi pembayaran OneSignal dinonaktifkan.'];
+        }
+
+        $invoice = $payment->invoice;
+        $customer = $invoice?->customer;
+        if (! $customer) {
+            return ['success' => false, 'message' => 'Customer tidak ditemukan.'];
+        }
+
+        $formattedAmount = 'Rp '.number_format($payment->amount, 0, ',', '.');
+        $title = '✅ Pembayaran Berhasil Dikonfirmasi';
+        $message = "Terima kasih {$customer->name}! Pembayaran tagihan internet sebesar {$formattedAmount} telah kami terima dan layanan aktif normal.";
+
+        return $this->sendToCustomer($customer, $title, $message, "/invoices/{$invoice->id}", null, [
+            'type' => 'payment',
+            'payment_id' => $payment->id,
+            'invoice_id' => $invoice->id,
+        ]);
+    }
+
+    /**
+     * Trigger push notification when support ticket is updated.
+     */
+    public function notifyTicketUpdated(SupportTicket $ticket, string $statusOrMessage): array
+    {
+        if (IspSetting::get('onesignal_notify_ticket', '1') !== '1') {
+            return ['success' => false, 'message' => 'Otomasi notifikasi tiket OneSignal dinonaktifkan.'];
+        }
+
+        $customer = $ticket->customer;
+        if (! $customer) {
+            return ['success' => false, 'message' => 'Customer tidak ditemukan.'];
+        }
+
+        $title = '🎫 Update Tiket Gangguan #'.$ticket->ticket_number;
+        $message = "Status tiket gangguan Anda [{$ticket->subject}] telah diperbarui: {$statusOrMessage}";
+
+        return $this->sendToCustomer($customer, $title, $message, "/tickets/{$ticket->id}", null, [
+            'type' => 'ticket',
+            'ticket_id' => $ticket->id,
+        ]);
+    }
+}
