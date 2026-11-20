@@ -47,12 +47,35 @@ class InternetPackage extends Model
 
     protected static function booted(): void
     {
+        static::updating(function (InternetPackage $package) {
+            $oldProfile = $package->getOriginal('mikrotik_profile');
+            if ($oldProfile && $oldProfile !== $package->mikrotik_profile && in_array($package->type, ['pppoe', 'hotspot'])) {
+                try {
+                    $dummy = clone $package;
+                    $dummy->mikrotik_profile = $oldProfile;
+                    app(MikrotikApiService::class)->deleteInternetPackageProfile($dummy);
+                } catch (\Throwable $e) {
+                    Log::warning("Gagal auto-delete profil lama MikroTik [{$oldProfile}]: {$e->getMessage()}");
+                }
+            }
+        });
+
         static::saved(function (InternetPackage $package) {
-            if (! empty($package->mikrotik_profile) && $package->is_active) {
+            if (! empty($package->mikrotik_profile) && $package->is_active && in_array($package->type, ['pppoe', 'hotspot'])) {
                 try {
                     app(MikrotikApiService::class)->syncInternetPackageProfile($package);
                 } catch (\Throwable $e) {
                     Log::warning("Gagal auto-sync profil paket ke MikroTik: {$e->getMessage()}");
+                }
+            }
+        });
+
+        static::deleted(function (InternetPackage $package) {
+            if (! empty($package->mikrotik_profile) && in_array($package->type, ['pppoe', 'hotspot'])) {
+                try {
+                    app(MikrotikApiService::class)->deleteInternetPackageProfile($package);
+                } catch (\Throwable $e) {
+                    Log::warning("Gagal auto-delete profil paket dari MikroTik: {$e->getMessage()}");
                 }
             }
         });

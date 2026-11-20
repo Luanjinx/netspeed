@@ -1492,6 +1492,106 @@ class MikrotikApiService
     }
 
     /**
+     * Delete an InternetPackage profile from MikroTik router(s).
+     */
+    public function deleteInternetPackageProfile(InternetPackage $package, ?Router $router = null): array
+    {
+        $profileName = $package->mikrotik_profile;
+        if (empty($profileName)) {
+            return ['success' => false, 'message' => 'Profil MikroTik tidak ditentukan pada paket ini.'];
+        }
+
+        // Never delete default profiles
+        if (in_array(strtolower($profileName), ['default', 'default-encryption'])) {
+            return ['success' => false, 'message' => 'Profil sistem bawaan MikroTik (default) tidak boleh dihapus.'];
+        }
+
+        if ($package->type === 'static') {
+            return ['success' => true, 'message' => 'Paket IP Static tidak memiliki profil di MikroTik.'];
+        }
+
+        $routers = $router ? collect([$router]) : Router::where('is_active', true)->get();
+
+        if ($routers->isEmpty()) {
+            return ['success' => false, 'message' => 'Tidak ada router aktif yang terhubung.'];
+        }
+
+        $successCount = 0;
+        $failedCount = 0;
+        $lastMessage = '';
+
+        foreach ($routers as $r) {
+            if (! $this->connect($r)) {
+                $failedCount++;
+                $lastMessage = $this->lastError ?: "Gagal terhubung ke router {$r->name}";
+
+                continue;
+            }
+
+            try {
+                if ($package->type === 'pppoe') {
+                    // Check if profile exists
+                    $find = $this->comm('/ppp/profile/print', ['?name' => $profileName]);
+                    $exists = $find['!re'][0] ?? null;
+
+                    if ($exists && isset($exists['.id'])) {
+                        $removeRes = $this->comm('/ppp/profile/remove', [
+                            'numbers' => $exists['.id'],
+                        ]);
+
+                        if (isset($removeRes['!trap'])) {
+                            $failedCount++;
+                            $trapErr = $removeRes['!trap'][0]['message'] ?? 'Gagal menghapus profil PPP';
+                            $lastMessage = "MikroTik {$r->name}: {$trapErr}";
+                        } else {
+                            $successCount++;
+                            $lastMessage = "Profil PPPoE [{$profileName}] berhasil dihapus dari router {$r->name}.";
+                        }
+                    } else {
+                        // Profile doesn't exist on router, consider it done
+                        $successCount++;
+                        $lastMessage = "Profil PPPoE [{$profileName}] tidak ditemukan di router {$r->name} (sudah terhapus).";
+                    }
+                } elseif ($package->type === 'hotspot') {
+                    // Check if hotspot profile exists
+                    $find = $this->comm('/ip/hotspot/user/profile/print', ['?name' => $profileName]);
+                    $exists = $find['!re'][0] ?? null;
+
+                    if ($exists && isset($exists['.id'])) {
+                        $removeRes = $this->comm('/ip/hotspot/user/profile/remove', [
+                            'numbers' => $exists['.id'],
+                        ]);
+
+                        if (isset($removeRes['!trap'])) {
+                            $failedCount++;
+                            $trapErr = $removeRes['!trap'][0]['message'] ?? 'Gagal menghapus profil Hotspot';
+                            $lastMessage = "MikroTik {$r->name}: {$trapErr}";
+                        } else {
+                            $successCount++;
+                            $lastMessage = "Profil Hotspot [{$profileName}] berhasil dihapus dari router {$r->name}.";
+                        }
+                    } else {
+                        $successCount++;
+                        $lastMessage = "Profil Hotspot [{$profileName}] tidak ditemukan di router {$r->name} (sudah terhapus).";
+                    }
+                }
+            } catch (Exception $e) {
+                $failedCount++;
+                $lastMessage = "Error: {$e->getMessage()}";
+            } finally {
+                $this->disconnect();
+            }
+        }
+
+        return [
+            'success' => $failedCount === 0 && $successCount > 0,
+            'message' => $routers->count() === 1
+                ? $lastMessage
+                : "Profil [{$profileName}] dihapus dari {$successCount}/{$routers->count()} router.",
+        ];
+    }
+
+    /**
      * Synchronize all active InternetPackages (both PPPoE and Hotspot) to router(s).
      */
     public function syncAllInternetPackagesToRouters(?Router $router = null): array

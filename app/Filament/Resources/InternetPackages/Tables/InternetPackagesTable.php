@@ -6,6 +6,7 @@ use App\Services\Router\MikrotikApiService;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Notifications\Notification;
@@ -115,6 +116,8 @@ class InternetPackagesTable
                         }
                     }),
                 EditAction::make(),
+                DeleteAction::make()
+                    ->successNotificationTitle('Paket & Profil MikroTik Berhasil Dihapus'),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

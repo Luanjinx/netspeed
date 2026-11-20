@@ -37,7 +37,8 @@ class EditInternetPackage extends EditRecord
                             ->send();
                     }
                 }),
-            DeleteAction::make(),
+            DeleteAction::make()
+                ->successNotificationTitle('Paket & Profil MikroTik Berhasil Dihapus'),
         ];
     }
 
