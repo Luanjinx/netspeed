@@ -125,12 +125,6 @@ class AppSettings extends Page implements HasForms
             ->components([
                 Tabs::make('Pengaturan Sistem')
                     ->tabs([
-                        Tab::make('Integrasi API (Link & Key)')
-                            ->icon('heroicon-o-key')
-                            ->schema([
-                                View::make('filament.pages.settings.api-cards'),
-                            ]),
-
                         Tab::make('Profil ISP & Titik Peta')
                             ->icon('heroicon-o-building-office-2')
                             ->schema([
