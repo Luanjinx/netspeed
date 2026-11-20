@@ -2,135 +2,78 @@
     <div style="display: flex; flex-direction: column; gap: 1.5rem;">
         
         <!-- Live Status Metric Cards -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem;">
             
             <!-- Card 1: Base URL API Backend -->
             <div style="background: #1a1e1c; border: 1px solid #232826; border-radius: 0.75rem; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between;">
-                <div>
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                        <div>
-                            <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #9aa49f;">
-                                Base URL API Backend
-                            </div>
-                            <div style="font-size: 1.15rem; font-weight: 800; margin-top: 0.35rem; color: #eef1f0; word-break: break-all;">
-                                <span style="color: #38bdf8;">{{ $data['app_api_base_url'] ?? url('/api') }}</span>
-                            </div>
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #9aa49f;">
+                            Base URL API Backend
                         </div>
-                        <div style="background: #131615; border: 1px solid #232826; border-radius: 0.5rem; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #38bdf8; flex-shrink: 0;">
-                            <span class="material-symbols-rounded" style="font-size: 24px;">lan</span>
+                        <div style="font-size: 1.15rem; font-weight: 800; margin-top: 0.35rem; color: #eef1f0; word-break: break-all;">
+                            <span style="color: #38bdf8;">{{ $data['app_api_base_url'] ?? url('/api') }}</span>
                         </div>
                     </div>
-
-                    <div style="margin-top: 0.75rem; font-size: 0.75rem; color: #9aa49f;">
-                        Gunakan URL ini di variabel <code style="color: #a7f3d0;">baseUrl</code> Flutter &amp; STB
+                    <div style="background: #131615; border: 1px solid #232826; border-radius: 0.5rem; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #38bdf8; flex-shrink: 0;">
+                        <span class="material-symbols-rounded" style="font-size: 24px;">lan</span>
                     </div>
                 </div>
 
-                <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px dashed #232826; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap;">
-                    <span style="font-size: 0.725rem; color: #9aa49f;">Endpoint REST API</span>
-                    <button type="button"
-                            onclick="navigator.clipboard.writeText('{{ $data['app_api_base_url'] ?? url('/api') }}'); $wire.copyBaseUrl();"
-                            style="display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 6px; font-size: 0.725rem; font-weight: 700; background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.35); cursor: pointer; transition: all 0.2s;"
-                            onmouseover="this.style.background='rgba(56, 189, 248, 0.25)';"
-                            onmouseout="this.style.background='rgba(56, 189, 248, 0.15)';">
-                        <span class="material-symbols-rounded" style="font-size: 15px;">content_copy</span>
-                        Salin URL Base
-                    </button>
+                <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px dashed #232826; font-size: 0.8125rem; color: #9aa49f;">
+                    Gunakan URL ini di variabel <code style="color: #a7f3d0;">baseUrl</code> Flutter &amp; STB
                 </div>
             </div>
 
             <!-- Card 2: App API Secret Key -->
             <div style="background: #1a1e1c; border: 1px solid #232826; border-radius: 0.75rem; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between;">
-                <div>
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                        <div>
-                            <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #9aa49f;">
-                                Header Otorisasi API
-                            </div>
-                            <div style="font-size: 1.15rem; font-weight: 800; margin-top: 0.35rem; color: #eef1f0; display: flex; align-items: center; gap: 0.5rem;">
-                                <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #00e07e; box-shadow: 0 0 10px #00e07e;"></span>
-                                <span style="color: #00e07e;">Kunci Aktif</span>
-                            </div>
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #9aa49f;">
+                            Header Otorisasi API
                         </div>
-                        <div style="background: #131615; border: 1px solid #232826; border-radius: 0.5rem; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #00e07e; flex-shrink: 0;">
-                            <span class="material-symbols-rounded" style="font-size: 24px;">key</span>
+                        <div style="font-size: 1.15rem; font-weight: 800; margin-top: 0.35rem; color: #eef1f0; display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #00e07e; box-shadow: 0 0 10px #00e07e;"></span>
+                            <span style="color: #00e07e;">Kunci Aktif</span>
                         </div>
                     </div>
-
-                    <div style="margin-top: 0.75rem; font-size: 0.75rem; color: #9aa49f; word-break: break-all;">
-                        Header: <code style="color: #00e07e;">x-api-key: {{ Str::limit($currentApiKey, 20) }}</code>
+                    <div style="background: #131615; border: 1px solid #232826; border-radius: 0.5rem; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #00e07e; flex-shrink: 0;">
+                        <span class="material-symbols-rounded" style="font-size: 24px;">key</span>
                     </div>
                 </div>
 
-                <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px dashed #232826; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap;">
-                    <span style="font-size: 0.725rem; color: #9aa49f;">Otorisasi Mobile &amp; STB</span>
-                    <button type="button"
-                            wire:click="mountAction('generateKey')"
-                            style="display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 6px; font-size: 0.725rem; font-weight: 700; background: rgba(234, 179, 8, 0.15); color: #facc15; border: 1px solid rgba(234, 179, 8, 0.35); cursor: pointer; transition: all 0.2s;"
-                            onmouseover="this.style.background='rgba(234, 179, 8, 0.25)';"
-                            onmouseout="this.style.background='rgba(234, 179, 8, 0.15)';">
-                        <span class="material-symbols-rounded" style="font-size: 15px;">autorenew</span>
-                        Generate Key Baru
-                    </button>
+                <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px dashed #232826; font-size: 0.75rem; color: #9aa49f; word-break: break-all;">
+                    Header: <code style="color: #00e07e;">x-api-key: {{ Str::limit($currentApiKey, 20) }}</code>
                 </div>
             </div>
 
             <!-- Card 3: OneSignal Push Engine -->
             <div style="background: #1a1e1c; border: 1px solid #232826; border-radius: 0.75rem; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between;">
-                <div>
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                        <div>
-                            <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #9aa49f;">
-                                OneSignal Push Engine
-                            </div>
-                            <div style="font-size: 1.15rem; font-weight: 800; margin-top: 0.35rem; color: #eef1f0; display: flex; align-items: center; gap: 0.5rem;">
-                                @if ($isOneSignalActive)
-                                    <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #00e07e; box-shadow: 0 0 10px #00e07e;"></span>
-                                    <span style="color: #00e07e;">Terkoneksi</span>
-                                    @if ($oneSignalAppName)
-                                        <span style="font-size: 0.75rem; font-weight: 600; color: #9aa49f;">({{ $oneSignalAppName }})</span>
-                                    @endif
-                                @else
-                                    <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #eab308; box-shadow: 0 0 10px #eab308;"></span>
-                                    <span style="color: #eab308;">Belum Terhubung</span>
-                                @endif
-                            </div>
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #9aa49f;">
+                            OneSignal Push Engine
                         </div>
-                        <div style="background: #131615; border: 1px solid #232826; border-radius: 0.5rem; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #eab308; flex-shrink: 0;">
-                            <span class="material-symbols-rounded" style="font-size: 24px;">notifications_active</span>
+                        <div style="font-size: 1.15rem; font-weight: 800; margin-top: 0.35rem; color: #eef1f0; display: flex; align-items: center; gap: 0.5rem;">
+                            @if ($isOneSignalActive)
+                                <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #00e07e; box-shadow: 0 0 10px #00e07e;"></span>
+                                <span style="color: #00e07e;">Terkoneksi</span>
+                                @if ($oneSignalAppName)
+                                    <span style="font-size: 0.75rem; font-weight: 600; color: #9aa49f;">({{ $oneSignalAppName }})</span>
+                                @endif
+                            @else
+                                <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #eab308; box-shadow: 0 0 10px #eab308;"></span>
+                                <span style="color: #eab308;">Belum Terhubung</span>
+                            @endif
                         </div>
                     </div>
-
-                    <div style="margin-top: 0.75rem; font-size: 0.75rem; color: #9aa49f;">
-                        @if ($isOneSignalActive && $oneSignalSubscribers !== null)
-                            <span style="color: #00e07e;">● {{ number_format($oneSignalSubscribers) }} device subscriber aktif</span>
-                        @elseif ($oneSignalStatusMessage)
-                            <span style="color: #f87171;">{{ Str::limit($oneSignalStatusMessage, 42) }}</span>
-                        @else
-                            Engine push notifikasi aplikasi Android &amp; STB
-                        @endif
+                    <div style="background: #131615; border: 1px solid #232826; border-radius: 0.5rem; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #eab308; flex-shrink: 0;">
+                        <span class="material-symbols-rounded" style="font-size: 24px;">notifications_active</span>
                     </div>
                 </div>
 
-                <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px dashed #232826; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap;">
-                    <button type="button"
-                            wire:click="testOneSignalConnection"
-                            wire:loading.attr="disabled"
-                            style="display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 6px; font-size: 0.725rem; font-weight: 700; background: rgba(0, 224, 126, 0.15); color: #00e07e; border: 1px solid rgba(0, 224, 126, 0.35); cursor: pointer; transition: all 0.2s;"
-                            onmouseover="this.style.background='rgba(0, 224, 126, 0.25)';"
-                            onmouseout="this.style.background='rgba(0, 224, 126, 0.15)';">
-                        <span wire:loading.remove wire:target="testOneSignalConnection" class="material-symbols-rounded" style="font-size: 15px;">wifi_tethering</span>
-                        <span wire:loading wire:target="testOneSignalConnection" class="material-symbols-rounded" style="font-size: 15px;">autorenew</span>
-                        Uji Koneksi OneSignal
-                    </button>
-
-                    <a href="{{ url('/admin/onesignal') }}"
-                       style="display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; border-radius: 6px; font-size: 0.725rem; font-weight: 600; background: #131615; color: #9aa49f; border: 1px solid #232826; text-decoration: none;"
-                       onmouseover="this.style.color='#eef1f0'; this.style.borderColor='#00e07e';"
-                       onmouseout="this.style.color='#9aa49f'; this.style.borderColor='#232826';">
-                        <span>Hub Broadcast</span>
-                        <span style="font-size: 13px;">&rarr;</span>
-                    </a>
+                <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px dashed #232826; font-size: 0.75rem; color: #9aa49f;">
+                    <a href="{{ url('/admin/onesignal') }}" style="color: #00e07e; text-decoration: underline;">Buka Hub Broadcast Pesan Massal &rarr;</a>
                 </div>
             </div>
         </div>

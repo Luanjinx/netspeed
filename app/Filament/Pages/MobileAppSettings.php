@@ -95,14 +95,51 @@ class MobileAppSettings extends Page implements HasForms
                                 ->label('Link Base API Backend (Untuk Flutter / STB)')
                                 ->default(url('/api'))
                                 ->required()
-                                ->helperText('Tautan ini diisikan ke variabel baseUrl di file konfigurasi aplikasi Flutter & STB Anda.'),
+                                ->helperText('Tautan ini diisikan ke variabel baseUrl di file konfigurasi aplikasi Flutter & STB Anda.')
+                                ->suffixAction(
+                                    Action::make('copyBaseUrlAction')
+                                        ->icon('heroicon-m-clipboard-document')
+                                        ->tooltip('Salin Base URL API')
+                                        ->color('info')
+                                        ->action(function ($livewire, $state) {
+                                            $url = $state ?: url('/api');
+                                            $livewire->js('navigator.clipboard.writeText('.json_encode($url).');');
+                                            Notification::make()
+                                                ->title('URL Berhasil Disalin!')
+                                                ->body($url)
+                                                ->success()
+                                                ->send();
+                                        })
+                                ),
 
                             TextInput::make('app_api_key')
                                 ->label('App API Secret Key (Header x-api-key)')
                                 ->required()
                                 ->password()
                                 ->revealable()
-                                ->helperText('Kunci rahasia untuk otorisasi header `x-api-key` pada setiap request API mobile pelanggan ke backend.'),
+                                ->helperText('Kunci rahasia untuk otorisasi header `x-api-key` pada setiap request API mobile pelanggan ke backend.')
+                                ->suffixAction(
+                                    Action::make('generateApiKeyAction')
+                                        ->icon('heroicon-m-arrow-path')
+                                        ->tooltip('Generate Key Baru')
+                                        ->color('warning')
+                                        ->requiresConfirmation()
+                                        ->modalHeading('Buat Kunci API Mobile Baru?')
+                                        ->modalDescription('PERINGATAN: Membuat API Key baru akan membatalkan kunci lama. Anda harus memperbarui konfigurasi di aplikasi Flutter & STB pelanggan agar tetap dapat terhubung.')
+                                        ->action(function ($livewire, $set) {
+                                            $newKey = 'isp_'.Str::random(32);
+                                            IspSetting::set('app_api_key', $newKey);
+                                            $set('app_api_key', $newKey);
+                                            $livewire->currentApiKey = $newKey;
+
+                                            Notification::make()
+                                                ->title('API Key Baru Berhasil Dibuat!')
+                                                ->body("Kunci: {$newKey}")
+                                                ->success()
+                                                ->duration(10000)
+                                                ->send();
+                                        })
+                                ),
                         ]),
 
                     // Section 2: Push Notifications (OneSignal & FCM)
@@ -113,14 +150,38 @@ class MobileAppSettings extends Page implements HasForms
                             TextInput::make('onesignal_app_id')
                                 ->label('OneSignal App ID')
                                 ->placeholder('cth: 3fe828b4-3717-4860-bc04-20512f4dd1be')
-                                ->helperText('Dapatkan dari OneSignal Dashboard > App Settings > Keys & IDs.'),
+                                ->helperText('Dapatkan dari OneSignal Dashboard > App Settings > Keys & IDs.')
+                                ->suffixAction(
+                                    Action::make('testOneSignalAppId')
+                                        ->icon('heroicon-m-signal')
+                                        ->tooltip('Uji Koneksi OneSignal')
+                                        ->color('success')
+                                        ->action(function ($livewire, $get) {
+                                            $livewire->runOneSignalTest(
+                                                trim((string) $get('onesignal_app_id')),
+                                                trim((string) $get('onesignal_rest_api_key'))
+                                            );
+                                        })
+                                ),
 
                             TextInput::make('onesignal_rest_api_key')
                                 ->label('OneSignal REST API Key')
                                 ->placeholder('Kunci autentikasi server OneSignal')
                                 ->password()
                                 ->revealable()
-                                ->helperText('Kunci rahasia untuk trigger broadcast notifikasi dari backend.'),
+                                ->helperText('Kunci rahasia untuk trigger broadcast notifikasi dari backend.')
+                                ->suffixAction(
+                                    Action::make('testOneSignalApiKey')
+                                        ->icon('heroicon-m-signal')
+                                        ->tooltip('Uji Koneksi OneSignal')
+                                        ->color('success')
+                                        ->action(function ($livewire, $get) {
+                                            $livewire->runOneSignalTest(
+                                                trim((string) $get('onesignal_app_id')),
+                                                trim((string) $get('onesignal_rest_api_key'))
+                                            );
+                                        })
+                                ),
 
                             TextInput::make('fcm_server_key')
                                 ->label('Firebase Cloud Messaging (FCM) Server Key')
@@ -184,10 +245,10 @@ class MobileAppSettings extends Page implements HasForms
             ->send();
     }
 
-    public function testOneSignalConnection(): void
+    public function runOneSignalTest(?string $appId = null, ?string $apiKey = null): void
     {
-        $appId = trim($this->data['onesignal_app_id'] ?? IspSetting::get('onesignal_app_id', ''));
-        $apiKey = trim($this->data['onesignal_rest_api_key'] ?? IspSetting::get('onesignal_rest_api_key', ''));
+        $appId = $appId ?: trim((string) ($this->data['onesignal_app_id'] ?? IspSetting::get('onesignal_app_id', '')));
+        $apiKey = $apiKey ?: trim((string) ($this->data['onesignal_rest_api_key'] ?? IspSetting::get('onesignal_rest_api_key', '')));
 
         if (empty($appId) || empty($apiKey)) {
             $this->isOneSignalActive = false;
@@ -195,7 +256,7 @@ class MobileAppSettings extends Page implements HasForms
 
             Notification::make()
                 ->title('OneSignal Belum Dikonfigurasi!')
-                ->body('Silakan isi OneSignal App ID dan REST API Key pada form di bawah terlebih dahulu.')
+                ->body('Silakan isi OneSignal App ID dan REST API Key pada form terlebih dahulu.')
                 ->warning()
                 ->send();
 
@@ -237,6 +298,11 @@ class MobileAppSettings extends Page implements HasForms
                 ->danger()
                 ->send();
         }
+    }
+
+    public function testOneSignalConnection(): void
+    {
+        $this->runOneSignalTest();
     }
 
     public function save(): void
