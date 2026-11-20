@@ -5,6 +5,7 @@ namespace App\Providers\Filament;
 use App\Filament\Pages\Auth\EditProfile;
 use App\Filament\Pages\Auth\Login;
 use App\Http\Middleware\BlockDemoMutations;
+use App\Providers\DemoModeServiceProvider;
 use Filament\FontProviders\LocalFontProvider;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -60,7 +61,7 @@ class AdminPanelProvider extends PanelProvider
                 'Pengaturan',
             ])
             ->spa()
-            ->unsavedChangesAlerts()
+            ->unsavedChangesAlerts(! DemoModeServiceProvider::isDemo())
             ->resourceEditPageRedirect('index')
             ->resourceCreatePageRedirect('index')
             ->renderHook(

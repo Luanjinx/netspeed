@@ -1,6 +1,9 @@
 @if(\App\Providers\DemoModeServiceProvider::isDemo())
-    <div x-data="{ open: false }"
-         @open-demo-modal.window="open = true"
+    <div x-data="{ 
+            open: {{ session('open_demo_modal') ? 'true' : 'false' }},
+            redirectUrl: '{{ session('demo_redirect_url') }}'
+         }"
+         @open-demo-modal.window="open = true; if ($event.detail && $event.detail.url) { redirectUrl = $event.detail.url; }"
          x-on:keydown.escape.window="open = false"
          x-show="open"
          x-cloak
@@ -51,7 +54,7 @@
                 <!-- Action Button -->
                 <div class="mt-5 flex justify-end">
                     <button type="button"
-                            @click="open = false"
+                            @click="open = false; if (redirectUrl && (window.location.pathname.includes('/edit') || window.location.pathname.includes('/create'))) { window.location.href = redirectUrl; }"
                             class="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-lg shadow-emerald-500/20 transition cursor-pointer">
                         Saya Mengerti
                     </button>
@@ -62,8 +65,8 @@
 
     <script>
         document.addEventListener('livewire:initialized', () => {
-            Livewire.on('open-demo-modal', () => {
-                window.dispatchEvent(new CustomEvent('open-demo-modal'));
+            Livewire.on('open-demo-modal', (event) => {
+                window.dispatchEvent(new CustomEvent('open-demo-modal', { detail: event || {} }));
             });
 
             if (typeof Livewire.hook === 'function') {
