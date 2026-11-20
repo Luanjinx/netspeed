@@ -50,7 +50,7 @@
             </div>
         </div>
 
-        <!-- 3. API Payment Gateway -->
+        <!-- 3. API Payment Gateway & QRIS Dinamis -->
         <a href="{{ url('/admin/payment-gateway') }}"
            class="settings-hub-card"
            style="display: flex; flex-direction: column; justify-content: space-between; padding: 1.15rem; background: #1a1e1c; border: 1px solid #232826; border-radius: 0.75rem; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); text-decoration: none;">
@@ -61,8 +61,8 @@
                 <span style="font-size: 0.7rem; font-weight: 600; padding: 3px 8px; border-radius: 6px; background: #131615; color: #00e07e; border: 1px solid #232826;">Buka Halaman &rarr;</span>
             </div>
             <div>
-                <h4 style="font-size: 0.875rem; font-weight: 700; color: #eef1f0; margin: 0.75rem 0 0.25rem 0;">API Payment Gateway</h4>
-                <p style="font-size: 0.75rem; color: #9aa49f; margin: 0; line-height: 1.35;">Tripay, Midtrans, CekMutasi, QRIS Otomatis &amp; webhook pelunasan realtime</p>
+                <h4 style="font-size: 0.875rem; font-weight: 700; color: #eef1f0; margin: 0.75rem 0 0.25rem 0;">API Payment Gateway &amp; QRIS</h4>
+                <p style="font-size: 0.75rem; color: #9aa49f; margin: 0; line-height: 1.35;">QRIS Dinamis 0% MDR, auto-scanner, Tripay, Midtrans, CekMutasi &amp; webhook</p>
             </div>
         </a>
 

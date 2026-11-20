@@ -216,7 +216,7 @@ class AppSettings extends Page implements HasForms
                 ->label('Scan Foto QRIS')
                 ->icon('heroicon-o-camera')
                 ->color('warning')
-                ->url(url('/admin/qris-settings')),
+                ->url(url('/admin/payment-gateway')),
         ];
     }
 
