@@ -7,7 +7,6 @@ use App\Models\Router;
 use App\Services\Router\MikrotikApiService;
 use BackedEnum;
 use Exception;
-use Filament\Actions\Action;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -32,11 +31,11 @@ class CompanyProfile extends Page implements HasForms
 
     protected static string|UnitEnum|null $navigationGroup = 'Pengaturan';
 
-    protected static ?string $navigationLabel = 'Profil ISP & Titik Peta';
+    protected static ?string $navigationLabel = 'General & Profil ISP';
 
-    protected static ?string $title = 'Identitas ISP & Titik Peta Kantor Pusat';
+    protected static ?string $title = 'Pengaturan General & Profil ISP';
 
-    protected ?string $subheading = 'Nama penyedia layanan yang tercetak pada invoice tagihan, struk kasir, dan titik koordinat peta admin & teknisi';
+    protected ?string $subheading = 'Nama penyedia layanan yang tercetak pada invoice tagihan, struk kasir, kontak layanan CS WhatsApp, dan titik koordinat peta kantor pusat NOC';
 
     protected string $view = 'filament.pages.company-profile';
 
@@ -107,19 +106,7 @@ class CompanyProfile extends Page implements HasForms
 
     protected function getHeaderActions(): array
     {
-        return [
-            Action::make('backToSettings')
-                ->label('Kembali ke Pengaturan')
-                ->icon('heroicon-o-arrow-left')
-                ->color('gray')
-                ->url(url('/admin/settings')),
-
-            Action::make('save')
-                ->label('Simpan Profil Perusahaan')
-                ->icon('heroicon-o-check')
-                ->color('primary')
-                ->action(fn () => $this->save()),
-        ];
+        return [];
     }
 
     public function save(): void
@@ -174,7 +161,7 @@ class CompanyProfile extends Page implements HasForms
     {
         return [
             url('/admin/settings') => 'Pengaturan Sistem',
-            'Profil ISP & Titik Peta',
+            'General & Profil ISP',
         ];
     }
 }
