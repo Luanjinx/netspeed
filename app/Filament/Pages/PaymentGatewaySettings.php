@@ -42,9 +42,9 @@ class PaymentGatewaySettings extends Page implements HasForms
 
     protected static ?string $navigationLabel = 'API Payment Gateway & QRIS Dinamis';
 
-    protected static ?string $title = 'Manajemen & Integrasi Payment Gateway & QRIS Dinamis';
+    protected static ?string $title = 'Manajemen & Integrasi Payment Gateway';
 
-    protected ?string $subheading = 'Koneksi barcode QRIS Dinamis 0% MDR dengan auto-scanner, gateway pihak ketiga (Tripay, Midtrans, CekMutasi, Moota, Xendit), dan Webhook pelunasan otomatis';
+    protected ?string $subheading = 'Koneksi gateway pembayaran (QRIS Dinamis 0% MDR bawaan, Tripay, Midtrans, CekMutasi, Moota, Xendit) & Webhook pelunasan real-time';
 
     protected string $view = 'filament.pages.payment-gateway-settings';
 
@@ -125,10 +125,11 @@ class PaymentGatewaySettings extends Page implements HasForms
             ->statePath('data')
             ->components([
                 Grid::make(['default' => 1, 'lg' => 2])->schema([
-                    // Section 1: Provider & Endpoint Utama
+                    // Card 1: Metode & Provider Utama Payment Gateway (Termasuk QRIS jika dipilih)
                     Section::make('Metode & Provider Utama Payment Gateway')
                         ->description('Pilih metode payment gateway bawaan QRIS Dinamis atau gateway pihak ketiga (Tripay, Midtrans, CekMutasi, Moota, Xendit).')
                         ->icon('heroicon-o-building-library')
+                        ->columnSpan(fn ($get) => ($get('payment_gateway_provider') ?? 'qris_manual') === 'qris_manual' ? ['default' => 1, 'lg' => 2] : 1)
                         ->schema([
                             Select::make('payment_gateway_provider')
                                 ->label('Penyedia / Metode Pembayaran Aktif')
@@ -144,22 +145,7 @@ class PaymentGatewaySettings extends Page implements HasForms
                                 ->required()
                                 ->live(),
 
-                            TextInput::make('payment_gateway_api_url')
-                                ->label('Link URL Endpoint API Gateway Pihak Ketiga')
-                                ->placeholder('cth: https://tripay.co.id/api/ atau https://api.midtrans.com/v2/')
-                                ->helperText('Hanya diperlukan untuk gateway pihak ketiga. Kosongkan jika menggunakan QRIS manual/mutasi.'),
-
-                            TextInput::make('payment_gateway_merchant_code')
-                                ->label('Kode Toko / Merchant Code / Merchant ID')
-                                ->placeholder('cth: T12345 / Merchant ID')
-                                ->helperText('Dapatkan kode merchant dari dashboard penyedia payment gateway Anda.'),
-                        ]),
-
-                    // Section 2: QRIS Dinamis Otomatis & Auto Scanner (Bawaan 0% MDR)
-                    Section::make('QRIS Dinamis Otomatis & Auto Scanner (Bawaan 0% MDR)')
-                        ->description('Unggah gambar atau foto screenshot barcode QRIS toko Anda (BCA, Mandiri, BRI, ShopeePay, GoPay, Nobu, dll). Sistem akan otomatis membaca string EMVCo dan info merchant.')
-                        ->icon('heroicon-o-qr-code')
-                        ->schema([
+                            // --- TAMPIL HANYA JIKA MEMILIH QRIS STATIS TO DINAMIS (DI DALAM CARD INI) ---
                             FileUpload::make('qris_image_upload')
                                 ->label('Upload Foto / Barcode QRIS Merchant (Scan Otomatis)')
                                 ->image()
@@ -169,6 +155,7 @@ class PaymentGatewaySettings extends Page implements HasForms
                                 ->maxSize(5120)
                                 ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/jpg', 'image/webp'])
                                 ->live()
+                                ->visible(fn ($get) => ($get('payment_gateway_provider') ?? 'qris_manual') === 'qris_manual')
                                 ->helperText('Pilih atau drag & drop file foto/screenshot barcode QRIS toko Anda. Sistem langsung memindai QR code dan mengisi string EMVCo secara instan.')
                                 ->afterStateUpdated(function ($state, callable $set) {
                                     if (! $state) {
@@ -205,10 +192,12 @@ class PaymentGatewaySettings extends Page implements HasForms
 
                             Placeholder::make('qris_preview_display')
                                 ->label('Status & Preview Barcode QRIS Merchant')
+                                ->visible(fn ($get) => ($get('payment_gateway_provider') ?? 'qris_manual') === 'qris_manual')
                                 ->content(fn ($get) => AppSettings::renderQrisPreviewHtml($get('static_qris_string'))),
 
                             Textarea::make('static_qris_string')
                                 ->label('Raw String QRIS Statis EMVCo Merchant')
+                                ->visible(fn ($get) => ($get('payment_gateway_provider') ?? 'qris_manual') === 'qris_manual')
                                 ->placeholder('00020101021126680016ID.CO.QRIS.WWW0118936009990000000001...')
                                 ->rows(3)
                                 ->live(debounce: 500)
@@ -216,14 +205,29 @@ class PaymentGatewaySettings extends Page implements HasForms
 
                             Toggle::make('use_unique_code')
                                 ->label('Gunakan 3 Digit Kode Unik Tagihan (cth: Rp 150.245)')
+                                ->visible(fn ($get) => ($get('payment_gateway_provider') ?? 'qris_manual') === 'qris_manual')
                                 ->helperText('Menambahkan 3 digit angka acak unik untuk mempermudah deteksi pembayaran mutasi rekening.')
                                 ->default(true),
+
+                            // --- TAMPIL HANYA JIKA MEMILIH GATEWAY PIHAK KETIGA ---
+                            TextInput::make('payment_gateway_api_url')
+                                ->label('Link URL Endpoint API Gateway Pihak Ketiga')
+                                ->placeholder('cth: https://tripay.co.id/api/ atau https://api.midtrans.com/v2/')
+                                ->visible(fn ($get) => ($get('payment_gateway_provider') ?? 'qris_manual') !== 'qris_manual')
+                                ->helperText('Link endpoint API resmi dari dashboard gateway pihak ketiga Anda.'),
+
+                            TextInput::make('payment_gateway_merchant_code')
+                                ->label('Kode Toko / Merchant Code / Merchant ID')
+                                ->placeholder('cth: T12345 / Merchant ID')
+                                ->visible(fn ($get) => ($get('payment_gateway_provider') ?? 'qris_manual') !== 'qris_manual')
+                                ->helperText('Dapatkan kode merchant dari dashboard penyedia payment gateway Anda.'),
                         ]),
 
-                    // Section 3: Kredensial & Kunci Rahasia API Pihak Ketiga
+                    // Card 2: Kredensial & Kunci Rahasia API Gateway Pihak Ketiga (Hanya untuk 3rd party)
                     Section::make('Kredensial & Kunci Rahasia API Gateway Pihak Ketiga')
                         ->description('Kunci autentikasi server untuk gateway Tripay, Midtrans, CekMutasi, Moota, atau Xendit.')
                         ->icon('heroicon-o-key')
+                        ->visible(fn ($get) => ($get('payment_gateway_provider') ?? 'qris_manual') !== 'qris_manual')
                         ->schema([
                             TextInput::make('payment_gateway_server_key')
                                 ->label('API Server Key / Private Key')
@@ -245,10 +249,12 @@ class PaymentGatewaySettings extends Page implements HasForms
                                 ->helperText('Digunakan untuk memvalidasi keaslian data notifikasi callback dari gateway.'),
                         ]),
 
-                    // Section 4: Webhook Callback URL
+                    // Card 3: Webhook Callback URL (Hanya untuk 3rd party)
                     Section::make('Webhook Callback URL (Notifikasi Pembayaran Real-Time)')
                         ->description('Salin alamat URL webhook ini ke pengaturan Callback URL / Notification URL di dashboard payment gateway Anda.')
                         ->icon('heroicon-o-arrow-path-rounded-square')
+                        ->visible(fn ($get) => ($get('payment_gateway_provider') ?? 'qris_manual') !== 'qris_manual')
+                        ->columnSpan(['default' => 1, 'lg' => 2])
                         ->schema([
                             Placeholder::make('payment_webhook_display')
                                 ->label('Alamat Webhook Endpoint Aplikasi')
@@ -262,9 +268,9 @@ class PaymentGatewaySettings extends Page implements HasForms
                                 ')),
                         ]),
 
-                    // Section 5: Otomasi Pelunasan
+                    // Card 4: Otomasi Pelunasan (Selalu Tampil)
                     Section::make('Otomatisasi Sistem Saat Tagihan Lunas')
-                        ->description('Aksi yang otomatis dijalankan sistem tepat setelah webhook pembayaran berhasil diverifikasi.')
+                        ->description('Aksi yang otomatis dijalankan sistem tepat setelah pembayaran tagihan berhasil diverifikasi.')
                         ->icon('heroicon-o-bolt')
                         ->columnSpan(['default' => 1, 'lg' => 2])
                         ->schema([
@@ -411,7 +417,7 @@ class PaymentGatewaySettings extends Page implements HasForms
                 ->url(url('/admin/settings')),
 
             Action::make('save')
-                ->label('Simpan Pengaturan Gateway & QRIS')
+                ->label('Simpan Pengaturan Gateway')
                 ->icon('heroicon-o-check')
                 ->color('primary')
                 ->action(fn () => $this->save()),
@@ -437,13 +443,17 @@ class PaymentGatewaySettings extends Page implements HasForms
         if (isset($state['qris_image_upload']) && is_string($state['qris_image_upload'])) {
             IspSetting::set('qris_image_upload', $state['qris_image_upload']);
         }
-        IspSetting::set('static_qris_string', trim($state['static_qris_string'] ?? ''));
-        IspSetting::set('use_unique_code', ! empty($state['use_unique_code']) ? '1' : '0');
+        if (array_key_exists('static_qris_string', $state)) {
+            IspSetting::set('static_qris_string', trim($state['static_qris_string'] ?? ''));
+        }
+        if (array_key_exists('use_unique_code', $state)) {
+            IspSetting::set('use_unique_code', ! empty($state['use_unique_code']) ? '1' : '0');
+        }
 
         $this->refreshStatus();
 
         Notification::make()
-            ->title('Pengaturan Payment Gateway & QRIS Dinamis Berhasil Disimpan!')
+            ->title('Pengaturan Payment Gateway Berhasil Disimpan!')
             ->success()
             ->send();
     }
@@ -472,7 +482,7 @@ class PaymentGatewaySettings extends Page implements HasForms
     {
         return [
             url('/admin/settings') => 'Pengaturan Sistem',
-            'API Payment Gateway & QRIS Dinamis',
+            'API Payment Gateway & Webhook',
         ];
     }
 }

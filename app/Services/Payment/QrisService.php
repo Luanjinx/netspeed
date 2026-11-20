@@ -161,6 +161,10 @@ class QrisService
     {
         $svg = $this->renderSvg($qrisString);
 
+        if (str_starts_with($svg, 'data:image/')) {
+            return $svg;
+        }
+
         return 'data:image/svg+xml;base64,'.base64_encode($svg);
     }
 
