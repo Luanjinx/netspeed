@@ -20,8 +20,11 @@
                 grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
             }
         }
+        .settings-hub-card {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
         .settings-hub-card:hover {
-            border-color: rgba(0, 224, 126, 0.4) !important;
+            border-color: rgba(0, 224, 126, 0.45) !important;
             transform: translateY(-2px);
             box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.6), 0 0 14px rgba(0, 224, 126, 0.12);
         }

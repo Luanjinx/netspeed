@@ -24,6 +24,7 @@ use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
+use Filament\Schemas\Components\View;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -130,183 +131,7 @@ class AppSettings extends Page implements HasForms
                         Tab::make('Integrasi API (Link & Key)')
                             ->icon('heroicon-o-key')
                             ->schema([
-                                Grid::make(['default' => 1, 'lg' => 2])->schema([
-                                    // 1. WhatsApp Gateway
-                                    Section::make('API WhatsApp Gateway (Notifikasi Tagihan & Voucher)')
-                                        ->description('Konfigurasi link gateway dan API key pengiriman notifikasi WhatsApp ke pelanggan')
-                                        ->icon('heroicon-o-chat-bubble-left-right')
-                                        ->schema([
-                                            TextInput::make('whatsapp_gateway_url')
-                                                ->label('Link URL Gateway WhatsApp (API Endpoint)')
-                                                ->placeholder('cth: https://api.fonnte.com/send')
-                                                ->helperText('Contoh Fonnte: https://api.fonnte.com/send | Wablas: https://solo.wablas.com/api/send-message')
-                                                ->required(),
-
-                                            TextInput::make('whatsapp_api_key')
-                                                ->label('API Key / Token WhatsApp')
-                                                ->placeholder('Masukkan token autentikasi API')
-                                                ->password()
-                                                ->revealable()
-                                                ->helperText('Token API rahasia dari akun penyedia WhatsApp Gateway Anda'),
-
-                                            TextInput::make('whatsapp_sender_number')
-                                                ->label('Nomor WhatsApp Pengirim (Opsional)')
-                                                ->placeholder('cth: 081234567890'),
-                                        ]),
-
-                                    // 1b. Telegram Bot API
-                                    Section::make('API Bot Telegram (Notifikasi NOC & Bot Interaktif)')
-                                        ->description('Pengaturan token bot Telegram untuk monitoring operasional, alert router, dan notifikasi tiket/pembayaran.')
-                                        ->icon('heroicon-o-paper-airplane')
-                                        ->schema([
-                                            TextInput::make('telegram_bot_token')
-                                                ->label('Telegram Bot Token (HTTP API)')
-                                                ->placeholder('123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ')
-                                                ->password()
-                                                ->revealable()
-                                                ->helperText('Dapatkan dari @BotFather di Telegram'),
-
-                                            TextInput::make('telegram_admin_chat_id')
-                                                ->label('Chat ID Admin / Grup NOC')
-                                                ->placeholder('cth: 123456789 atau -100123456789')
-                                                ->helperText('ID penerima alert notifikasi sistem (Ketik /id di bot)'),
-
-                                            Toggle::make('telegram_bot_enabled')
-                                                ->label('Aktifkan Notifikasi Bot Telegram')
-                                                ->default(true),
-
-                                            Placeholder::make('telegram_console_link')
-                                                ->label('Alat Manajemen Bot Telegram')
-                                                ->content(new HtmlString('<div class="pt-1"><a href="'.url('/admin/telegram-bot').'" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#1a1e1c] text-[#00e07e] border border-[#232826] hover:bg-[#00e07e] hover:text-[#06261a] transition-all"><span>Buka Konsol & Log Interaktif Bot Telegram &rarr;</span></a></div>')),
-                                        ]),
-
-                                    // 2. Payment Gateway & Webhook
-                                    Section::make('API Payment Gateway & Webhook Pembayaran Otomatis')
-                                        ->description('Pengaturan koneksi API ke Tripay, Midtrans, CekMutasi, atau Moota')
-                                        ->icon('heroicon-o-credit-card')
-                                        ->schema([
-                                            Select::make('payment_gateway_provider')
-                                                ->label('Penyedia / Metode Payment Gateway')
-                                                ->options([
-                                                    'qris_manual' => 'QRIS Statis to Dinamis (Bawaan - Tanpa Potongan MDR)',
-                                                    'tripay' => 'Tripay (QRIS Dinamis, Virtual Account BCA/Mandiri/BRI, Alfamart)',
-                                                    'midtrans' => 'Midtrans (GoPay, QRIS, Virtual Account)',
-                                                    'xendit' => 'Xendit',
-                                                    'cekmutasi' => 'CekMutasi (Deteksi Mutasi Rekening Otomatis)',
-                                                    'moota' => 'Moota (Auto Cek Mutasi Bank)',
-                                                ])
-                                                ->default('qris_manual')
-                                                ->required(),
-
-                                            TextInput::make('payment_gateway_api_url')
-                                                ->label('Link URL Endpoint API Payment Gateway')
-                                                ->placeholder('cth: https://tripay.co.id/api/ atau https://api.midtrans.com/'),
-
-                                            TextInput::make('payment_gateway_server_key')
-                                                ->label('API Server Key / Private Key')
-                                                ->placeholder('Server Key dari dashboard gateway')
-                                                ->password()
-                                                ->revealable(),
-
-                                            Grid::make(2)->schema([
-                                                TextInput::make('payment_gateway_client_key')
-                                                    ->label('Client Key (Opsional)')
-                                                    ->placeholder('Client Key publik'),
-
-                                                TextInput::make('payment_gateway_merchant_code')
-                                                    ->label('Kode Toko / Merchant')
-                                                    ->placeholder('cth: T12345 / Merchant ID'),
-                                            ]),
-
-                                            TextInput::make('payment_webhook_url')
-                                                ->label('Webhook Callback URL')
-                                                ->helperText('Salin URL ini ke Dashboard Payment Gateway untuk auto-konfirmasi pembayaran.')
-                                                ->readOnly()
-                                                ->copyable(),
-                                        ]),
-
-                                    // 3. Mobile Flutter & STB Client API
-                                    Section::make('API Aplikasi Mobile Flutter & STB Android')
-                                        ->description('Base URL dan kunci otorisasi backend untuk aplikasi mobile pelanggan / teknisi')
-                                        ->icon('heroicon-o-device-phone-mobile')
-                                        ->schema([
-                                            TextInput::make('app_api_base_url')
-                                                ->label('Link Base API Backend (Untuk Flutter / STB)')
-                                                ->helperText('Tautan ini diisikan ke variabel baseUrl di aplikasi Flutter / STB Anda')
-                                                ->readOnly()
-                                                ->copyable(),
-
-                                            TextInput::make('app_api_key')
-                                                ->label('App API Secret Key')
-                                                ->helperText('Kunci rahasia untuk otorisasi header request aplikasi mobile ke backend')
-                                                ->readOnly()
-                                                ->copyable(),
-
-                                            TextInput::make('fcm_server_key')
-                                                ->label('Firebase Cloud Messaging (FCM) Server Key')
-                                                ->placeholder('Server Key Push Notification')
-                                                ->password()
-                                                ->revealable()
-                                                ->helperText('Dapatkan dari Firebase Console > Project Settings > Cloud Messaging'),
-
-                                            Grid::make(2)->schema([
-                                                TextInput::make('onesignal_app_id')
-                                                    ->label('OneSignal App ID')
-                                                    ->placeholder('App ID OneSignal'),
-
-                                                TextInput::make('onesignal_rest_api_key')
-                                                    ->label('OneSignal REST API Key')
-                                                    ->placeholder('REST API Key')
-                                                    ->password()
-                                                    ->revealable(),
-                                            ]),
-
-                                            Placeholder::make('onesignal_console_link')
-                                                ->label('Alat Push Notifikasi')
-                                                ->content(new HtmlString('<div class="pt-1"><a href="'.url('/admin/onesignal').'" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#1a1e1c] text-[#00e07e] border border-[#232826] hover:bg-[#00e07e] hover:text-[#06261a] transition-all"><span>Buka Hub Broadcast Push Notifikasi OneSignal &rarr;</span></a></div>')),
-                                        ]),
-
-                                    // 4. TR-069 GenieACS API
-                                    Section::make('API TR-069 GenieACS (Modem ONT Pelanggan)')
-                                        ->description('Koneksi ke GenieACS NBI untuk cek redaman optik, status ONT, dan reboot modem')
-                                        ->icon('heroicon-o-signal')
-                                        ->schema([
-                                            TextInput::make('genieacs_api_url')
-                                                ->label('Link URL Server GenieACS NBI')
-                                                ->placeholder('cth: http://192.168.2.1:7557')
-                                                ->helperText('Default port REST API NBI GenieACS adalah 7557'),
-
-                                            TextInput::make('genieacs_auth_token')
-                                                ->label('API Auth Token GenieACS')
-                                                ->placeholder('Bearer Token (Opsional)')
-                                                ->password()
-                                                ->revealable(),
-
-                                            Grid::make(2)->schema([
-                                                TextInput::make('genieacs_username')
-                                                    ->label('Username Basic Auth (Opsional)')
-                                                    ->placeholder('cth: admin'),
-
-                                                TextInput::make('genieacs_password')
-                                                    ->label('Password Basic Auth (Opsional)')
-                                                    ->password()
-                                                    ->revealable(),
-                                            ]),
-                                        ]),
-
-                                    // 5. Google Maps API
-                                    Section::make('API Peta & Geocoding')
-                                        ->description('Google Maps Javascript API Key untuk fitur satelit hybrid dan geocoding')
-                                        ->icon('heroicon-o-map')
-                                        ->schema([
-                                            TextInput::make('google_maps_api_key')
-                                                ->label('Google Maps API Key (Opsional)')
-                                                ->placeholder('AIzaSy...')
-                                                ->password()
-                                                ->revealable()
-                                                ->helperText('Jika kosong, sistem secara otomatis menggunakan OpenStreetMap & Google Tile hybrid gratis bawaan.'),
-                                        ]),
-                                ]),
+                                View::make('filament.pages.settings.api-cards'),
                             ]),
 
                         // TAB 2: PROFIL PERUSAHAAN & TITIK PETA
@@ -590,42 +415,332 @@ class AppSettings extends Page implements HasForms
         ];
     }
 
+    public function configureWhatsAppAction(): Action
+    {
+        return Action::make('configureWhatsApp')
+            ->label('Pengaturan WhatsApp Gateway')
+            ->icon('heroicon-o-chat-bubble-left-right')
+            ->modalHeading('Pengaturan API WhatsApp Gateway')
+            ->modalDescription('Konfigurasi link URL gateway dan API key pengiriman notifikasi WhatsApp ke pelanggan.')
+            ->modalSubmitActionLabel('Simpan WhatsApp Gateway')
+            ->form([
+                TextInput::make('whatsapp_gateway_url')
+                    ->label('Link URL Gateway WhatsApp (API Endpoint)')
+                    ->placeholder('cth: https://api.fonnte.com/send')
+                    ->default(fn () => IspSetting::get('whatsapp_gateway_url', 'https://api.fonnte.com/send'))
+                    ->required(),
+                TextInput::make('whatsapp_api_key')
+                    ->label('API Key / Token WhatsApp')
+                    ->placeholder('Masukkan token autentikasi API')
+                    ->default(fn () => IspSetting::get('whatsapp_api_key', ''))
+                    ->password()
+                    ->revealable()
+                    ->helperText('Token API rahasia dari akun penyedia WhatsApp Gateway Anda'),
+                TextInput::make('whatsapp_sender_number')
+                    ->label('Nomor WhatsApp Pengirim (Opsional)')
+                    ->placeholder('cth: 081234567890')
+                    ->default(fn () => IspSetting::get('whatsapp_sender_number', '')),
+            ])
+            ->action(function (array $data): void {
+                IspSetting::set('whatsapp_gateway_url', trim($data['whatsapp_gateway_url'] ?? ''));
+                IspSetting::set('whatsapp_api_key', trim($data['whatsapp_api_key'] ?? ''));
+                IspSetting::set('whatsapp_sender_number', trim($data['whatsapp_sender_number'] ?? ''));
+                $this->data['whatsapp_gateway_url'] = $data['whatsapp_gateway_url'] ?? '';
+                $this->data['whatsapp_api_key'] = $data['whatsapp_api_key'] ?? '';
+                $this->data['whatsapp_sender_number'] = $data['whatsapp_sender_number'] ?? '';
+                Notification::make()->title('Pengaturan WhatsApp Berhasil Disimpan')->success()->send();
+            });
+    }
+
+    public function configureTelegramAction(): Action
+    {
+        return Action::make('configureTelegram')
+            ->label('Pengaturan Bot Telegram')
+            ->icon('heroicon-o-paper-airplane')
+            ->modalHeading('Pengaturan API Bot Telegram NOC')
+            ->modalDescription('Token Bot HTTP API dan Chat ID alert operasional untuk notifikasi tiket, router offline & pembayaran.')
+            ->modalSubmitActionLabel('Simpan Bot Telegram')
+            ->form([
+                TextInput::make('telegram_bot_token')
+                    ->label('Telegram Bot Token (HTTP API)')
+                    ->placeholder('123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ')
+                    ->default(fn () => IspSetting::get('telegram_bot_token', ''))
+                    ->password()
+                    ->revealable()
+                    ->helperText('Dapatkan dari @BotFather di Telegram'),
+                TextInput::make('telegram_admin_chat_id')
+                    ->label('Chat ID Admin / Grup NOC')
+                    ->placeholder('cth: 123456789 atau -100123456789')
+                    ->default(fn () => IspSetting::get('telegram_admin_chat_id', ''))
+                    ->helperText('ID penerima alert notifikasi sistem (Ketik /id di bot)'),
+                Toggle::make('telegram_bot_enabled')
+                    ->label('Aktifkan Notifikasi Bot Telegram')
+                    ->default(fn () => IspSetting::get('telegram_bot_enabled', '1') === '1'),
+            ])
+            ->action(function (array $data): void {
+                IspSetting::set('telegram_bot_token', trim($data['telegram_bot_token'] ?? ''));
+                IspSetting::set('telegram_admin_chat_id', trim($data['telegram_admin_chat_id'] ?? ''));
+                IspSetting::set('telegram_bot_enabled', ! empty($data['telegram_bot_enabled']) ? '1' : '0');
+                $this->data['telegram_bot_token'] = $data['telegram_bot_token'] ?? '';
+                $this->data['telegram_admin_chat_id'] = $data['telegram_admin_chat_id'] ?? '';
+                $this->data['telegram_bot_enabled'] = ! empty($data['telegram_bot_enabled']);
+                Notification::make()->title('Pengaturan Bot Telegram Berhasil Disimpan')->success()->send();
+            });
+    }
+
+    public function configurePaymentAction(): Action
+    {
+        return Action::make('configurePayment')
+            ->label('Pengaturan Payment Gateway')
+            ->icon('heroicon-o-credit-card')
+            ->modalHeading('Pengaturan API Payment Gateway & Webhook')
+            ->modalDescription('Koneksi gateway Tripay, Midtrans, CekMutasi, Moota, atau QRIS Otomatis untuk pelunasan tagihan.')
+            ->modalSubmitActionLabel('Simpan Payment Gateway')
+            ->form([
+                Select::make('payment_gateway_provider')
+                    ->label('Penyedia / Metode Payment Gateway')
+                    ->options([
+                        'qris_manual' => 'QRIS Statis to Dinamis (Bawaan - Tanpa Potongan MDR)',
+                        'tripay' => 'Tripay (QRIS Dinamis, Virtual Account BCA/Mandiri/BRI, Alfamart)',
+                        'midtrans' => 'Midtrans (GoPay, QRIS, Virtual Account)',
+                        'xendit' => 'Xendit',
+                        'cekmutasi' => 'CekMutasi (Deteksi Mutasi Rekening Otomatis)',
+                        'moota' => 'Moota (Auto Cek Mutasi Bank)',
+                    ])
+                    ->default(fn () => IspSetting::get('payment_gateway_provider', 'qris_manual'))
+                    ->required(),
+                TextInput::make('payment_gateway_api_url')
+                    ->label('Link URL Endpoint API Payment Gateway')
+                    ->placeholder('cth: https://tripay.co.id/api/ atau https://api.midtrans.com/')
+                    ->default(fn () => IspSetting::get('payment_gateway_api_url', '')),
+                TextInput::make('payment_gateway_server_key')
+                    ->label('API Server Key / Private Key')
+                    ->placeholder('Server Key dari dashboard gateway')
+                    ->default(fn () => IspSetting::get('payment_gateway_server_key', ''))
+                    ->password()
+                    ->revealable(),
+                TextInput::make('payment_gateway_client_key')
+                    ->label('Client Key (Opsional)')
+                    ->placeholder('Client Key publik')
+                    ->default(fn () => IspSetting::get('payment_gateway_client_key', '')),
+                TextInput::make('payment_gateway_merchant_code')
+                    ->label('Kode Toko / Merchant')
+                    ->placeholder('cth: T12345 / Merchant ID')
+                    ->default(fn () => IspSetting::get('payment_gateway_merchant_code', '')),
+                Placeholder::make('payment_webhook_display')
+                    ->label('Webhook Callback URL (Salin ke Dashboard Gateway)')
+                    ->content(fn () => new HtmlString('<code class="text-xs text-[#00e07e] bg-[#131615] px-2 py-1 rounded border border-[#232826] select-all">'.url('/api/payment/webhook').'</code>')),
+            ])
+            ->action(function (array $data): void {
+                IspSetting::set('payment_gateway_provider', $data['payment_gateway_provider'] ?? 'qris_manual');
+                IspSetting::set('payment_gateway_api_url', trim($data['payment_gateway_api_url'] ?? ''));
+                IspSetting::set('payment_gateway_server_key', trim($data['payment_gateway_server_key'] ?? ''));
+                IspSetting::set('payment_gateway_client_key', trim($data['payment_gateway_client_key'] ?? ''));
+                IspSetting::set('payment_gateway_merchant_code', trim($data['payment_gateway_merchant_code'] ?? ''));
+                $this->data['payment_gateway_provider'] = $data['payment_gateway_provider'] ?? 'qris_manual';
+                $this->data['payment_gateway_api_url'] = $data['payment_gateway_api_url'] ?? '';
+                $this->data['payment_gateway_server_key'] = $data['payment_gateway_server_key'] ?? '';
+                $this->data['payment_gateway_client_key'] = $data['payment_gateway_client_key'] ?? '';
+                $this->data['payment_gateway_merchant_code'] = $data['payment_gateway_merchant_code'] ?? '';
+                Notification::make()->title('Pengaturan Payment Gateway Berhasil Disimpan')->success()->send();
+            });
+    }
+
+    public function configureMobileAction(): Action
+    {
+        return Action::make('configureMobile')
+            ->label('Pengaturan API Mobile & STB')
+            ->icon('heroicon-o-device-phone-mobile')
+            ->modalHeading('Pengaturan API Aplikasi Mobile & STB Android')
+            ->modalDescription('Integrasi API backend, kunci rahasia aplikasi pelanggan, dan push notification (FCM / OneSignal).')
+            ->modalSubmitActionLabel('Simpan Pengaturan Mobile')
+            ->form([
+                TextInput::make('app_api_base_url')
+                    ->label('Link Base API Backend (Untuk Flutter / STB)')
+                    ->default(fn () => IspSetting::get('app_api_base_url', url('/api')))
+                    ->readOnly()
+                    ->helperText('Tautan ini diisikan ke variabel baseUrl di aplikasi Flutter / STB Anda'),
+                TextInput::make('app_api_key')
+                    ->label('App API Secret Key')
+                    ->default(fn () => IspSetting::get('app_api_key', 'isp_secret_default'))
+                    ->readOnly()
+                    ->helperText('Kunci rahasia untuk otorisasi header request aplikasi mobile ke backend'),
+                TextInput::make('fcm_server_key')
+                    ->label('Firebase Cloud Messaging (FCM) Server Key')
+                    ->placeholder('Server Key Push Notification')
+                    ->default(fn () => IspSetting::get('fcm_server_key', ''))
+                    ->password()
+                    ->revealable()
+                    ->helperText('Dapatkan dari Firebase Console > Project Settings > Cloud Messaging'),
+                TextInput::make('onesignal_app_id')
+                    ->label('OneSignal App ID')
+                    ->placeholder('App ID OneSignal')
+                    ->default(fn () => IspSetting::get('onesignal_app_id', '')),
+                TextInput::make('onesignal_rest_api_key')
+                    ->label('OneSignal REST API Key')
+                    ->placeholder('REST API Key')
+                    ->default(fn () => IspSetting::get('onesignal_rest_api_key', ''))
+                    ->password()
+                    ->revealable(),
+            ])
+            ->action(function (array $data): void {
+                IspSetting::set('app_api_base_url', trim($data['app_api_base_url'] ?? ''));
+                IspSetting::set('app_api_key', trim($data['app_api_key'] ?? ''));
+                IspSetting::set('fcm_server_key', trim($data['fcm_server_key'] ?? ''));
+                IspSetting::set('onesignal_app_id', trim($data['onesignal_app_id'] ?? ''));
+                IspSetting::set('onesignal_rest_api_key', trim($data['onesignal_rest_api_key'] ?? ''));
+                $this->data['app_api_base_url'] = $data['app_api_base_url'] ?? '';
+                $this->data['app_api_key'] = $data['app_api_key'] ?? '';
+                $this->data['fcm_server_key'] = $data['fcm_server_key'] ?? '';
+                $this->data['onesignal_app_id'] = $data['onesignal_app_id'] ?? '';
+                $this->data['onesignal_rest_api_key'] = $data['onesignal_rest_api_key'] ?? '';
+                Notification::make()->title('Pengaturan API Mobile & Push Notifikasi Berhasil Disimpan')->success()->send();
+            });
+    }
+
+    public function configureGenieacsAction(): Action
+    {
+        return Action::make('configureGenieacs')
+            ->label('Pengaturan GenieACS TR-069')
+            ->icon('heroicon-o-signal')
+            ->modalHeading('Pengaturan API TR-069 GenieACS (Modem ONT)')
+            ->modalDescription('Koneksi REST API NBI GenieACS untuk deteksi redaman optik, status ONT, dan reboot modem.')
+            ->modalSubmitActionLabel('Simpan Pengaturan GenieACS')
+            ->form([
+                TextInput::make('genieacs_api_url')
+                    ->label('Link URL Server GenieACS NBI')
+                    ->placeholder('cth: http://192.168.2.1:7557')
+                    ->default(fn () => IspSetting::get('genieacs_api_url', 'http://192.168.2.1:7557'))
+                    ->helperText('Default port REST API NBI GenieACS adalah 7557')
+                    ->required(),
+                TextInput::make('genieacs_auth_token')
+                    ->label('API Auth Token GenieACS')
+                    ->placeholder('Bearer Token (Opsional)')
+                    ->default(fn () => IspSetting::get('genieacs_auth_token', ''))
+                    ->password()
+                    ->revealable(),
+                TextInput::make('genieacs_username')
+                    ->label('Username Basic Auth (Opsional)')
+                    ->placeholder('cth: admin')
+                    ->default(fn () => IspSetting::get('genieacs_username', '')),
+                TextInput::make('genieacs_password')
+                    ->label('Password Basic Auth (Opsional)')
+                    ->placeholder('Password')
+                    ->default(fn () => IspSetting::get('genieacs_password', ''))
+                    ->password()
+                    ->revealable(),
+            ])
+            ->action(function (array $data): void {
+                IspSetting::set('genieacs_api_url', trim($data['genieacs_api_url'] ?? ''));
+                IspSetting::set('genieacs_auth_token', trim($data['genieacs_auth_token'] ?? ''));
+                IspSetting::set('genieacs_username', trim($data['genieacs_username'] ?? ''));
+                IspSetting::set('genieacs_password', trim($data['genieacs_password'] ?? ''));
+                $this->data['genieacs_api_url'] = $data['genieacs_api_url'] ?? '';
+                $this->data['genieacs_auth_token'] = $data['genieacs_auth_token'] ?? '';
+                $this->data['genieacs_username'] = $data['genieacs_username'] ?? '';
+                $this->data['genieacs_password'] = $data['genieacs_password'] ?? '';
+                Notification::make()->title('Pengaturan GenieACS Berhasil Disimpan')->success()->send();
+            });
+    }
+
+    public function configureMapsAction(): Action
+    {
+        return Action::make('configureMaps')
+            ->label('Pengaturan Peta & Geocoding')
+            ->icon('heroicon-o-map')
+            ->modalHeading('Pengaturan API Peta & Geocoding')
+            ->modalDescription('Google Maps Javascript API Key dan titik koordinat kantor pusat untuk navigasi peta teknisi.')
+            ->modalSubmitActionLabel('Simpan Pengaturan Peta')
+            ->form([
+                TextInput::make('google_maps_api_key')
+                    ->label('Google Maps API Key (Opsional)')
+                    ->placeholder('AIzaSy...')
+                    ->default(fn () => IspSetting::get('google_maps_api_key', ''))
+                    ->password()
+                    ->revealable()
+                    ->helperText('Jika kosong, sistem secara otomatis menggunakan OpenStreetMap & Google Tile hybrid gratis bawaan.'),
+                TextInput::make('office_lat')
+                    ->label('Latitude Kantor Pusat')
+                    ->placeholder('cth: -6.2087634')
+                    ->default(fn () => IspSetting::get('office_lat', '-6.2087634')),
+                TextInput::make('office_lng')
+                    ->label('Longitude Kantor Pusat')
+                    ->placeholder('cth: 106.845599')
+                    ->default(fn () => IspSetting::get('office_lng', '106.845599')),
+            ])
+            ->action(function (array $data): void {
+                IspSetting::set('google_maps_api_key', trim($data['google_maps_api_key'] ?? ''));
+                if (! empty($data['office_lat'])) {
+                    IspSetting::set('office_lat', trim($data['office_lat']));
+                }
+                if (! empty($data['office_lng'])) {
+                    IspSetting::set('office_lng', trim($data['office_lng']));
+                }
+                $this->data['google_maps_api_key'] = $data['google_maps_api_key'] ?? '';
+                $this->data['office_lat'] = $data['office_lat'] ?? '';
+                $this->data['office_lng'] = $data['office_lng'] ?? '';
+
+                $jsonPath = config_path('settings.json');
+                $json = [
+                    'office_name' => IspSetting::get('company_name', 'Kantor Pusat ISP'),
+                    'office_lat' => (float) ($data['office_lat'] ?? -6.2087634),
+                    'office_lng' => (float) ($data['office_lng'] ?? 106.845599),
+                    'default_zoom' => 16,
+                ];
+                @file_put_contents($jsonPath, json_encode($json, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+                Notification::make()->title('Pengaturan Peta Berhasil Disimpan')->success()->send();
+            });
+    }
+
     public function save(): void
     {
         $state = $this->form->getState();
 
         // 1. WhatsApp Gateway
-        IspSetting::set('whatsapp_gateway_url', trim($state['whatsapp_gateway_url'] ?? ''));
-        IspSetting::set('whatsapp_api_key', trim($state['whatsapp_api_key'] ?? ''));
-        IspSetting::set('whatsapp_sender_number', trim($state['whatsapp_sender_number'] ?? ''));
+        if (array_key_exists('whatsapp_gateway_url', $state)) {
+            IspSetting::set('whatsapp_gateway_url', trim($state['whatsapp_gateway_url'] ?? ''));
+            IspSetting::set('whatsapp_api_key', trim($state['whatsapp_api_key'] ?? ''));
+            IspSetting::set('whatsapp_sender_number', trim($state['whatsapp_sender_number'] ?? ''));
+        }
 
         // 1b. Telegram Bot
-        IspSetting::set('telegram_bot_token', trim($state['telegram_bot_token'] ?? ''));
-        IspSetting::set('telegram_admin_chat_id', trim($state['telegram_admin_chat_id'] ?? ''));
-        IspSetting::set('telegram_bot_enabled', ! empty($state['telegram_bot_enabled']) ? '1' : '0');
+        if (array_key_exists('telegram_bot_token', $state)) {
+            IspSetting::set('telegram_bot_token', trim($state['telegram_bot_token'] ?? ''));
+            IspSetting::set('telegram_admin_chat_id', trim($state['telegram_admin_chat_id'] ?? ''));
+            IspSetting::set('telegram_bot_enabled', ! empty($state['telegram_bot_enabled']) ? '1' : '0');
+        }
 
         // 2. Payment Gateway
-        IspSetting::set('payment_gateway_provider', $state['payment_gateway_provider'] ?? 'qris_manual');
-        IspSetting::set('payment_gateway_api_url', trim($state['payment_gateway_api_url'] ?? ''));
-        IspSetting::set('payment_gateway_server_key', trim($state['payment_gateway_server_key'] ?? ''));
-        IspSetting::set('payment_gateway_client_key', trim($state['payment_gateway_client_key'] ?? ''));
-        IspSetting::set('payment_gateway_merchant_code', trim($state['payment_gateway_merchant_code'] ?? ''));
+        if (array_key_exists('payment_gateway_provider', $state)) {
+            IspSetting::set('payment_gateway_provider', $state['payment_gateway_provider'] ?? 'qris_manual');
+            IspSetting::set('payment_gateway_api_url', trim($state['payment_gateway_api_url'] ?? ''));
+            IspSetting::set('payment_gateway_server_key', trim($state['payment_gateway_server_key'] ?? ''));
+            IspSetting::set('payment_gateway_client_key', trim($state['payment_gateway_client_key'] ?? ''));
+            IspSetting::set('payment_gateway_merchant_code', trim($state['payment_gateway_merchant_code'] ?? ''));
+        }
 
         // 3. Mobile Flutter API
-        IspSetting::set('app_api_base_url', trim($state['app_api_base_url'] ?? ''));
-        IspSetting::set('app_api_key', trim($state['app_api_key'] ?? ''));
-        IspSetting::set('fcm_server_key', trim($state['fcm_server_key'] ?? ''));
-        IspSetting::set('onesignal_app_id', trim($state['onesignal_app_id'] ?? ''));
-        IspSetting::set('onesignal_rest_api_key', trim($state['onesignal_rest_api_key'] ?? ''));
+        if (array_key_exists('app_api_base_url', $state)) {
+            IspSetting::set('app_api_base_url', trim($state['app_api_base_url'] ?? ''));
+            IspSetting::set('app_api_key', trim($state['app_api_key'] ?? ''));
+            IspSetting::set('fcm_server_key', trim($state['fcm_server_key'] ?? ''));
+            IspSetting::set('onesignal_app_id', trim($state['onesignal_app_id'] ?? ''));
+            IspSetting::set('onesignal_rest_api_key', trim($state['onesignal_rest_api_key'] ?? ''));
+        }
 
         // 4. GenieACS API
-        IspSetting::set('genieacs_api_url', trim($state['genieacs_api_url'] ?? ''));
-        IspSetting::set('genieacs_auth_token', trim($state['genieacs_auth_token'] ?? ''));
-        IspSetting::set('genieacs_username', trim($state['genieacs_username'] ?? ''));
-        IspSetting::set('genieacs_password', trim($state['genieacs_password'] ?? ''));
+        if (array_key_exists('genieacs_api_url', $state)) {
+            IspSetting::set('genieacs_api_url', trim($state['genieacs_api_url'] ?? ''));
+            IspSetting::set('genieacs_auth_token', trim($state['genieacs_auth_token'] ?? ''));
+            IspSetting::set('genieacs_username', trim($state['genieacs_username'] ?? ''));
+            IspSetting::set('genieacs_password', trim($state['genieacs_password'] ?? ''));
+        }
 
         // 5. Maps API
-        IspSetting::set('google_maps_api_key', trim($state['google_maps_api_key'] ?? ''));
+        if (array_key_exists('google_maps_api_key', $state)) {
+            IspSetting::set('google_maps_api_key', trim($state['google_maps_api_key'] ?? ''));
+        }
 
         // 6. Company Profile
         IspSetting::set('company_name', trim($state['company_name'] ?? ''));
