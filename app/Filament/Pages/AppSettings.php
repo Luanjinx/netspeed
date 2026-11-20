@@ -8,7 +8,6 @@ use App\Services\Notification\WhatsAppService;
 use App\Services\Payment\QrisService;
 use App\Services\Router\MikrotikApiService;
 use BackedEnum;
-use Exception;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Placeholder;
@@ -24,7 +23,6 @@ use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Components\View;
 use Filament\Schemas\Schema;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\HtmlString;
@@ -165,38 +163,6 @@ class AppSettings extends Page implements HasForms
                         Notification::make()->title('WhatsApp Berhasil Terkirim!')->success()->send();
                     } else {
                         Notification::make()->title('Gagal Kirim WhatsApp')->body($res['message'] ?? 'Error')->danger()->send();
-                    }
-                }),
-
-            Action::make('testGenieacs')
-                ->label('Test GenieACS')
-                ->icon('heroicon-o-signal')
-                ->color('info')
-                ->action(function () {
-                    $url = IspSetting::get('genieacs_api_url', '');
-                    if (empty($url)) {
-                        Notification::make()->title('URL GenieACS kosong')->warning()->send();
-
-                        return;
-                    }
-                    try {
-                        $req = Http::timeout(5)->baseUrl(rtrim($url, '/'));
-                        $token = IspSetting::get('genieacs_auth_token', '');
-                        $user = IspSetting::get('genieacs_username', '');
-                        $pass = IspSetting::get('genieacs_password', '');
-                        if (! empty($token)) {
-                            $req->withToken($token);
-                        } elseif (! empty($user) && ! empty($pass)) {
-                            $req->withBasicAuth($user, $pass);
-                        }
-                        $res = $req->get('/devices', ['limit' => 1]);
-                        if ($res->successful()) {
-                            Notification::make()->title('Koneksi GenieACS Sukses (HTTP '.$res->status().')')->success()->send();
-                        } else {
-                            Notification::make()->title('GenieACS Error: HTTP '.$res->status())->warning()->send();
-                        }
-                    } catch (Exception $e) {
-                        Notification::make()->title('Gagal terhubung ke GenieACS')->body($e->getMessage())->danger()->send();
                     }
                 }),
 
@@ -400,51 +366,6 @@ class AppSettings extends Page implements HasForms
                 $this->data['onesignal_app_id'] = $data['onesignal_app_id'] ?? '';
                 $this->data['onesignal_rest_api_key'] = $data['onesignal_rest_api_key'] ?? '';
                 Notification::make()->title('Pengaturan API Mobile & Push Notifikasi Berhasil Disimpan')->success()->send();
-            });
-    }
-
-    public function configureGenieacsAction(): Action
-    {
-        return Action::make('configureGenieacs')
-            ->label('Pengaturan GenieACS TR-069')
-            ->icon('heroicon-o-signal')
-            ->modalHeading('Pengaturan API TR-069 GenieACS (Modem ONT)')
-            ->modalDescription('Koneksi REST API NBI GenieACS untuk deteksi redaman optik, status ONT, dan reboot modem.')
-            ->modalSubmitActionLabel('Simpan Pengaturan GenieACS')
-            ->form([
-                TextInput::make('genieacs_api_url')
-                    ->label('Link URL Server GenieACS NBI')
-                    ->placeholder('cth: http://192.168.2.1:7557')
-                    ->default(fn () => IspSetting::get('genieacs_api_url', 'http://192.168.2.1:7557'))
-                    ->helperText('Default port REST API NBI GenieACS adalah 7557')
-                    ->required(),
-                TextInput::make('genieacs_auth_token')
-                    ->label('API Auth Token GenieACS')
-                    ->placeholder('Bearer Token (Opsional)')
-                    ->default(fn () => IspSetting::get('genieacs_auth_token', ''))
-                    ->password()
-                    ->revealable(),
-                TextInput::make('genieacs_username')
-                    ->label('Username Basic Auth (Opsional)')
-                    ->placeholder('cth: admin')
-                    ->default(fn () => IspSetting::get('genieacs_username', '')),
-                TextInput::make('genieacs_password')
-                    ->label('Password Basic Auth (Opsional)')
-                    ->placeholder('Password')
-                    ->default(fn () => IspSetting::get('genieacs_password', ''))
-                    ->password()
-                    ->revealable(),
-            ])
-            ->action(function (array $data): void {
-                IspSetting::set('genieacs_api_url', trim($data['genieacs_api_url'] ?? ''));
-                IspSetting::set('genieacs_auth_token', trim($data['genieacs_auth_token'] ?? ''));
-                IspSetting::set('genieacs_username', trim($data['genieacs_username'] ?? ''));
-                IspSetting::set('genieacs_password', trim($data['genieacs_password'] ?? ''));
-                $this->data['genieacs_api_url'] = $data['genieacs_api_url'] ?? '';
-                $this->data['genieacs_auth_token'] = $data['genieacs_auth_token'] ?? '';
-                $this->data['genieacs_username'] = $data['genieacs_username'] ?? '';
-                $this->data['genieacs_password'] = $data['genieacs_password'] ?? '';
-                Notification::make()->title('Pengaturan GenieACS Berhasil Disimpan')->success()->send();
             });
     }
 
