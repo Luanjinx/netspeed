@@ -4,10 +4,15 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
+use App\Models\InternetPackage;
 use App\Models\User;
+use App\Models\WorkOrder;
+use App\Services\Notification\TelegramService;
+use App\Services\Notification\WhatsAppService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
@@ -112,6 +117,141 @@ class AuthController extends Controller
                 'customer' => $customer,
             ],
         ]);
+    }
+
+    /**
+     * Register a new customer from Flutter Mobile App.
+     * Automatically creates User, Customer (pending), and Work Order (SPK) for installation.
+     */
+    public function register(Request $request): JsonResponse
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'phone' => 'required|string|max:30',
+            'email' => 'nullable|email|max:255',
+            'password' => 'required|string|min:6',
+            'address' => 'required|string|max:1000',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
+            'package_id' => 'required|exists:internet_packages,id',
+            'notes' => 'nullable|string|max:1000',
+        ]);
+
+        $rawPhone = trim((string) $request->input('phone'));
+        $cleanPhone = preg_replace('/[^0-9]/', '', $rawPhone);
+        if (str_starts_with($cleanPhone, '0')) {
+            $cleanPhone = '62'.substr($cleanPhone, 1);
+        }
+
+        $phoneVariants = [$rawPhone, $cleanPhone, '0'.substr($cleanPhone, 2)];
+        if (Customer::whereIn('phone', $phoneVariants)->exists() || User::whereIn('phone', $phoneVariants)->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Nomor WhatsApp sudah terdaftar. Silakan login menggunakan nomor ini.',
+            ], 422);
+        }
+
+        if ($request->filled('email')) {
+            $email = trim((string) $request->input('email'));
+            if (User::where('email', $email)->exists() || Customer::where('email', $email)->exists()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Alamat email sudah terdaftar. Silakan gunakan email lain atau login.',
+                ], 422);
+            }
+        }
+
+        // Generate unique customer number
+        $monthPrefix = date('Ym');
+        $customerCount = Customer::whereYear('created_at', date('Y'))->whereMonth('created_at', date('m'))->count();
+        $counter = $customerCount + 1;
+        do {
+            $customerNumber = 'CUST-'.$monthPrefix.'-'.str_pad((string) $counter, 4, '0', STR_PAD_LEFT);
+            $counter++;
+        } while (Customer::where('customer_number', $customerNumber)->exists());
+
+        $passwordHash = Hash::make($request->input('password'));
+        $userEmail = $request->filled('email') ? trim((string) $request->input('email')) : "{$customerNumber}@customer.netspeed";
+
+        // Create User account
+        $user = User::create([
+            'name' => trim((string) $request->input('name')),
+            'email' => $userEmail,
+            'phone' => $cleanPhone,
+            'password' => $passwordHash,
+            'role' => 'customer',
+            'is_active' => true,
+        ]);
+
+        // Create Customer profile (Status: Pending)
+        $customer = Customer::create([
+            'customer_number' => $customerNumber,
+            'user_id' => $user->id,
+            'name' => trim((string) $request->input('name')),
+            'phone' => $cleanPhone,
+            'email' => $request->filled('email') ? trim((string) $request->input('email')) : null,
+            'password' => $passwordHash,
+            'address' => trim((string) $request->input('address')),
+            'latitude' => $request->input('latitude'),
+            'longitude' => $request->input('longitude'),
+            'package_id' => $request->input('package_id'),
+            'connection_type' => 'pppoe',
+            'status' => 'pending',
+            'registered_at' => now(),
+            'notes' => $request->input('notes'),
+        ]);
+
+        // Automatically create Surat Perintah Kerja (Work Order)
+        $package = InternetPackage::find($request->input('package_id'));
+        $workOrder = WorkOrder::create([
+            'type' => 'installation',
+            'customer_id' => $customer->id,
+            'technician_id' => null,
+            'title' => 'Pemasangan Baru - '.$customer->name,
+            'description' => "Pendaftaran Pasang Baru via Mobile App.\nPaket: ".($package?->name ?? '-')."\nAlamat: {$customer->address}\nCatatan: ".($customer->notes ?: '-'),
+            'status' => 'pending',
+            'scheduled_date' => now()->addDays(1),
+        ]);
+
+        // Send WhatsApp confirmation to Customer
+        try {
+            app(WhatsAppService::class)->sendNewRegistration($customer, $workOrder);
+        } catch (\Throwable $e) {
+            Log::warning('Gagal kirim WhatsApp registrasi baru: '.$e->getMessage());
+        }
+
+        // Send Telegram alert to Admin NOC
+        try {
+            app(TelegramService::class)->notifyNewRegistration($customer, $workOrder);
+        } catch (\Throwable $e) {
+            Log::warning('Gagal kirim Telegram registrasi baru: '.$e->getMessage());
+        }
+
+        // Generate Sanctum access token for instant session
+        $token = $user->createToken('customer-app')->plainTextToken;
+        $customer->load(['package']);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Pendaftaran berhasil! Tim teknisi kami akan segera menghubungi Anda.',
+            'data' => [
+                'token' => $token,
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'phone' => $user->phone,
+                    'role' => $user->role,
+                ],
+                'customer' => $customer,
+                'work_order' => [
+                    'order_number' => $workOrder->order_number,
+                    'status' => $workOrder->status,
+                    'title' => $workOrder->title,
+                    'scheduled_date' => $workOrder->scheduled_date?->format('Y-m-d'),
+                ],
+            ],
+        ], 201);
     }
 
     /**

@@ -6,6 +6,7 @@ use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\IspSetting;
 use App\Models\Payment;
+use App\Models\WorkOrder;
 use Exception;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -220,6 +221,34 @@ class WhatsAppService
             ."Kabar baik! Siklus baru pemakaian internet Anda telah dimulai. Kecepatan internet Anda telah *DIPULIHKAN PENUH* ke *{$normalSpeed}*.\n\n"
             ."Selamat menikmati kembali akses internet berkecepatan maksimal.\n\n"
             ."_{$ispName}_";
+
+        return $this->sendMessage($customer->phone, $msg);
+    }
+
+    /**
+     * Notification: Pendaftaran Pasang Baru (Surat Tugas / SPK Terbit).
+     */
+    public function sendNewRegistration(Customer $customer, WorkOrder $workOrder): array
+    {
+        if (empty($customer->phone)) {
+            return ['success' => false, 'message' => 'Nomor HP tidak valid'];
+        }
+
+        $ispName = IspSetting::get('company_name', 'NetSpeed ISP');
+        $packageName = $customer->package?->name ?? 'Paket Internet';
+        $price = $customer->package ? 'Rp '.number_format($customer->package->price, 0, ',', '.') : '-';
+
+        $msg = "*PENDAFTARAN PASANG BARU BERHASIL*\n"
+            ."Halo Bpk/Ibu *{$customer->name}*,\n\n"
+            ."Terima kasih telah memilih *{$ispName}*. Permohonan pemasangan baru Anda telah kami terima:\n\n"
+            ."• No. Pelanggan: *{$customer->customer_number}*\n"
+            ."• No. SPK/Tugas: *{$workOrder->order_number}*\n"
+            ."• Pilihan Paket: *{$packageName}* ({$price}/bln)\n"
+            ."• Alamat: *{$customer->address}*\n"
+            ."• Status: *Menunggu Penjadwalan Teknisi*\n\n"
+            ."Tim teknisi kami akan segera menghubungi Anda melalui nomor WhatsApp ini untuk konfirmasi jadwal survei & instalasi ke lokasi.\n\n"
+            ."Anda juga dapat memantau status pemasangan melalui aplikasi mobile *{$ispName}* menggunakan nomor WhatsApp atau ID Pelanggan Anda.\n\n"
+            ."Salam Hangat,\n_{$ispName}_";
 
         return $this->sendMessage($customer->phone, $msg);
     }

@@ -9,6 +9,7 @@ use App\Models\IspSetting;
 use App\Models\Payment;
 use App\Models\Router;
 use App\Models\SupportTicket;
+use App\Models\WorkOrder;
 use Exception;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -312,6 +313,37 @@ class TelegramService
         $buttons = [
             [
                 ['text' => '👤 Cek Pelanggan', 'callback_data' => 'cek_'.$customer->customer_number],
+            ],
+        ];
+
+        return $this->sendToAdmin($text, 'HTML', $buttons);
+    }
+
+    /**
+     * Notify Admin/NOC about a new customer registration from Mobile App.
+     */
+    public function notifyNewRegistration(Customer $customer, WorkOrder $workOrder): array
+    {
+        if (! $this->isEnabled()) {
+            return ['ok' => false, 'description' => 'Telegram bot dinonaktifkan.'];
+        }
+
+        $packageName = $customer->package?->name ?? '-';
+        $packagePrice = $customer->package ? 'Rp '.number_format($customer->package->price, 0, ',', '.') : '-';
+
+        $text = "🎉 <b>PENDAFTARAN PASANG BARU (PSB)</b>\n\n"
+            .'• No. Pelanggan: <code>'.htmlspecialchars($customer->customer_number)."</code>\n"
+            .'• No. SPK: <code>'.htmlspecialchars($workOrder->order_number)."</code>\n"
+            .'• Nama Calon: <b>'.htmlspecialchars($customer->name)."</b>\n"
+            .'• No. WhatsApp: <code>'.htmlspecialchars($customer->phone)."</code>\n"
+            .'• Pilihan Paket: <b>'.htmlspecialchars($packageName)."</b> ({$packagePrice})\n"
+            .'• Alamat: <i>'.htmlspecialchars($customer->address ?? '-')."</i>\n"
+            .($customer->latitude && $customer->longitude ? "• Koordinat: <code>{$customer->latitude}, {$customer->longitude}</code>\n" : '')
+            .'• Waktu: <b>'.now()->format('d/m/Y H:i').' WIB</b>';
+
+        $buttons = [
+            [
+                ['text' => '📋 Buka SPK di Panel', 'url' => url('/admin/work-orders')],
             ],
         ];
 

@@ -45,7 +45,8 @@ class WorkOrderForm
                                 ->options(Technician::where('is_active', true)->pluck('name', 'id'))
                                 ->searchable()
                                 ->preload()
-                                ->required(),
+                                ->nullable()
+                                ->placeholder('Belum ditugaskan (Pending Dispatch)'),
                         ]),
                         Grid::make(['default' => 1, 'sm' => 2])->schema([
                             Select::make('customer_id')

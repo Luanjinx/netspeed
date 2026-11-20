@@ -43,7 +43,8 @@ class WorkOrdersTable
                     ->label('Teknisi')
                     ->searchable()
                     ->badge()
-                    ->color('info'),
+                    ->placeholder('Belum Ditugaskan')
+                    ->color(fn ($state) => $state ? 'info' : 'gray'),
                 TextColumn::make('customer.name')
                     ->label('Pelanggan')
                     ->searchable()
