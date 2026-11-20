@@ -23,6 +23,7 @@ Route::prefix('install')->name('install.')->group(function () {
     Route::post('/step2', [InstallController::class, 'saveStep2'])->name('step2.save');
     Route::get('/step3', [InstallController::class, 'step3'])->name('step3');
     Route::post('/migrate', [InstallController::class, 'runMigrate'])->name('migrate');
+    Route::post('/migrate-direct', [InstallController::class, 'runMigrateDirect'])->name('migrate_direct');
     Route::get('/step4', [InstallController::class, 'step4'])->name('step4');
     Route::post('/step4', [InstallController::class, 'saveStep4'])->name('step4.save');
     Route::get('/step5', [InstallController::class, 'step5'])->name('step5');

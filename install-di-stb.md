@@ -81,11 +81,13 @@ Masuk ke MariaDB Console:
 sudo mysql -u root -p
 ```
 
-Jalankan perintah SQL berikut untuk membuat database dan user:
+Jalankan perintah SQL berikut untuk membuat database dan user (mendukung koneksi via socket `localhost` maupun TCP `127.0.0.1`):
 ```sql
-CREATE DATABASE isp_billing CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER 'isp_user'@'localhost' IDENTIFIED BY 'PasswordKuatISP123!';
+CREATE DATABASE IF NOT EXISTS isp_billing CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER IF NOT EXISTS 'isp_user'@'localhost' IDENTIFIED BY 'PasswordKuatISP123!';
+CREATE USER IF NOT EXISTS 'isp_user'@'127.0.0.1' IDENTIFIED BY 'PasswordKuatISP123!';
 GRANT ALL PRIVILEGES ON isp_billing.* TO 'isp_user'@'localhost';
+GRANT ALL PRIVILEGES ON isp_billing.* TO 'isp_user'@'127.0.0.1';
 FLUSH PRIVILEGES;
 EXIT;
 ```
@@ -209,6 +211,52 @@ sudo nginx -t
 sudo systemctl restart nginx
 sudo systemctl restart php8.3-fpm
 ```
+
+---
+
+## 🧙 Langkah 5B: Menjalankan Web Setup Wizard (Instalasi Praktis via Browser)
+
+Setelah Nginx dan PHP-FPM aktif, Anda dapat menyelesaikan konfigurasi awal melalui browser secara visual tanpa perlu banyak mengetik perintah manual:
+
+Buka browser Anda dan akses:
+👉 **`http://IP_STB_ANDA/install`** atau **`https://domainanda/install`**
+
+Ikuti 5 langkah mudah berikut:
+
+1. **Langkah 01 — Server & Izin Folder:**
+   - Sistem akan memeriksa versi PHP, ekstensi (PDO, cURL, OpenSSL), dan izin tulis folder `storage` & `bootstrap/cache`.
+   - Jika semua bertanda centang hijau, klik **Lanjut ke Konfigurasi Database →**.
+
+2. **Langkah 02 — Konfigurasi Database & Environment:**
+   - **Nama Aplikasi / Brand**: `NetSpeed Billing`
+   - **URL Aplikasi (Domain)**:
+     - Jika menggunakan Cloudflare Tunnel: **Wajib gunakan awalan `https://`**, contoh: `https://ryzprjkt.cloud`
+     - Jika akses lokal: `http://192.168.1.xxx`
+   - **Database Host**: `127.0.0.1` *(Port: `3306`)*
+   - **Nama Database**: `isp_billing`
+   - **Username Database**: `isp_user`
+   - **Password Database**: `PasswordKuatISP123!`
+   - Klik tombol **Simpan & Lanjut ke Migrasi →**.
+
+3. **Langkah 03 — Migrasi Database & Struktur Tabel:**
+   - Klik tombol hijau **⚡ Jalankan Migrasi Database** (atau tombol alternatif **🚀 Migrasi Langsung (Form)**).
+   - Tunggu hingga proses migrasi selesai 100%, lalu klik **Lanjut ke Setup Admin →**.
+   - > 💡 *Tips: Jika koneksi browser terputus atau muncul "Failed to fetch", cukup jalankan perintah di terminal STB:*
+     > ```bash
+     > cd /var/www/isp-billing
+     > php artisan migrate --force
+     > ```
+     > *Setelah itu langsung buka `https://domainanda/install/step4` di browser.*
+
+4. **Langkah 04 — Akun Pengelola & Profil Perusahaan ISP:**
+   - Masukkan **Nama Lengkap**, **Email Login**, dan **Password Super Admin**.
+   - Masukkan **Nama Brand ISP** dan **Nomor WhatsApp Dukungan Teknis**.
+   - Centang opsi *Isi data contoh (paket internet, router demo, teknisi)* jika ingin mencoba data awal.
+   - Klik **Selesaikan Instalasi & Kunci Sistem →**.
+
+5. **Langkah 05 — Selesai!**
+   - Instalasi selesai dan sistem terkunci aman.
+   - Klik tombol **Buka Admin Panel (NetSpeed)** untuk langsung login ke dashboard pengelola di `/admin`!
 
 ---
 

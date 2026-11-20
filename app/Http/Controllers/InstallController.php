@@ -69,7 +69,9 @@ class InstallController extends Controller
                 ->with('error', 'Harap lengkapi semua persyaratan server dan permission terlebih dahulu.');
         }
 
-        $appUrl = request()->getSchemeAndHttpHost();
+        $forwardedProto = request()->header('x-forwarded-proto');
+        $scheme = ($forwardedProto === 'https' || request()->isSecure()) ? 'https' : request()->getScheme();
+        $appUrl = $scheme.'://'.request()->getHttpHost();
 
         return view('install.step2', [
             'appUrl' => $appUrl,
@@ -168,6 +170,22 @@ class InstallController extends Controller
         $result = InstallationService::runMigrations();
 
         return response()->json($result);
+    }
+
+    /**
+     * Fallback standard POST endpoint to execute database migrations without AJAX fetch.
+     */
+    public function runMigrateDirect(): RedirectResponse
+    {
+        $result = InstallationService::runMigrations();
+
+        if ($result['success']) {
+            return redirect()->route('install.step4')
+                ->with('success', 'Migrasi database berhasil diselesaikan!');
+        }
+
+        return redirect()->route('install.step3')
+            ->with('error', 'Terjadi kesalahan migrasi: '.($result['output'] ?? 'Error tidak diketahui.'));
     }
 
     /**

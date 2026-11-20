@@ -56,10 +56,17 @@ Klik tombol "Jalankan Migrasi Database" di bawah untuk memulai proses pembentuka
                 &larr; Kembali ke Database
             </a>
             
-            <div class="flex items-center gap-3 w-full sm:w-auto">
+            <div class="flex items-center gap-3 w-full sm:w-auto flex-wrap">
                 <button type="button" id="btnStartMigrate" class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-obsidian-950 text-sm font-bold shadow-lg shadow-emerald-500/20 transition flex items-center justify-center gap-2">
                     <span>⚡</span> Jalankan Migrasi Database
                 </button>
+
+                <form action="{{ route('install.migrate_direct') }}" method="POST" class="w-full sm:w-auto">
+                    @csrf
+                    <button type="submit" id="btnDirectMigrate" class="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-amber-500/50 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 text-xs font-bold transition flex items-center justify-center gap-1.5" title="Gunakan jika browser Anda memblokir koneksi AJAX / Failed to fetch">
+                        <span>🚀</span> Migrasi Langsung (Form)
+                    </button>
+                </form>
 
                 <a href="{{ route('install.step4') }}" id="btnNextStep4" class="hidden w-full sm:w-auto text-center px-6 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-obsidian-950 text-sm font-bold shadow-lg shadow-emerald-500/20 transition">
                     Lanjut ke Setup Admin &rarr;
@@ -93,7 +100,7 @@ Klik tombol "Jalankan Migrasi Database" di bawah untuk memulai proses pembentuka
         consoleOutput.innerText = '>> Memulai Artisan Migrate --force ...\n';
 
         try {
-            const res = await fetch("{{ route('install.migrate', [], false) }}", {
+            const res = await fetch("{{ route('install.migrate') }}", {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
