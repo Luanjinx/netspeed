@@ -130,12 +130,12 @@ class AppSettings extends Page implements HasForms
                         Tab::make('Integrasi API (Link & Key)')
                             ->icon('heroicon-o-key')
                             ->schema([
-                                // 1. WhatsApp Gateway
-                                Section::make('API WhatsApp Gateway (Notifikasi Tagihan & Voucher)')
-                                    ->description('Konfigurasi link gateway dan API key pengiriman notifikasi WhatsApp ke pelanggan')
-                                    ->icon('heroicon-o-chat-bubble-left-right')
-                                    ->schema([
-                                        Grid::make(2)->schema([
+                                Grid::make(['default' => 1, 'lg' => 2])->schema([
+                                    // 1. WhatsApp Gateway
+                                    Section::make('API WhatsApp Gateway (Notifikasi Tagihan & Voucher)')
+                                        ->description('Konfigurasi link gateway dan API key pengiriman notifikasi WhatsApp ke pelanggan')
+                                        ->icon('heroicon-o-chat-bubble-left-right')
+                                        ->schema([
                                             TextInput::make('whatsapp_gateway_url')
                                                 ->label('Link URL Gateway WhatsApp (API Endpoint)')
                                                 ->placeholder('cth: https://api.fonnte.com/send')
@@ -148,19 +148,17 @@ class AppSettings extends Page implements HasForms
                                                 ->password()
                                                 ->revealable()
                                                 ->helperText('Token API rahasia dari akun penyedia WhatsApp Gateway Anda'),
+
+                                            TextInput::make('whatsapp_sender_number')
+                                                ->label('Nomor WhatsApp Pengirim (Opsional)')
+                                                ->placeholder('cth: 081234567890'),
                                         ]),
 
-                                        TextInput::make('whatsapp_sender_number')
-                                            ->label('Nomor WhatsApp Pengirim (Opsional)')
-                                            ->placeholder('cth: 081234567890'),
-                                    ]),
-
-                                // 1b. Telegram Bot API
-                                Section::make('API Bot Telegram (Notifikasi NOC & Bot Interaktif)')
-                                    ->description('Pengaturan token bot Telegram untuk monitoring operasional, alert router, dan notifikasi tiket/pembayaran. Kelola lebih lanjut di menu Sistem > Bot Telegram.')
-                                    ->icon('heroicon-o-paper-airplane')
-                                    ->schema([
-                                        Grid::make(2)->schema([
+                                    // 1b. Telegram Bot API
+                                    Section::make('API Bot Telegram (Notifikasi NOC & Bot Interaktif)')
+                                        ->description('Pengaturan token bot Telegram untuk monitoring operasional, alert router, dan notifikasi tiket/pembayaran.')
+                                        ->icon('heroicon-o-paper-airplane')
+                                        ->schema([
                                             TextInput::make('telegram_bot_token')
                                                 ->label('Telegram Bot Token (HTTP API)')
                                                 ->placeholder('123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ')
@@ -172,23 +170,21 @@ class AppSettings extends Page implements HasForms
                                                 ->label('Chat ID Admin / Grup NOC')
                                                 ->placeholder('cth: 123456789 atau -100123456789')
                                                 ->helperText('ID penerima alert notifikasi sistem (Ketik /id di bot)'),
+
+                                            Toggle::make('telegram_bot_enabled')
+                                                ->label('Aktifkan Notifikasi Bot Telegram')
+                                                ->default(true),
+
+                                            Placeholder::make('telegram_console_link')
+                                                ->label('Alat Manajemen Bot Telegram')
+                                                ->content(new HtmlString('<div class="pt-1"><a href="'.url('/admin/telegram-bot').'" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#1a1e1c] text-[#00e07e] border border-[#232826] hover:bg-[#00e07e] hover:text-[#06261a] transition-all"><span>Buka Konsol & Log Interaktif Bot Telegram &rarr;</span></a></div>')),
                                         ]),
 
-                                        Toggle::make('telegram_bot_enabled')
-                                            ->label('Aktifkan Notifikasi Bot Telegram')
-                                            ->default(true),
-
-                                        Placeholder::make('telegram_console_link')
-                                            ->label('Alat Manajemen Bot Telegram')
-                                            ->content(new HtmlString('<div class="pt-1"><a href="'.url('/admin/telegram-bot').'" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#1a1e1c] text-[#00e07e] border border-[#232826] hover:bg-[#00e07e] hover:text-[#06261a] transition-all"><span>Buka Konsol & Log Interaktif Bot Telegram &rarr;</span></a></div>')),
-                                    ]),
-
-                                // 2. Payment Gateway & Webhook
-                                Section::make('API Payment Gateway & Webhook Pembayaran Otomatis')
-                                    ->description('Pengaturan koneksi API ke Tripay, Midtrans, CekMutasi, atau Moota')
-                                    ->icon('heroicon-o-credit-card')
-                                    ->schema([
-                                        Grid::make(2)->schema([
+                                    // 2. Payment Gateway & Webhook
+                                    Section::make('API Payment Gateway & Webhook Pembayaran Otomatis')
+                                        ->description('Pengaturan koneksi API ke Tripay, Midtrans, CekMutasi, atau Moota')
+                                        ->icon('heroicon-o-credit-card')
+                                        ->schema([
                                             Select::make('payment_gateway_provider')
                                                 ->label('Penyedia / Metode Payment Gateway')
                                                 ->options([
@@ -205,37 +201,35 @@ class AppSettings extends Page implements HasForms
                                             TextInput::make('payment_gateway_api_url')
                                                 ->label('Link URL Endpoint API Payment Gateway')
                                                 ->placeholder('cth: https://tripay.co.id/api/ atau https://api.midtrans.com/'),
-                                        ]),
 
-                                        Grid::make(3)->schema([
                                             TextInput::make('payment_gateway_server_key')
                                                 ->label('API Server Key / Private Key')
                                                 ->placeholder('Server Key dari dashboard gateway')
                                                 ->password()
                                                 ->revealable(),
 
-                                            TextInput::make('payment_gateway_client_key')
-                                                ->label('API Client Key / Public Key (Opsional)')
-                                                ->placeholder('Client Key publik'),
+                                            Grid::make(2)->schema([
+                                                TextInput::make('payment_gateway_client_key')
+                                                    ->label('Client Key (Opsional)')
+                                                    ->placeholder('Client Key publik'),
 
-                                            TextInput::make('payment_gateway_merchant_code')
-                                                ->label('Kode Toko / Merchant Code')
-                                                ->placeholder('cth: T12345 / Merchant ID'),
+                                                TextInput::make('payment_gateway_merchant_code')
+                                                    ->label('Kode Toko / Merchant')
+                                                    ->placeholder('cth: T12345 / Merchant ID'),
+                                            ]),
+
+                                            TextInput::make('payment_webhook_url')
+                                                ->label('Webhook Callback URL')
+                                                ->helperText('Salin URL ini ke Dashboard Payment Gateway untuk auto-konfirmasi pembayaran.')
+                                                ->readOnly()
+                                                ->copyable(),
                                         ]),
 
-                                        TextInput::make('payment_webhook_url')
-                                            ->label('Webhook Callback URL (Salin ini ke Dashboard Payment Gateway)')
-                                            ->helperText('Saat pelanggan bayar via QRIS/VA, payment gateway akan mengirim sinyal HTTP POST ke tautan ini untuk otomatis melunasi tagihan & mengaktifkan PPPoE.')
-                                            ->readOnly()
-                                            ->copyable(),
-                                    ]),
-
-                                // 3. Mobile Flutter & STB Client API
-                                Section::make('API Aplikasi Mobile Flutter & STB Android')
-                                    ->description('Pengaturan base URL dan kunci otorisasi backend untuk aplikasi mobile pelanggan / teknisi')
-                                    ->icon('heroicon-o-device-phone-mobile')
-                                    ->schema([
-                                        Grid::make(2)->schema([
+                                    // 3. Mobile Flutter & STB Client API
+                                    Section::make('API Aplikasi Mobile Flutter & STB Android')
+                                        ->description('Base URL dan kunci otorisasi backend untuk aplikasi mobile pelanggan / teknisi')
+                                        ->icon('heroicon-o-device-phone-mobile')
+                                        ->schema([
                                             TextInput::make('app_api_base_url')
                                                 ->label('Link Base API Backend (Untuk Flutter / STB)')
                                                 ->helperText('Tautan ini diisikan ke variabel baseUrl di aplikasi Flutter / STB Anda')
@@ -247,40 +241,36 @@ class AppSettings extends Page implements HasForms
                                                 ->helperText('Kunci rahasia untuk otorisasi header request aplikasi mobile ke backend')
                                                 ->readOnly()
                                                 ->copyable(),
-                                        ]),
 
-                                        TextInput::make('fcm_server_key')
-                                            ->label('Firebase Cloud Messaging (FCM) Server Key')
-                                            ->placeholder('Server Key untuk Push Notification Android / iOS')
-                                            ->password()
-                                            ->revealable()
-                                            ->helperText('Dapatkan dari Firebase Console > Project Settings > Cloud Messaging'),
-
-                                        Grid::make(2)->schema([
-                                            TextInput::make('onesignal_app_id')
-                                                ->label('OneSignal App ID (Push Notification Flutter)')
-                                                ->placeholder('cth: 3fa85f64-5717-4562-b3fc-2c963f66afa6')
-                                                ->helperText('Dapatkan dari OneSignal Dashboard > App Settings > Keys & IDs'),
-
-                                            TextInput::make('onesignal_rest_api_key')
-                                                ->label('OneSignal REST API Key')
-                                                ->placeholder('os_v2_app_... atau REST API Key')
+                                            TextInput::make('fcm_server_key')
+                                                ->label('Firebase Cloud Messaging (FCM) Server Key')
+                                                ->placeholder('Server Key Push Notification')
                                                 ->password()
                                                 ->revealable()
-                                                ->helperText('Kunci autentikasi server OneSignal'),
+                                                ->helperText('Dapatkan dari Firebase Console > Project Settings > Cloud Messaging'),
+
+                                            Grid::make(2)->schema([
+                                                TextInput::make('onesignal_app_id')
+                                                    ->label('OneSignal App ID')
+                                                    ->placeholder('App ID OneSignal'),
+
+                                                TextInput::make('onesignal_rest_api_key')
+                                                    ->label('OneSignal REST API Key')
+                                                    ->placeholder('REST API Key')
+                                                    ->password()
+                                                    ->revealable(),
+                                            ]),
+
+                                            Placeholder::make('onesignal_console_link')
+                                                ->label('Alat Push Notifikasi')
+                                                ->content(new HtmlString('<div class="pt-1"><a href="'.url('/admin/onesignal').'" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#1a1e1c] text-[#00e07e] border border-[#232826] hover:bg-[#00e07e] hover:text-[#06261a] transition-all"><span>Buka Hub Broadcast Push Notifikasi OneSignal &rarr;</span></a></div>')),
                                         ]),
 
-                                        Placeholder::make('onesignal_console_link')
-                                            ->label('Alat Push Notifikasi')
-                                            ->content(new HtmlString('<div class="pt-1"><a href="'.url('/admin/onesignal').'" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#1a1e1c] text-[#00e07e] border border-[#232826] hover:bg-[#00e07e] hover:text-[#06261a] transition-all"><span>Buka Hub Broadcast Push Notifikasi OneSignal &rarr;</span></a></div>')),
-                                    ]),
-
-                                // 4. TR-069 GenieACS API
-                                Section::make('API TR-069 GenieACS (Modem ONT Pelanggan)')
-                                    ->description('Koneksi ke GenieACS NBI untuk cek redaman optik, status ONT, dan reboot modem')
-                                    ->icon('heroicon-o-signal')
-                                    ->schema([
-                                        Grid::make(2)->schema([
+                                    // 4. TR-069 GenieACS API
+                                    Section::make('API TR-069 GenieACS (Modem ONT Pelanggan)')
+                                        ->description('Koneksi ke GenieACS NBI untuk cek redaman optik, status ONT, dan reboot modem')
+                                        ->icon('heroicon-o-signal')
+                                        ->schema([
                                             TextInput::make('genieacs_api_url')
                                                 ->label('Link URL Server GenieACS NBI')
                                                 ->placeholder('cth: http://192.168.2.1:7557')
@@ -291,42 +281,43 @@ class AppSettings extends Page implements HasForms
                                                 ->placeholder('Bearer Token (Opsional)')
                                                 ->password()
                                                 ->revealable(),
+
+                                            Grid::make(2)->schema([
+                                                TextInput::make('genieacs_username')
+                                                    ->label('Username Basic Auth (Opsional)')
+                                                    ->placeholder('cth: admin'),
+
+                                                TextInput::make('genieacs_password')
+                                                    ->label('Password Basic Auth (Opsional)')
+                                                    ->password()
+                                                    ->revealable(),
+                                            ]),
                                         ]),
 
-                                        Grid::make(2)->schema([
-                                            TextInput::make('genieacs_username')
-                                                ->label('Username Basic Auth (Opsional)')
-                                                ->placeholder('cth: admin'),
-
-                                            TextInput::make('genieacs_password')
-                                                ->label('Password Basic Auth (Opsional)')
+                                    // 5. Google Maps API
+                                    Section::make('API Peta & Geocoding')
+                                        ->description('Google Maps Javascript API Key untuk fitur satelit hybrid dan geocoding')
+                                        ->icon('heroicon-o-map')
+                                        ->schema([
+                                            TextInput::make('google_maps_api_key')
+                                                ->label('Google Maps API Key (Opsional)')
+                                                ->placeholder('AIzaSy...')
                                                 ->password()
-                                                ->revealable(),
+                                                ->revealable()
+                                                ->helperText('Jika kosong, sistem secara otomatis menggunakan OpenStreetMap & Google Tile hybrid gratis bawaan.'),
                                         ]),
-                                    ]),
-
-                                // 5. Google Maps API
-                                Section::make('API Peta & Geocoding')
-                                    ->description('Google Maps Javascript API Key untuk fitur satelit hybrid dan geocoding')
-                                    ->icon('heroicon-o-map')
-                                    ->schema([
-                                        TextInput::make('google_maps_api_key')
-                                            ->label('Google Maps API Key (Opsional)')
-                                            ->placeholder('AIzaSy...')
-                                            ->password()
-                                            ->revealable()
-                                            ->helperText('Jika kosong, sistem secara otomatis menggunakan OpenStreetMap & Google Tile hybrid gratis bawaan.'),
-                                    ]),
+                                ]),
                             ]),
 
                         // TAB 2: PROFIL PERUSAHAAN & TITIK PETA
                         Tab::make('Profil ISP & Titik Peta')
                             ->icon('heroicon-o-building-office-2')
                             ->schema([
-                                Section::make('Identitas Perusahaan / Penyedia Layanan')
-                                    ->description('Informasi nama dan kontak ISP yang tercetak di invoice tagihan, struk kasir thermal, dan pesan WhatsApp')
-                                    ->schema([
-                                        Grid::make(2)->schema([
+                                Grid::make(['default' => 1, 'lg' => 2])->schema([
+                                    Section::make('Identitas Perusahaan / Penyedia Layanan')
+                                        ->description('Informasi nama dan kontak ISP yang tercetak di invoice tagihan, struk kasir thermal, dan pesan WhatsApp')
+                                        ->icon('heroicon-o-building-office-2')
+                                        ->schema([
                                             TextInput::make('company_name')
                                                 ->label('Nama Brand / Perusahaan ISP')
                                                 ->placeholder('cth: NETSPEED WI-FI BROADBAND')
@@ -336,18 +327,17 @@ class AppSettings extends Page implements HasForms
                                                 ->label('Nomor WhatsApp Layanan CS / Bantuan')
                                                 ->placeholder('cth: 0812-3456-7890')
                                                 ->required(),
+
+                                            Textarea::make('company_address')
+                                                ->label('Alamat Kantor Pusat / NOC')
+                                                ->placeholder('Alamat lengkap kantor penyedia internet')
+                                                ->rows(3),
                                         ]),
 
-                                        Textarea::make('company_address')
-                                            ->label('Alamat Kantor Pusat / NOC')
-                                            ->placeholder('Alamat lengkap kantor penyedia internet')
-                                            ->rows(3),
-                                    ]),
-
-                                Section::make('Koordinat Titik Kantor Pusat / NOC (Pusat Peta)')
-                                    ->description('Titik koordinat awal saat teknisi membuka peta lapangan (/tech/map) dan peta admin (/admin/map)')
-                                    ->schema([
-                                        Grid::make(2)->schema([
+                                    Section::make('Koordinat Titik Kantor Pusat / NOC (Pusat Peta)')
+                                        ->description('Titik koordinat awal saat teknisi membuka peta lapangan (/tech/map) dan peta admin (/admin/map)')
+                                        ->icon('heroicon-o-map-pin')
+                                        ->schema([
                                             TextInput::make('office_lat')
                                                 ->label('Latitude Kantor Pusat')
                                                 ->placeholder('cth: -6.2087634')
@@ -358,93 +348,96 @@ class AppSettings extends Page implements HasForms
                                                 ->placeholder('cth: 106.845599')
                                                 ->required(),
                                         ]),
-                                    ]),
+                                ]),
                             ]),
 
                         // TAB 3: BILLING, QRIS & ISOLIR
                         Tab::make('Billing, QRIS & Isolir')
                             ->icon('heroicon-o-currency-dollar')
                             ->schema([
-                                Section::make('QRIS Dinamis Otomatis & Auto Scanner')
-                                    ->description('Unggah gambar/foto barcode QRIS statis toko Anda untuk otomatis membaca string EMVCo dan info merchant, atau masukkan manual.')
-                                    ->schema([
-                                        FileUpload::make('qris_image_upload')
-                                            ->label('Upload Foto / Barcode QRIS Merchant (Scan Otomatis)')
-                                            ->image()
-                                            ->disk('public')
-                                            ->directory('qris-uploads')
-                                            ->visibility('public')
-                                            ->maxSize(5120)
-                                            ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/jpg', 'image/webp'])
-                                            ->live()
-                                            ->helperText('Pilih atau drag & drop file foto/screenshot QRIS toko Anda (BCA, Mandiri, BRI, ShopeePay, GoPay, Nobu, dll). Sistem akan langsung membaca QR code dan mengisi string EMVCo di bawah.')
-                                            ->afterStateUpdated(function ($state, callable $set) {
-                                                if (! $state) {
-                                                    return;
-                                                }
+                                Grid::make(['default' => 1, 'lg' => 2])->schema([
+                                    Section::make('QRIS Dinamis Otomatis & Auto Scanner')
+                                        ->columnSpan(['default' => 1, 'lg' => 2])
+                                        ->icon('heroicon-o-qr-code')
+                                        ->description('Unggah gambar/foto barcode QRIS statis toko Anda untuk otomatis membaca string EMVCo dan info merchant, atau masukkan manual.')
+                                        ->schema([
+                                            FileUpload::make('qris_image_upload')
+                                                ->label('Upload Foto / Barcode QRIS Merchant (Scan Otomatis)')
+                                                ->image()
+                                                ->disk('public')
+                                                ->directory('qris-uploads')
+                                                ->visibility('public')
+                                                ->maxSize(5120)
+                                                ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/jpg', 'image/webp'])
+                                                ->live()
+                                                ->helperText('Pilih atau drag & drop file foto/screenshot QRIS toko Anda (BCA, Mandiri, BRI, ShopeePay, GoPay, Nobu, dll). Sistem akan langsung membaca QR code dan mengisi string EMVCo di bawah.')
+                                                ->afterStateUpdated(function ($state, callable $set) {
+                                                    if (! $state) {
+                                                        return;
+                                                    }
 
-                                                $filePath = self::resolveUploadedFilePath($state);
-                                                if (! $filePath || ! file_exists($filePath)) {
-                                                    return;
-                                                }
+                                                    $filePath = self::resolveUploadedFilePath($state);
+                                                    if (! $filePath || ! file_exists($filePath)) {
+                                                        return;
+                                                    }
 
-                                                $service = app(QrisService::class);
-                                                $result = $service->decodeFromImage($filePath);
+                                                    $service = app(QrisService::class);
+                                                    $result = $service->decodeFromImage($filePath);
 
-                                                if ($result['success'] ?? false) {
-                                                    $set('static_qris_string', $result['payload']);
+                                                    if ($result['success'] ?? false) {
+                                                        $set('static_qris_string', $result['payload']);
 
-                                                    Notification::make()
-                                                        ->title('✅ Barcode QRIS Berhasil Dipindai!')
-                                                        ->body("Merchant: {$result['merchant_name']}\nKota: {$result['merchant_city']}\nFormat EMVCo valid telah diterapkan ke sistem.")
-                                                        ->success()
-                                                        ->duration(8000)
-                                                        ->send();
-                                                } else {
-                                                    Notification::make()
-                                                        ->title('Gagal Memindai QR Code')
-                                                        ->body($result['message'] ?? 'Tidak ditemukan QR code yang valid pada gambar.')
-                                                        ->danger()
-                                                        ->duration(9000)
-                                                        ->send();
-                                                }
-                                            }),
+                                                        Notification::make()
+                                                            ->title('✅ Barcode QRIS Berhasil Dipindai!')
+                                                            ->body("Merchant: {$result['merchant_name']}\nKota: {$result['merchant_city']}\nFormat EMVCo valid telah diterapkan ke sistem.")
+                                                            ->success()
+                                                            ->duration(8000)
+                                                            ->send();
+                                                    } else {
+                                                        Notification::make()
+                                                            ->title('Gagal Memindai QR Code')
+                                                            ->body($result['message'] ?? 'Tidak ditemukan QR code yang valid pada gambar.')
+                                                            ->danger()
+                                                            ->duration(9000)
+                                                            ->send();
+                                                    }
+                                                }),
 
-                                        Placeholder::make('qris_preview_display')
-                                            ->label('Status & Preview Barcode QRIS Merchant')
-                                            ->content(fn ($get) => self::renderQrisPreviewHtml($get('static_qris_string'))),
+                                            Placeholder::make('qris_preview_display')
+                                                ->label('Status & Preview Barcode QRIS Merchant')
+                                                ->content(fn ($get) => self::renderQrisPreviewHtml($get('static_qris_string'))),
 
-                                        Textarea::make('static_qris_string')
-                                            ->label('Raw String QRIS Statis EMVCo Merchant')
-                                            ->placeholder('00020101021126680016ID.CO.QRIS.WWW0118936009990000000001...')
-                                            ->rows(3)
-                                            ->live(debounce: 500)
-                                            ->helperText('Payload EMVCo QRIS resmi toko Anda. Nilai ini otomatis terisi saat foto QRIS diunggah di atas. Anda juga dapat mengubahnya secara manual jika diperlukan.'),
+                                            Textarea::make('static_qris_string')
+                                                ->label('Raw String QRIS Statis EMVCo Merchant')
+                                                ->placeholder('00020101021126680016ID.CO.QRIS.WWW0118936009990000000001...')
+                                                ->rows(3)
+                                                ->live(debounce: 500)
+                                                ->helperText('Payload EMVCo QRIS resmi toko Anda. Nilai ini otomatis terisi saat foto QRIS diunggah di atas. Anda juga dapat mengubahnya secara manual jika diperlukan.'),
 
-                                        Toggle::make('use_unique_code')
-                                            ->label('Gunakan 3 Digit Kode Unik Tagihan')
-                                            ->helperText('Menambahkan 3 digit angka acak (cth: Rp 150.245) untuk mempermudah deteksi pembayaran mutasi rekening.')
-                                            ->default(true),
-                                    ]),
+                                            Toggle::make('use_unique_code')
+                                                ->label('Gunakan 3 Digit Kode Unik Tagihan')
+                                                ->helperText('Menambahkan 3 digit angka acak (cth: Rp 150.245) untuk mempermudah deteksi pembayaran mutasi rekening.')
+                                                ->default(true),
+                                        ]),
 
-                                Section::make('Profil Isolir Otomatis MikroTik')
-                                    ->description('Profil kecepatan yang diterapkan ke pelanggan PPPoE saat menunggak pembayaran')
-                                    ->schema([
-                                        TextInput::make('default_isolir_profile')
-                                            ->label('Nama Profil Isolir MikroTik (/ppp/profile)')
-                                            ->placeholder('cth: PROFIL-ISOLIR atau ISOLIR')
-                                            ->required(),
+                                    Section::make('Profil Isolir Otomatis MikroTik')
+                                        ->icon('heroicon-o-shield-exclamation')
+                                        ->description('Profil kecepatan yang diterapkan ke pelanggan PPPoE saat menunggak pembayaran')
+                                        ->schema([
+                                            TextInput::make('default_isolir_profile')
+                                                ->label('Nama Profil Isolir MikroTik (/ppp/profile)')
+                                                ->placeholder('cth: PROFIL-ISOLIR atau ISOLIR')
+                                                ->required(),
 
-                                        Placeholder::make('isolir_wizard_link')
-                                            ->label('Alat Redirect Isolir')
-                                            ->content(new HtmlString('<div class="pt-1"><a href="'.url('/admin/isolir-manager').'" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#1a1e1c] text-[#00e07e] border border-[#232826] hover:bg-[#00e07e] hover:text-[#06261a] transition-all"><span>Buka Wizard Script Isolir & Captive MikroTik &rarr;</span></a></div>')),
-                                    ]),
+                                            Placeholder::make('isolir_wizard_link')
+                                                ->label('Alat Redirect Isolir')
+                                                ->content(new HtmlString('<div class="pt-1"><a href="'.url('/admin/isolir-manager').'" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#1a1e1c] text-[#00e07e] border border-[#232826] hover:bg-[#00e07e] hover:text-[#06261a] transition-all"><span>Buka Wizard Script Isolir & Captive MikroTik &rarr;</span></a></div>')),
+                                        ]),
 
-                                Section::make('Subnet Jaringan PPPoE & Anti-Konflik Hotspot')
-                                    ->description('Konfigurasi IP Gateway (Local Address) dan Pool IP dinamis yang otomatis disematkan pada secret & profil PPPoE agar terisolasi penuh dari subnet Hotspot')
-                                    ->icon('heroicon-o-shield-check')
-                                    ->schema([
-                                        Grid::make(3)->schema([
+                                    Section::make('Subnet Jaringan PPPoE & Anti-Konflik Hotspot')
+                                        ->icon('heroicon-o-shield-check')
+                                        ->description('Konfigurasi IP Gateway (Local Address) dan Pool IP dinamis yang otomatis disematkan pada secret & profil PPPoE agar terisolasi penuh dari subnet Hotspot')
+                                        ->schema([
                                             TextInput::make('pppoe_local_address')
                                                 ->label('Local Address (Gateway PPPoE)')
                                                 ->placeholder('cth: 10.20.0.1')
@@ -460,7 +453,7 @@ class AppSettings extends Page implements HasForms
                                                 ->placeholder('cth: 8.8.8.8,1.1.1.1')
                                                 ->required(),
                                         ]),
-                                    ]),
+                                ]),
                             ]),
 
                     ]),

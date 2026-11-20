@@ -1,4 +1,32 @@
 <x-filament-panels::page>
+    <style>
+        .settings-hub-grid {
+            display: grid !important;
+            grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+            gap: 0.875rem !important;
+        }
+        @media (min-width: 640px) {
+            .settings-hub-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            }
+        }
+        @media (min-width: 768px) {
+            .settings-hub-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+            }
+        }
+        @media (min-width: 1024px) {
+            .settings-hub-grid {
+                grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+            }
+        }
+        .settings-hub-card:hover {
+            border-color: rgba(0, 224, 126, 0.4) !important;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.6), 0 0 14px rgba(0, 224, 126, 0.12);
+        }
+    </style>
+
     <!-- Quick Integration & Tools Hub -->
     <div class="settings-hub-wrapper" style="margin-bottom: 1.5rem; padding: 1.25rem 1.35rem; background: #131615; border: 1px solid #232826; border-radius: 1rem;">
         <div class="settings-hub-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
@@ -17,7 +45,7 @@
             </span>
         </div>
 
-        <div class="settings-hub-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.875rem;">
+        <div class="settings-hub-grid">
             <!-- Bot Telegram -->
             <a href="{{ url('/admin/telegram-bot') }}" class="settings-hub-card" style="display: flex; flex-direction: column; justify-content: space-between; padding: 1.1rem; background: #1a1e1c; border: 1px solid #232826; border-radius: 0.75rem; text-decoration: none; transition: all 0.2s ease;">
                 <div style="display: flex; align-items: flex-start; justify-content: space-between;">

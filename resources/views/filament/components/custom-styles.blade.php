@@ -164,9 +164,60 @@
         box-shadow: var(--shadow) !important;
     }
 
-    .dark .fi-section-header,
-    .dark .fi-modal-header {
+    .dark .fi-section {
+        transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+        overflow: hidden !important;
+    }
+
+    .dark .fi-section:hover {
+        border-color: rgba(0, 224, 126, 0.3) !important;
+    }
+
+    .dark .fi-section-header {
+        background-color: rgba(26, 30, 28, 0.55) !important;
+        padding: 1rem 1.25rem !important;
         border-bottom: 1px solid var(--border) !important;
+    }
+
+    .dark .fi-section-content {
+        padding: 1.25rem !important;
+    }
+
+    /* Modern Tabs Card Bar */
+    .dark .fi-sc-tabs-tablist,
+    .dark .fi-tabs {
+        background: var(--surface) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 0.875rem !important;
+        padding: 0.35rem !important;
+        gap: 0.4rem !important;
+        margin-bottom: 1.25rem !important;
+    }
+
+    .dark .fi-sc-tabs-tab,
+    .dark .fi-tabs-item {
+        border-radius: 0.625rem !important;
+        padding: 0.55rem 1.15rem !important;
+        font-size: 0.8125rem !important;
+        font-weight: 700 !important;
+        transition: all 0.2s ease !important;
+        border: 1px solid transparent !important;
+    }
+
+    .dark .fi-sc-tabs-tab[aria-selected="true"],
+    .dark .fi-tabs-item[aria-selected="true"],
+    .dark .fi-tabs-item--active {
+        background: var(--btn) !important;
+        color: var(--btnText) !important;
+        font-weight: 800 !important;
+        box-shadow: 0 4px 14px rgba(0, 224, 126, 0.35) !important;
+        border-color: var(--btn) !important;
+    }
+
+    .dark .fi-sc-tabs-tab[aria-selected="true"] *,
+    .dark .fi-tabs-item[aria-selected="true"] *,
+    .dark .fi-tabs-item--active * {
+        color: var(--btnText) !important;
     }
 
     .dark .fi-modal-footer {
