@@ -269,24 +269,134 @@ sudo systemctl restart php8.3-fpm
 
 ## 🌍 Langkah 8: Mengakses Backend dari Internet (Aplikasi Flutter / Pelanggan)
 
-Karena STB Anda biasanya berada di jaringan lokal (IP Privat seperti `192.168.1.xxx` tanpa IP Publik Statis), cara termudah dan paling aman agar aplikasi Android Flutter pelanggan dapat mengakses backend dari luar rumah adalah menggunakan **Cloudflare Tunnel (`cloudflared`)** — **100% GRATIS dan sudah HTTPS otomatis**:
+Karena STB Anda berada di jaringan lokal rumah/kantor (IP Privat seperti `192.168.1.xxx` tanpa IP Publik Statis), cara termudah, paling aman, dan stabil agar aplikasi Android Flutter pelanggan dapat mengakses backend dari jaringan internet luar adalah menggunakan **Cloudflare Tunnel (`cloudflared`)** — **100% GRATIS, tanpa port forwarding router, dan otomatis HTTPS / SSL aktif**.
 
-1. **Install cloudflared di STB (Arsitektur ARM64):**
+> [!NOTE]
+> **Benar sekali!** Saat menjalankan `cloudflared tunnel create`, Cloudflare akan membuatkan sebuah **Tunnel ID (UUID)** dan file kredensial JSON. Tunnel ID ini **wajib** dimasukkan ke dalam file konfigurasi atau digunakan saat registrasi service.
+> 
+> Pilih salah satu dari dua metode di bawah ini (Metode A direkomendasikan karena paling praktis):
+
+---
+
+### Opsi A: Menggunakan Cloudflare Zero Trust Dashboard (Metode Token — Sangat Mudah & Praktis)
+
+Metode ini tidak memerlukan pembuatan file `config.yml` secara manual karena seluruh konfigurasi Tunnel ID dan hostname dikelola otomatis dari dashboard Cloudflare:
+
+1. **Install cloudflared di STB (ARM64):**
    ```bash
    curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm64.deb
    sudo dpkg -i cloudflared.deb
    ```
-2. **Login & Hubungkan Tunnel:**
+
+2. **Buat Tunnel di Dashboard Cloudflare:**
+   - Buka dashboard [Cloudflare Zero Trust](https://one.dash.cloudflare.com/) > menu **Networks** > **Tunnels**.
+   - Klik **Create a Tunnel** > Pilih **Cloudflared** > Beri nama tunnel (misal: `isp-stb-server`).
+   - Pada bagian **Choose your environment**, pilih **Debian** dan arsitektur **arm64**.
+
+3. **Salin & Jalankan Perintah Service Install:**
+   Cloudflare akan menyediakan perintah 1 baris yang sudah berisi token Tunnel unik Anda:
    ```bash
-   cloudflared tunnel login
-   cloudflared tunnel create isp-server
+   sudo cloudflared service install <TOKEN_DARI_CLOUDFLARE>
    ```
-3. Arahkan hostname domain Anda (misal `api.ispanda.com`) ke `http://localhost:80`.
-4. Jalankan sebagai system service agar otomatis nyala saat STB hidup:
+   *Perintah ini otomatis mengonfigurasi Tunnel ID dan mengaktifkan service systemd `cloudflared`.*
+
+4. **Tambahkan Public Hostname (Routing Domain):**
+   - Pada tab **Public Hostname** di Cloudflare Dashboard, klik **Add a public hostname**.
+   - **Subdomain**: `api` (atau `billing`)
+   - **Domain**: pilih domain Anda (misal: `ispanda.com`)
+   - **Service Type**: `HTTP`
+   - **URL**: `localhost:80` (atau `127.0.0.1:80`)
+   - Klik **Save Tunnel**.
+
+---
+
+### Opsi B: Menggunakan CLI Manual (Konfigurasi File `config.yml` & Tunnel ID)
+
+Jika Anda ingin mengelola file konfigurasi secara lokal di STB menggunakan CLI:
+
+1. **Install cloudflared di STB (ARM64):**
    ```bash
-   sudo cloudflared service install
-   sudo systemctl start cloudflared
+   curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm64.deb
+   sudo dpkg -i cloudflared.deb
    ```
 
-Sekarang backend di STB Anda dapat diakses secara publik dengan aman di `https://api.ispanda.com` dan siap dihubungkan ke `isp_customer_app`!
+2. **Login ke Akun Cloudflare:**
+   ```bash
+   cloudflared tunnel login
+   ```
+   *Buka link URL yang muncul di terminal pada browser untuk mengotorisasi domain Anda.*
+
+3. **Buat Tunnel Baru:**
+   ```bash
+   cloudflared tunnel create isp-server
+   ```
+   Terminal akan menampilkan output seperti ini:
+   ```text
+   Tunnel credentials written to /root/.cloudflared/9b4a1c23-5678-4abc-9def-1234567890ab.json.
+   Created tunnel isp-server with id 9b4a1c23-5678-4abc-9def-1234567890ab
+   ```
+   > 📌 **Catat Tunnel ID Anda:** contoh di atas adalah `9b4a1c23-5678-4abc-9def-1234567890ab`.
+
+4. **Hubungkan Hostname Domain ke Tunnel (Routing DNS):**
+   ```bash
+   cloudflared tunnel route dns isp-server api.ispanda.com
+   ```
+   *(Ganti `api.ispanda.com` dengan subdomain & domain Anda).*
+
+5. **Buat File Konfigurasi `config.yml`:**
+   Buat dan edit file konfigurasi:
+   ```bash
+   nano ~/.cloudflared/config.yml
+   ```
+   Isi dengan script berikut (**ganti `<TUNNEL_ID_ANDA>` dengan ID yang didapat pada Langkah 3**):
+   ```yaml
+   tunnel: <TUNNEL_ID_ANDA>
+   credentials-file: /root/.cloudflared/<TUNNEL_ID_ANDA>.json
+
+   ingress:
+     - hostname: api.ispanda.com
+       service: http://localhost:80
+     - service: http_status:404
+   ```
+   *Simpan dengan menekan `Ctrl+O`, lalu `Enter`, dan keluar dengan `Ctrl+X`.*
+
+6. **Tes Koneksi Tunnel:**
+   ```bash
+   cloudflared tunnel run isp-server
+   ```
+   *Jika muncul log `Connection established`, tekan `Ctrl+C` untuk berhenti dan lanjut pasang service.*
+
+7. **Pasang sebagai System Service (Otomatis Nyala Saat STB Hidup):**
+   ```bash
+   # Salin konfigurasi dan file credential ke folder system
+   sudo mkdir -p /etc/cloudflared
+   sudo cp ~/.cloudflared/config.yml /etc/cloudflared/
+   sudo cp ~/.cloudflared/<TUNNEL_ID_ANDA>.json /etc/cloudflared/
+
+   # Install dan aktifkan service systemd
+   sudo cloudflared service install
+   sudo systemctl daemon-reload
+   sudo systemctl enable --now cloudflared
+   ```
+
+---
+
+### 🔍 Verifikasi & Sambungkan ke Aplikasi Flutter
+
+1. **Cek Status Service di STB:**
+   ```bash
+   sudo systemctl status cloudflared
+   ```
+   *Pastikan statusnya `active (running)`.*
+
+2. **Uji di Browser / Smartphone:**
+   Buka `https://api.ispanda.com` di browser HP Anda menggunakan jaringan kuota seluler (bukan Wi-Fi lokal). Halaman login NetSpeed harus terbuka dengan gembok hijau HTTPS yang aman!
+
+3. **Sambungkan ke Aplikasi Mobile Flutter (`isp_customer_app`):**
+   Di proyek Flutter Anda, cukup sesuaikan `baseUrl` API ke domain Cloudflare Tunnel ini:
+   ```dart
+   // File: lib/services/api_service.dart
+   static const String baseUrl = 'https://api.ispanda.com/api';
+   ```
+   Sekarang seluruh pelanggan dan teknisi dapat mengakses tagihan, scan QRIS, dan cek status router dari mana saja melalui internet!
 
