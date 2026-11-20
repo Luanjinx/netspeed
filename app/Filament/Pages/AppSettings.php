@@ -838,13 +838,13 @@ class AppSettings extends Page implements HasForms
 
         if (empty($cleanQris)) {
             return new HtmlString('
-                <div class="flex items-center gap-3 p-4 rounded-xl border border-dashed border-gray-300 dark:border-gray-700 bg-gray-50/60 dark:bg-gray-800/40 text-gray-500 dark:text-gray-400">
-                    <div class="p-2.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-400 shrink-0">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4"></path></svg>
+                <div style="display: flex; align-items: center; gap: 1rem; padding: 1.15rem; border-radius: 0.75rem; border: 1px dashed #2e3532; background: #131615;">
+                    <div style="width: 2.75rem; height: 2.75rem; min-width: 2.75rem; min-height: 2.75rem; border-radius: 0.6rem; background: #1a1e1c; border: 1px solid #232826; display: flex; align-items: center; justify-content: center; color: #00e07e; flex-shrink: 0;">
+                        <span class="material-symbols-rounded" style="font-size: 24px; display: block; line-height: 1;">qr_code_2</span>
                     </div>
-                    <div class="text-xs">
-                        <span class="font-semibold text-gray-700 dark:text-gray-200 block text-sm">Belum Ada Barcode QRIS Terdaftar</span>
-                        Silakan unggah foto barcode QRIS toko Anda pada kotak upload di atas. Sistem akan membaca barcode secara otomatis, memverifikasi EMVCo Bank Indonesia, dan menampilkan preview kode QR di sini.
+                    <div style="font-size: 0.8rem; line-height: 1.45; color: #9aa49f;">
+                        <span style="font-weight: 700; color: #eef1f0; display: block; font-size: 0.875rem; margin-bottom: 3px;">Belum Ada Barcode QRIS Terdaftar</span>
+                        Silakan unggah foto/screenshot barcode QRIS toko Anda (BCA, Mandiri, BRI, ShopeePay, GoPay, Dana, dll) pada kotak di atas. Sistem akan memindai QR code secara otomatis, memverifikasi EMVCo Bank Indonesia, dan menampilkan preview kode QR di sini.
                     </div>
                 </div>
             ');
@@ -861,33 +861,38 @@ class AppSettings extends Page implements HasForms
             $crc = e($details['crc'] ?? '');
 
             $crcBadge = $details['crc_valid']
-                ? '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300">CRC Valid ('.$crc.')</span>'
-                : '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300">CRC: '.$crc.'</span>';
+                ? '<span style="display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 600; background: #1a1e1c; color: #00e07e; border: 1px solid #232826;">CRC Valid ('.$crc.')</span>'
+                : '<span style="display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 600; background: #1a1e1c; color: #eab308; border: 1px solid #232826;">CRC: '.$crc.'</span>';
 
             return new HtmlString('
-                <div class="p-4 rounded-xl border border-gray-200 dark:border-gray-700/80 bg-white dark:bg-gray-800/80 shadow-sm flex flex-col sm:flex-row items-center gap-5">
-                    <div class="bg-white p-2 rounded-xl border border-gray-200 dark:border-gray-600 shadow-sm shrink-0">
-                        <img src="'.$svgUri.'" alt="QRIS Merchant Barcode" class="w-32 h-32 object-contain" />
+                <div style="display: flex; flex-direction: row; align-items: center; gap: 1.25rem; padding: 1.15rem; border-radius: 0.75rem; border: 1px solid #232826; background: #131615; flex-wrap: wrap;">
+                    <div style="background: #ffffff; padding: 0.5rem; border-radius: 0.6rem; border: 1px solid #232826; flex-shrink: 0; display: flex; align-items: center; justify-content: center; width: 136px; height: 136px; min-width: 136px; min-height: 136px; box-sizing: border-box;">
+                        <img src="'.$svgUri.'" alt="QRIS Merchant Barcode" style="width: 120px; height: 120px; max-width: 120px; max-height: 120px; object-fit: contain; display: block;" />
                     </div>
-                    <div class="space-y-2 text-left flex-1 min-w-0">
-                        <div class="flex flex-wrap items-center gap-2">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800">
-                                <svg class="w-3.5 h-3.5 mr-1 text-emerald-600 dark:text-emerald-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                    <div style="flex: 1; min-width: 240px; display: flex; flex-direction: column; gap: 0.4rem;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                            <span style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; background: rgba(0, 224, 126, 0.12); color: #00e07e; border: 1px solid rgba(0, 224, 126, 0.3);">
+                                <span class="material-symbols-rounded" style="font-size: 14px; display: inline-block;">verified</span>
                                 Standar EMVCo QRIS Terverifikasi
                             </span>
                             '.$crcBadge.'
                         </div>
-                        <h4 class="text-base font-bold text-gray-900 dark:text-white truncate">'.$merchant.'</h4>
-                        <div class="text-xs text-gray-500 dark:text-gray-400 space-y-0.5">
-                            <p><span class="font-medium text-gray-700 dark:text-gray-300">Kota Merchant:</span> '.$city.'</p>
-                            <p><span class="font-medium text-gray-700 dark:text-gray-300">Mode Sistem:</span> QRIS '.$method.' &rarr; Otomatis disuntikkan nominal tagihan unik saat pelanggan checkout</p>
-                            <p class="text-[11px] text-gray-400 dark:text-gray-500 pt-0.5">Mendukung pembayaran dari BCA Mobile, Livin by Mandiri, BRImo, BNI Mobile, GoPay, OVO, Dana, ShopeePay, LinkAja, dll.</p>
+                        <h4 style="font-size: 0.95rem; font-weight: 700; color: #eef1f0; margin: 2px 0 0 0;">'.$merchant.'</h4>
+                        <div style="font-size: 0.75rem; color: #9aa49f; line-height: 1.45;">
+                            <p style="margin: 0;"><strong style="color: #c5cec9;">Kota Merchant:</strong> '.$city.'</p>
+                            <p style="margin: 0;"><strong style="color: #c5cec9;">Mode Sistem:</strong> QRIS '.$method.' &rarr; Otomatis disuntikkan nominal tagihan unik saat pelanggan checkout</p>
+                            <p style="margin: 3px 0 0 0; font-size: 0.7rem; color: #6f7a74;">Mendukung pembayaran dari BCA Mobile, Livin by Mandiri, BRImo, BNI Mobile, GoPay, OVO, Dana, ShopeePay, LinkAja, dll.</p>
                         </div>
                     </div>
                 </div>
             ');
         } catch (\Throwable $e) {
-            return new HtmlString('<div class="p-3 text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 rounded-lg border border-amber-200 dark:border-amber-800">Format string QRIS belum lengkap atau tidak valid: '.e($e->getMessage()).'</div>');
+            return new HtmlString('
+                <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.85rem 1rem; border-radius: 0.75rem; border: 1px solid rgba(234, 179, 8, 0.3); background: rgba(234, 179, 8, 0.08); color: #eab308; font-size: 0.775rem;">
+                    <span class="material-symbols-rounded" style="font-size: 20px; flex-shrink: 0;">warning</span>
+                    <span>Format string QRIS belum lengkap atau tidak valid: '.e($e->getMessage()).'</span>
+                </div>
+            ');
         }
     }
 }

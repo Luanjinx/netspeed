@@ -98,6 +98,15 @@
         color: var(--text);
     }
 
+    /* Defensive Sizing: Prevent unconstrained SVGs inside form placeholders / previews */
+    .fi-fo-placeholder svg,
+    .fi-page-content svg.w-6,
+    .fi-page-content svg.w-5,
+    .fi-page-content svg.w-4 {
+        max-width: 24px !important;
+        max-height: 24px !important;
+    }
+
     /* Selection Color */
     ::selection {
         background-color: var(--accent) !important;
