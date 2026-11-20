@@ -13,12 +13,16 @@ use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Tabs\Tab;
+use Filament\Schemas\Components\View;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -118,7 +122,28 @@ class AppSettings extends Page implements HasForms
     {
         return $schema
             ->statePath('data')
-            ->components([]);
+            ->components([
+                Tabs::make('Pengaturan Sistem')
+                    ->tabs([
+                        Tab::make('Integrasi API (Link & Key)')
+                            ->icon('heroicon-o-key')
+                            ->schema([
+                                View::make('filament.pages.settings.api-cards'),
+                            ]),
+
+                        Tab::make('Profil ISP & Titik Peta')
+                            ->icon('heroicon-o-building-office-2')
+                            ->schema([
+                                View::make('filament.pages.settings.profile-cards'),
+                            ]),
+
+                        Tab::make('Billing, QRIS & Isolir')
+                            ->icon('heroicon-o-currency-dollar')
+                            ->schema([
+                                View::make('filament.pages.settings.billing-cards'),
+                            ]),
+                    ]),
+            ]);
     }
 
     protected function getHeaderActions(): array
@@ -192,6 +217,12 @@ class AppSettings extends Page implements HasForms
                     IspSetting::set('app_api_key', $newKey);
                     Notification::make()->title('API Key Baru Dibuat')->body($newKey)->success()->send();
                 }),
+
+            Action::make('scanQris')
+                ->label('Scan Foto QRIS')
+                ->icon('heroicon-o-camera')
+                ->color('warning')
+                ->url(url('/admin/qris-settings')),
         ];
     }
 
@@ -514,6 +545,81 @@ class AppSettings extends Page implements HasForms
                 $this->data['pppoe_dns_servers'] = $data['pppoe_dns_servers'] ?? '8.8.8.8,1.1.1.1';
                 $this->data['default_isolir_profile'] = $data['default_isolir_profile'] ?? 'PROFIL-ISOLIR';
                 Notification::make()->title('Pengaturan Subnet PPPoE & Isolir Berhasil Disimpan')->success()->send();
+            });
+    }
+
+    public function configureCompanyAction(): Action
+    {
+        return Action::make('configureCompany')
+            ->label('Pengaturan Profil Perusahaan')
+            ->icon('heroicon-o-building-office-2')
+            ->modalHeading('Identitas Perusahaan / Penyedia Layanan')
+            ->modalDescription('Informasi nama dan kontak ISP yang tercetak di invoice tagihan, struk kasir thermal, dan pesan WhatsApp.')
+            ->modalSubmitActionLabel('Simpan Profil Perusahaan')
+            ->form([
+                TextInput::make('company_name')
+                    ->label('Nama Brand / Perusahaan ISP')
+                    ->placeholder('cth: NETSPEED WI-FI BROADBAND')
+                    ->default(fn () => IspSetting::get('company_name', 'NETSPEED WI-FI BROADBAND'))
+                    ->required(),
+                TextInput::make('company_phone')
+                    ->label('Nomor WhatsApp Layanan CS / Bantuan')
+                    ->placeholder('cth: 0812-3456-7890')
+                    ->default(fn () => IspSetting::get('company_phone', '0812-3456-7890'))
+                    ->required(),
+                Textarea::make('company_address')
+                    ->label('Alamat Kantor Pusat / NOC')
+                    ->placeholder('Alamat lengkap kantor penyedia internet')
+                    ->default(fn () => IspSetting::get('company_address', 'Jl. Telekomunikasi No. 88, Jakarta'))
+                    ->rows(3),
+            ])
+            ->action(function (array $data): void {
+                IspSetting::set('company_name', trim($data['company_name'] ?? ''));
+                IspSetting::set('company_phone', trim($data['company_phone'] ?? ''));
+                IspSetting::set('company_address', trim($data['company_address'] ?? ''));
+                $this->data['company_name'] = $data['company_name'] ?? '';
+                $this->data['company_phone'] = $data['company_phone'] ?? '';
+                $this->data['company_address'] = $data['company_address'] ?? '';
+                Notification::make()->title('Profil Perusahaan Berhasil Disimpan')->success()->send();
+            });
+    }
+
+    public function configureCoordinatesAction(): Action
+    {
+        return Action::make('configureCoordinates')
+            ->label('Koordinat Kantor Pusat / NOC')
+            ->icon('heroicon-o-map-pin')
+            ->modalHeading('Koordinat Titik Kantor Pusat / NOC (Pusat Peta)')
+            ->modalDescription('Titik koordinat awal saat teknisi membuka peta lapangan (/tech/map) dan peta admin (/admin/map).')
+            ->modalSubmitActionLabel('Simpan Titik Koordinat')
+            ->form([
+                TextInput::make('office_lat')
+                    ->label('Latitude Kantor Pusat')
+                    ->placeholder('cth: -6.2087634')
+                    ->default(fn () => (string) (IspSetting::getOfficeLocation()['lat'] ?? '-6.2087634'))
+                    ->required(),
+                TextInput::make('office_lng')
+                    ->label('Longitude Kantor Pusat')
+                    ->placeholder('cth: 106.845599')
+                    ->default(fn () => (string) (IspSetting::getOfficeLocation()['lng'] ?? '106.845599'))
+                    ->required(),
+            ])
+            ->action(function (array $data): void {
+                IspSetting::set('office_lat', trim($data['office_lat'] ?? '-6.2087634'));
+                IspSetting::set('office_lng', trim($data['office_lng'] ?? '106.845599'));
+                $this->data['office_lat'] = $data['office_lat'] ?? '-6.2087634';
+                $this->data['office_lng'] = $data['office_lng'] ?? '106.845599';
+
+                $jsonPath = config_path('settings.json');
+                $json = [
+                    'office_name' => IspSetting::get('company_name', 'Kantor Pusat ISP'),
+                    'office_lat' => (float) ($data['office_lat'] ?? -6.2087634),
+                    'office_lng' => (float) ($data['office_lng'] ?? 106.845599),
+                    'default_zoom' => 16,
+                ];
+                @file_put_contents($jsonPath, json_encode($json, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+                Notification::make()->title('Titik Koordinat Berhasil Disimpan')->success()->send();
             });
     }
 
