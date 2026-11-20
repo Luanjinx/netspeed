@@ -29,8 +29,7 @@ class RoutersTable
                     ->searchable()
                     ->copyable(),
                 TextColumn::make('port')
-                    ->label('Port')
-                    ->numeric(),
+                    ->label('Port'),
                 TextColumn::make('status')
                     ->label('Status')
                     ->badge()

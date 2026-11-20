@@ -15,11 +15,19 @@ class MikrotikApiService
 
     protected bool $connected = false;
 
+    protected ?string $lastError = null;
+
+    public function getLastError(): ?string
+    {
+        return $this->lastError;
+    }
+
     /**
      * Connect to RouterOS API via socket (supports local & external/cloud/VPN IP).
      */
     public function connect(Router $router): bool
     {
+        $this->lastError = null;
         $this->disconnect();
 
         $prefix = $router->use_ssl ? 'ssl://' : '';
@@ -46,6 +54,7 @@ class MikrotikApiService
         );
 
         if (! $this->socket) {
+            $this->lastError = "Gagal membuka koneksi socket ke {$target}: {$errstr} ({$errno})";
             Log::warning("MikroTik connect failed to {$target}: {$errstr} ({$errno})");
 
             return false;
@@ -88,21 +97,58 @@ class MikrotikApiService
             'password' => $password,
         ]);
 
+        // If RouterOS rejected credentials with !trap
+        if (isset($res['!trap'])) {
+            $trapMsg = $res['!trap'][0]['message'] ?? 'invalid user name or password';
+
+            // Check if older RouterOS challenge is required (pre-6.43)
+            $challenge = $res['!done'][0]['ret'] ?? ($res['!trap'][0]['ret'] ?? null);
+            if ($challenge && strlen($challenge) === 32) {
+                $hash = md5(chr(0).$password.hex2bin($challenge));
+                $resChallenge = $this->comm('/login', [
+                    'name' => $username,
+                    'response' => '00'.$hash,
+                ]);
+
+                if (isset($resChallenge['!done']) && ! isset($resChallenge['!trap'])) {
+                    return true;
+                }
+
+                $trapMsg = $resChallenge['!trap'][0]['message'] ?? $trapMsg;
+            }
+
+            $this->lastError = "Login ke MikroTik ditolak ({$trapMsg}). Pastikan username dan password MikroTik benar, dan IP server diizinkan (allowed-address).";
+            Log::warning("MikroTik login rejected: {$trapMsg}");
+
+            return false;
+        }
+
+        // If RouterOS returned !done without !trap
         if (isset($res['!done'])) {
+            // Older RouterOS challenge response check
+            $challenge = $res['!done'][0]['ret'] ?? null;
+            if ($challenge && strlen($challenge) === 32) {
+                $hash = md5(chr(0).$password.hex2bin($challenge));
+                $resChallenge = $this->comm('/login', [
+                    'name' => $username,
+                    'response' => '00'.$hash,
+                ]);
+
+                if (isset($resChallenge['!done']) && ! isset($resChallenge['!trap'])) {
+                    return true;
+                }
+
+                $trapMsg = $resChallenge['!trap'][0]['message'] ?? 'Login challenge failed';
+                $this->lastError = "Login ke MikroTik ditolak ({$trapMsg}).";
+                Log::warning("MikroTik login challenge rejected: {$trapMsg}");
+
+                return false;
+            }
+
             return true;
         }
 
-        // Older RouterOS challenge-response fallback
-        if (isset($res['!trap']) && isset($res['!done'][0]['ret'])) {
-            $challenge = hex2bin($res['!done'][0]['ret']);
-            $hash = md5(chr(0).$password.$challenge);
-            $res = $this->comm('/login', [
-                'name' => $username,
-                'response' => '00'.$hash,
-            ]);
-
-            return isset($res['!done']);
-        }
+        $this->lastError = 'Tidak menerima respons login dari MikroTik (koneksi terputus).';
 
         return false;
     }
@@ -274,20 +320,32 @@ class MikrotikApiService
                 $resolvedIp = filter_var($router->host, FILTER_VALIDATE_IP) ? $router->host : @gethostbyname($router->host);
                 $isPrivate = filter_var($resolvedIp, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false;
                 $hint = $isPrivate
-                    ? " Catatan: Host '{$router->host}' ({$resolvedIp}) adalah IP Privat/Lokal. Server hosting di internet publik tidak dapat menjangkau IP lokal tanpa VPN Remote atau IP Publik."
-                    : " (IP Publik: {$resolvedIp}). Port 8728 belum tembus dari internet luar. Pastikan DMZ/Port Forwarding di modem sudah diarahkan ke IP WAN MikroTik (192.168.1.2) atau provider internet Anda tidak menerapkan CGNAT.";
+                    ? " Catatan: Host '{$router->host}' ({$resolvedIp}) adalah IP Privat/Lokal. Server di luar jaringan lokal tidak dapat menjangkau IP lokal tanpa VPN Remote atau IP Publik."
+                    : " (IP Publik: {$resolvedIp}).";
 
                 $router->update(['status' => 'offline']);
 
+                $errMsg = $this->lastError ?: "Gagal terhubung ke router fisik ({$router->host}:{$router->port}). Pastikan IP/Port API bisa diakses dari luar.{$hint}";
+
                 return [
                     'success' => false,
-                    'message' => 'Gagal terhubung ke router fisik ('.$router->host.':'.$router->port.'). Pastikan IP/Port API bisa diakses dari luar.'.$hint,
+                    'message' => $errMsg,
                 ];
             }
 
             // Fetch /system/resource/print
             $res = $this->comm('/system/resource/print');
             $data = $res['!re'][0] ?? ($res['!done'][0] ?? []);
+
+            if (empty($data)) {
+                $this->disconnect();
+                $router->update(['status' => 'error']);
+
+                return [
+                    'success' => false,
+                    'message' => "Koneksi terbuka ke {$router->host}:{$router->port}, namun gagal membaca data sistem (/system/resource/print kosong). Pastikan akun '{$router->username}' memiliki hak akses group 'read' & 'api' di MikroTik.",
+                ];
+            }
 
             // Fetch /system/identity/print
             $identityRes = $this->comm('/system/identity/print');
