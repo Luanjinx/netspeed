@@ -82,12 +82,22 @@
         <form wire:submit="save" class="space-y-6">
             {{ $this->form }}
 
-            <div class="flex items-center justify-end pt-5 border-t border-[#232826]">
+            <!-- Card Aksi Simpan (Posisi Kanan) -->
+            <div style="background: #1a1e1c; border: 1px solid #232826; border-radius: 0.75rem; padding: 1.15rem 1.35rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-top: 1.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.85rem;">
+                    <div style="width: 2.6rem; height: 2.6rem; border-radius: 0.6rem; background: #131615; border: 1px solid #232826; display: flex; align-items: center; justify-content: center; color: #00e07e; flex-shrink: 0;">
+                        <span class="material-symbols-rounded" style="font-size: 22px;">save</span>
+                    </div>
+                    <div>
+                        <h4 style="font-size: 0.875rem; font-weight: 700; color: #eef1f0; margin: 0;">Simpan Pengaturan Peta</h4>
+                        <p style="font-size: 0.75rem; color: #9aa49f; margin: 3px 0 0 0;">Terapkan Google Maps JS API key &amp; titik koordinat kantor pusat NOC</p>
+                    </div>
+                </div>
+
                 <button type="submit"
-                        class="inline-flex items-center justify-center gap-2 px-7 py-2.5 text-sm font-bold text-white transition-all duration-200 rounded-lg shadow-lg bg-[#00e07e] hover:bg-[#00c56e] active:scale-[0.98] shadow-[0_4px_16px_rgba(0,224,126,0.35)] cursor-pointer"
-                        style="color: #ffffff !important;">
+                        style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 0.75rem 2.25rem; font-size: 0.875rem; font-weight: 700; color: #ffffff !important; background: #00e07e; border: 1px solid #00e07e; border-radius: 0.6rem; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 18px rgba(0, 224, 126, 0.35);">
                     <span class="material-symbols-rounded" style="font-size: 20px; color: #ffffff !important; line-height: 1;">check</span>
-                    <span style="color: #ffffff !important; font-weight: 700; font-size: 0.925rem;">Simpan</span>
+                    <span style="color: #ffffff !important; font-weight: 700; font-size: 0.95rem; letter-spacing: 0.02em;">Simpan</span>
                 </button>
             </div>
         </form>
