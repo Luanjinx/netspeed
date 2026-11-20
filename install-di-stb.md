@@ -94,19 +94,13 @@ EXIT;
 
 ## 📁 Langkah 4: Deploy Source Code ISP Billing
 
-### 1. Letakkan File Project di `/var/www/isp-billing`
-Anda bisa meng-clone repositori Git Anda atau mengunggah source code zip ke STB:
+### 1. Clone Repositori NetSpeed ke `/var/www/isp-billing`
+Jalankan perintah clone langsung dari repositori GitHub:
 
 ```bash
-# Buat folder direktori
-sudo mkdir -p /var/www/isp-billing
+# Clone source code langsung ke direktori web server
+sudo git clone https://github.com/Luanjinx/netspeed.git /var/www/isp-billing
 cd /var/www/isp-billing
-
-# Opsi A: Jika menggunakan Git
-# git clone <URL_REPO_ANDA> .
-
-# Opsi B: Jika upload file zip (misal: via SCP / FileZilla)
-# unzip isp-billing.zip -d /var/www/isp-billing
 ```
 
 ### 2. Atur File Konfigurasi `.env`
