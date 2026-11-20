@@ -1,4 +1,4 @@
-@if(config('app.demo'))
+@if(\App\Providers\DemoModeServiceProvider::isDemo())
     <div x-data="{ open: false }"
          @open-demo-modal.window="open = true"
          x-on:keydown.escape.window="open = false"

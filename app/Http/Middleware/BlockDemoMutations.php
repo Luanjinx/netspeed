@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Providers\DemoModeServiceProvider;
 use Closure;
 use Filament\Notifications\Notification;
 use Illuminate\Http\Request;
@@ -15,7 +16,7 @@ class BlockDemoMutations
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (! config('app.demo')) {
+        if (! DemoModeServiceProvider::isDemo()) {
             return $next($request);
         }
 
@@ -30,9 +31,9 @@ class BlockDemoMutations
         }
 
         // Check if mutation route or livewire mutation
-        if ($request->is('admin/*') || $request->is('livewire/*')) {
+        if ($request->is('admin/*') || $request->is('*livewire*')) {
             // Check Livewire payload for mutations
-            if ($request->is('livewire/*')) {
+            if ($request->is('*livewire*')) {
                 $components = $request->input('components', []);
                 $hasMutation = false;
 
@@ -43,7 +44,7 @@ class BlockDemoMutations
                         $params = $call['params'] ?? [];
                         $actionName = is_array($params) && isset($params[0]) && is_string($params[0]) ? strtolower($params[0]) : '';
 
-                        $isMutatingMethod = in_array($method, ['save', 'create', 'delete', 'destroy'], true) ||
+                        $isMutatingMethod = in_array($method, ['save', 'create', 'delete', 'destroy', 'update'], true) ||
                             str_contains($method, 'delete') ||
                             str_contains($method, 'create') ||
                             str_contains($method, 'save') ||
@@ -69,7 +70,8 @@ class BlockDemoMutations
                         ], true) ||
                             str_contains($actionName, 'delete') ||
                             str_contains($actionName, 'reboot') ||
-                            str_contains($actionName, 'isolir');
+                            str_contains($actionName, 'isolir') ||
+                            str_contains($actionName, 'save');
 
                         if ($isMutatingMethod || (($method === 'callmountedaction' || $method === 'callmountedtableaction') && $isMutatingAction)) {
                             $hasMutation = true;
@@ -100,9 +102,9 @@ class BlockDemoMutations
 
                 Notification::make()
                     ->warning()
-                    ->title('Mode Demo Aktif')
-                    ->body('Aksi penambahan, perubahan, dan penghapusan data dinonaktifkan pada versi demo ini.')
-                    ->duration(4000)
+                    ->title('⚡ Mode Demo Aktif')
+                    ->body('Anda sedang menjelajahi akun demonstrasi. Fitur penambahan, perubahan, dan penghapusan data dinonaktifkan (Read-Only).')
+                    ->duration(5000)
                     ->send();
 
                 return back();
