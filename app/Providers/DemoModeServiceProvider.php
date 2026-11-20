@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Model;
@@ -37,9 +38,14 @@ class DemoModeServiceProvider extends ServiceProvider
             return;
         }
 
-        // 1. Eloquent Model Protection: Abort ANY database insert, update, or delete
+        // 1. Eloquent Model Protection: Abort database mutations on ISP data models
         Model::saving(function (Model $model) {
             if (static::isDemo() && ! app()->runningInConsole()) {
+                // Allow login & session remember_token updates on User model
+                if ($model instanceof User && ! $model->isDirty(['name', 'email', 'password'])) {
+                    return true;
+                }
+
                 Notification::make()
                     ->warning()
                     ->title('⚡ Mode Demo Aktif')
@@ -51,7 +57,7 @@ class DemoModeServiceProvider extends ServiceProvider
                     try {
                         Livewire::dispatch('open-demo-modal');
                     } catch (Throwable $e) {
-                        // Suppress if not in active Livewire cycle
+                        // Suppress
                     }
                 }
 
@@ -110,23 +116,6 @@ class DemoModeServiceProvider extends ServiceProvider
                 str_contains($name, 'sync') ||
                 str_contains($name, 'reset')
             ) {
-                // When user clicks "Save" / "Create" / "Hapus", intercept with popup modal & toast and halt execution cleanly.
-                $action->before(function (Action $action): void {
-                    Notification::make()
-                        ->warning()
-                        ->title('⚡ Mode Demo Aktif')
-                        ->body('Anda sedang menjelajahi akun demonstrasi. Fitur penambahan, perubahan, dan penghapusan data dinonaktifkan (Read-Only).')
-                        ->duration(5000)
-                        ->send();
-
-                    $livewire = $action->getLivewire();
-                    if ($livewire && method_exists($livewire, 'dispatch')) {
-                        $livewire->dispatch('open-demo-modal');
-                    }
-
-                    $action->halt();
-                });
-
                 $action->action(function (Action $action): void {
                     Notification::make()
                         ->warning()
