@@ -51,20 +51,20 @@
         </div>
 
         <!-- 3. API Payment Gateway -->
-        <div wire:click="mountAction('configurePayment')"
-             class="settings-hub-card cursor-pointer"
-             style="display: flex; flex-direction: column; justify-content: space-between; padding: 1.15rem; background: #1a1e1c; border: 1px solid #232826; border-radius: 0.75rem; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); user-select: none;">
+        <a href="{{ url('/admin/payment-gateway') }}"
+           class="settings-hub-card"
+           style="display: flex; flex-direction: column; justify-content: space-between; padding: 1.15rem; background: #1a1e1c; border: 1px solid #232826; border-radius: 0.75rem; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); text-decoration: none;">
             <div style="display: flex; align-items: flex-start; justify-content: space-between;">
                 <div style="width: 2.6rem; height: 2.6rem; border-radius: 0.6rem; background: #131615; border: 1px solid #232826; display: flex; align-items: center; justify-content: center; color: #00e07e;">
                     <span class="material-symbols-rounded" style="font-size: 22px;">credit_card</span>
                 </div>
-                <span style="font-size: 0.7rem; font-weight: 600; padding: 3px 8px; border-radius: 6px; background: #131615; color: #00e07e; border: 1px solid #232826;">Atur API &rarr;</span>
+                <span style="font-size: 0.7rem; font-weight: 600; padding: 3px 8px; border-radius: 6px; background: #131615; color: #00e07e; border: 1px solid #232826;">Buka Halaman &rarr;</span>
             </div>
             <div>
                 <h4 style="font-size: 0.875rem; font-weight: 700; color: #eef1f0; margin: 0.75rem 0 0.25rem 0;">API Payment Gateway</h4>
                 <p style="font-size: 0.75rem; color: #9aa49f; margin: 0; line-height: 1.35;">Tripay, Midtrans, CekMutasi, QRIS Otomatis &amp; webhook pelunasan realtime</p>
             </div>
-        </div>
+        </a>
 
         <!-- 4. API Mobile Flutter & STB -->
         <div wire:click="mountAction('configureMobile')"
