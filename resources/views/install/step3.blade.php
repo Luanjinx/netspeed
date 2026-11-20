@@ -93,7 +93,7 @@ Klik tombol "Jalankan Migrasi Database" di bawah untuk memulai proses pembentuka
         consoleOutput.innerText = '>> Memulai Artisan Migrate --force ...\n';
 
         try {
-            const res = await fetch("{{ route('install.migrate') }}", {
+            const res = await fetch("{{ route('install.migrate', [], false) }}", {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

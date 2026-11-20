@@ -116,7 +116,7 @@
         this.innerText = 'Sedang memperbaiki...';
         
         try {
-            const res = await fetch("{{ route('install.fix_permissions') }}", {
+            const res = await fetch("{{ route('install.fix_permissions', [], false) }}", {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

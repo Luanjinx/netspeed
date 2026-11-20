@@ -114,7 +114,7 @@
         };
 
         try {
-            const res = await fetch("{{ route('install.test_db') }}", {
+            const res = await fetch("{{ route('install.test_db', [], false) }}", {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
