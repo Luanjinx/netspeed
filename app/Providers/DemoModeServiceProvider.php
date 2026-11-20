@@ -60,10 +60,15 @@ class DemoModeServiceProvider extends ServiceProvider
                 $action->action(function (Action $action): void {
                     Notification::make()
                         ->warning()
-                        ->title('Mode Demo Aktif')
-                        ->body('Fitur penambahan, perubahan, dan penghapusan data dinonaktifkan pada versi demo ini.')
-                        ->duration(4000)
+                        ->title('⚡ Mode Demo Aktif')
+                        ->body('Anda sedang menjelajahi akun demonstrasi. Fitur penambahan, perubahan, dan penghapusan data dinonaktifkan (Read-Only).')
+                        ->duration(5000)
                         ->send();
+
+                    $livewire = $action->getLivewire();
+                    if ($livewire && method_exists($livewire, 'dispatch')) {
+                        $livewire->dispatch('open-demo-modal');
+                    }
 
                     $action->halt();
                 });

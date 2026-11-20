@@ -81,13 +81,13 @@ class BlockDemoMutations
                 if ($hasMutation) {
                     Notification::make()
                         ->warning()
-                        ->title('Mode Demo Aktif')
-                        ->body('Aksi penambahan, perubahan, dan penghapusan data dinonaktifkan pada versi demo ini.')
-                        ->duration(4000)
+                        ->title('⚡ Mode Demo Aktif')
+                        ->body('Anda sedang menjelajahi akun demonstrasi. Fitur penambahan, perubahan, dan penghapusan data dinonaktifkan (Read-Only).')
+                        ->duration(5000)
                         ->send();
 
                     throw ValidationException::withMessages([
-                        'demo' => 'Mode Demo Aktif: Aksi penambahan, perubahan, dan penghapusan data dinonaktifkan pada versi demo ini.',
+                        'demo' => 'Mode Demo Aktif: Anda sedang menjelajahi akun demonstrasi. Fitur penambahan, perubahan, dan penghapusan data dinonaktifkan (Read-Only).',
                     ]);
                 }
             } else {
