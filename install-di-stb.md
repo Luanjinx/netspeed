@@ -271,10 +271,10 @@ sudo systemctl restart php8.3-fpm
 
 Karena STB Anda berada di jaringan lokal rumah/kantor (IP Privat seperti `192.168.1.xxx` tanpa IP Publik Statis), cara termudah, paling aman, dan stabil agar aplikasi Android Flutter pelanggan dapat mengakses backend dari jaringan internet luar adalah menggunakan **Cloudflare Tunnel (`cloudflared`)** — **100% GRATIS, tanpa port forwarding router, dan otomatis HTTPS / SSL aktif**.
 
-> [!NOTE]
-> **Benar sekali!** Saat menjalankan `cloudflared tunnel create`, Cloudflare akan membuatkan sebuah **Tunnel ID (UUID)** dan file kredensial JSON. Tunnel ID ini **wajib** dimasukkan ke dalam file konfigurasi atau digunakan saat registrasi service.
-> 
-> Pilih salah satu dari dua metode di bawah ini (Metode A direkomendasikan karena paling praktis):
+> [!IMPORTANT]
+> **Perbedaan Utama: Web Dashboard (Opsi A) vs CLI Manual (Opsi B):**
+> - **Opsi A (Cloudflare Web Dashboard — Sangat Direkomendasikan):** Tunnel dibuat langsung dari website Cloudflare. Anda bisa mengatur domain, subdomain (`api.domainanda.com`), dan port lokal (`localhost:80`) langsung dari web Cloudflare tanpa perlu edit file config apapun di STB.
+> - **Opsi B (CLI Manual):** Jika tunnel dibuat lewat perintah terminal `cloudflared tunnel create`, Cloudflare menandainya sebagai *"Locally managed"*. Pada mode ini, Anda **tidak bisa** mengatur rute dari web Cloudflare, melainkan **wajib** membuat file konfigurasi `config.yml` dan memasukkan **Tunnel ID** secara manual di STB.
 
 ---
 
@@ -300,13 +300,23 @@ Metode ini tidak memerlukan pembuatan file `config.yml` secara manual karena sel
    ```
    *Perintah ini otomatis mengonfigurasi Tunnel ID dan mengaktifkan service systemd `cloudflared`.*
 
+   > [!TIP]
+   > **Jika Muncul Error "cloudflared service is already installed":**
+   > Jika Anda sebelumnya pernah menginstall service cloudflared lama di STB dan muncul error:
+   > `cloudflared service is already installed at /etc/systemd/system/cloudflared.service`
+   > Cukup hapus service lama terlebih dahulu dengan perintah:
+   > ```bash
+   > sudo cloudflared service uninstall
+   > ```
+   > Lalu jalankan kembali perintah `sudo cloudflared service install <TOKEN_DARI_CLOUDFLARE>`.
+
 4. **Tambahkan Public Hostname (Routing Domain):**
    - Pada tab **Public Hostname** di Cloudflare Dashboard, klik **Add a public hostname**.
    - **Subdomain**: `api` (atau `billing`)
-   - **Domain**: pilih domain Anda (misal: `ispanda.com`)
+   - **Domain**: pilih domain Anda yang sudah aktif di Cloudflare (misal: `ispanda.com`)
    - **Service Type**: `HTTP`
    - **URL**: `localhost:80` (atau `127.0.0.1:80`)
-   - Klik **Save Tunnel**.
+   - Klik **Save Tunnel**. Status tunnel akan langsung berubah menjadi **Healthy** hijau!
 
 ---
 
