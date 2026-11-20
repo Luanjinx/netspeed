@@ -13,7 +13,7 @@
             </div>
             <span class="settings-hub-badge" style="font-size: 0.7rem; font-weight: 700; padding: 4px 10px; border-radius: 6px; background: #1a1e1c; color: #00e07e; border: 1px solid #232826; display: inline-flex; align-items: center; gap: 5px;">
                 <span class="material-symbols-rounded" style="font-size: 14px;">check_circle</span>
-                4 Modul Aktif
+                5 Modul Aktif
             </span>
         </div>
 
@@ -71,6 +71,20 @@
                 <div>
                     <h4 class="settings-hub-title" style="font-size: 0.875rem; font-weight: 700; color: #eef1f0; margin: 0.75rem 0 0.25rem 0;">Database Settings</h4>
                     <p class="settings-hub-desc" style="font-size: 0.75rem; color: #9aa49f; margin: 0; line-height: 1.35;">Tabel mentah key-value konfigurasi</p>
+                </div>
+            </a>
+
+            <!-- Pembaruan Sistem (GitHub) -->
+            <a href="{{ url('/admin/system-update') }}" class="settings-hub-card" style="display: flex; flex-direction: column; justify-content: space-between; padding: 1.1rem; background: #1a1e1c; border: 1px solid #232826; border-radius: 0.75rem; text-decoration: none; transition: all 0.2s ease;">
+                <div style="display: flex; align-items: flex-start; justify-content: space-between;">
+                    <div class="settings-hub-icon-box" style="width: 2.6rem; height: 2.6rem; border-radius: 0.6rem; background: #131615; border: 1px solid #232826; display: flex; align-items: center; justify-content: center; color: #00e07e;">
+                        <span class="material-symbols-rounded" style="font-size: 22px;">system_update</span>
+                    </div>
+                    <span class="settings-hub-badge" style="font-size: 0.7rem; font-weight: 600; padding: 3px 8px; border-radius: 6px; background: #131615; color: #00e07e; border: 1px solid #232826;">Update &rarr;</span>
+                </div>
+                <div>
+                    <h4 class="settings-hub-title" style="font-size: 0.875rem; font-weight: 700; color: #eef1f0; margin: 0.75rem 0 0.25rem 0;">Pembaruan Sistem</h4>
+                    <p class="settings-hub-desc" style="font-size: 0.75rem; color: #9aa49f; margin: 0; line-height: 1.35;">Tarik pembaruan fitur langsung dari GitHub</p>
                 </div>
             </a>
         </div>
