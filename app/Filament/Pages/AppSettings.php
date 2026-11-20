@@ -13,18 +13,12 @@ use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
-use Filament\Schemas\Components\Grid;
-use Filament\Schemas\Components\Section;
-use Filament\Schemas\Components\Tabs;
-use Filament\Schemas\Components\Tabs\Tab;
-use Filament\Schemas\Components\View;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -124,165 +118,7 @@ class AppSettings extends Page implements HasForms
     {
         return $schema
             ->statePath('data')
-            ->components([
-                Tabs::make('Pengaturan Sistem')
-                    ->tabs([
-                        // TAB 1: INTEGRASI API (LINK & API KEY)
-                        Tab::make('Integrasi API (Link & Key)')
-                            ->icon('heroicon-o-key')
-                            ->schema([
-                                View::make('filament.pages.settings.api-cards'),
-                            ]),
-
-                        // TAB 2: PROFIL PERUSAHAAN & TITIK PETA
-                        Tab::make('Profil ISP & Titik Peta')
-                            ->icon('heroicon-o-building-office-2')
-                            ->schema([
-                                Grid::make(['default' => 1, 'lg' => 2])->schema([
-                                    Section::make('Identitas Perusahaan / Penyedia Layanan')
-                                        ->description('Informasi nama dan kontak ISP yang tercetak di invoice tagihan, struk kasir thermal, dan pesan WhatsApp')
-                                        ->icon('heroicon-o-building-office-2')
-                                        ->schema([
-                                            TextInput::make('company_name')
-                                                ->label('Nama Brand / Perusahaan ISP')
-                                                ->placeholder('cth: NETSPEED WI-FI BROADBAND')
-                                                ->required(),
-
-                                            TextInput::make('company_phone')
-                                                ->label('Nomor WhatsApp Layanan CS / Bantuan')
-                                                ->placeholder('cth: 0812-3456-7890')
-                                                ->required(),
-
-                                            Textarea::make('company_address')
-                                                ->label('Alamat Kantor Pusat / NOC')
-                                                ->placeholder('Alamat lengkap kantor penyedia internet')
-                                                ->rows(3),
-                                        ]),
-
-                                    Section::make('Koordinat Titik Kantor Pusat / NOC (Pusat Peta)')
-                                        ->description('Titik koordinat awal saat teknisi membuka peta lapangan (/tech/map) dan peta admin (/admin/map)')
-                                        ->icon('heroicon-o-map-pin')
-                                        ->schema([
-                                            TextInput::make('office_lat')
-                                                ->label('Latitude Kantor Pusat')
-                                                ->placeholder('cth: -6.2087634')
-                                                ->required(),
-
-                                            TextInput::make('office_lng')
-                                                ->label('Longitude Kantor Pusat')
-                                                ->placeholder('cth: 106.845599')
-                                                ->required(),
-                                        ]),
-                                ]),
-                            ]),
-
-                        // TAB 3: BILLING, QRIS & ISOLIR
-                        Tab::make('Billing, QRIS & Isolir')
-                            ->icon('heroicon-o-currency-dollar')
-                            ->schema([
-                                Grid::make(['default' => 1, 'lg' => 2])->schema([
-                                    Section::make('QRIS Dinamis Otomatis & Auto Scanner')
-                                        ->columnSpan(['default' => 1, 'lg' => 2])
-                                        ->icon('heroicon-o-qr-code')
-                                        ->description('Unggah gambar/foto barcode QRIS statis toko Anda untuk otomatis membaca string EMVCo dan info merchant, atau masukkan manual.')
-                                        ->schema([
-                                            FileUpload::make('qris_image_upload')
-                                                ->label('Upload Foto / Barcode QRIS Merchant (Scan Otomatis)')
-                                                ->image()
-                                                ->disk('public')
-                                                ->directory('qris-uploads')
-                                                ->visibility('public')
-                                                ->maxSize(5120)
-                                                ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/jpg', 'image/webp'])
-                                                ->live()
-                                                ->helperText('Pilih atau drag & drop file foto/screenshot QRIS toko Anda (BCA, Mandiri, BRI, ShopeePay, GoPay, Nobu, dll). Sistem akan langsung membaca QR code dan mengisi string EMVCo di bawah.')
-                                                ->afterStateUpdated(function ($state, callable $set) {
-                                                    if (! $state) {
-                                                        return;
-                                                    }
-
-                                                    $filePath = self::resolveUploadedFilePath($state);
-                                                    if (! $filePath || ! file_exists($filePath)) {
-                                                        return;
-                                                    }
-
-                                                    $service = app(QrisService::class);
-                                                    $result = $service->decodeFromImage($filePath);
-
-                                                    if ($result['success'] ?? false) {
-                                                        $set('static_qris_string', $result['payload']);
-
-                                                        Notification::make()
-                                                            ->title('✅ Barcode QRIS Berhasil Dipindai!')
-                                                            ->body("Merchant: {$result['merchant_name']}\nKota: {$result['merchant_city']}\nFormat EMVCo valid telah diterapkan ke sistem.")
-                                                            ->success()
-                                                            ->duration(8000)
-                                                            ->send();
-                                                    } else {
-                                                        Notification::make()
-                                                            ->title('Gagal Memindai QR Code')
-                                                            ->body($result['message'] ?? 'Tidak ditemukan QR code yang valid pada gambar.')
-                                                            ->danger()
-                                                            ->duration(9000)
-                                                            ->send();
-                                                    }
-                                                }),
-
-                                            Placeholder::make('qris_preview_display')
-                                                ->label('Status & Preview Barcode QRIS Merchant')
-                                                ->content(fn ($get) => self::renderQrisPreviewHtml($get('static_qris_string'))),
-
-                                            Textarea::make('static_qris_string')
-                                                ->label('Raw String QRIS Statis EMVCo Merchant')
-                                                ->placeholder('00020101021126680016ID.CO.QRIS.WWW0118936009990000000001...')
-                                                ->rows(3)
-                                                ->live(debounce: 500)
-                                                ->helperText('Payload EMVCo QRIS resmi toko Anda. Nilai ini otomatis terisi saat foto QRIS diunggah di atas. Anda juga dapat mengubahnya secara manual jika diperlukan.'),
-
-                                            Toggle::make('use_unique_code')
-                                                ->label('Gunakan 3 Digit Kode Unik Tagihan')
-                                                ->helperText('Menambahkan 3 digit angka acak (cth: Rp 150.245) untuk mempermudah deteksi pembayaran mutasi rekening.')
-                                                ->default(true),
-                                        ]),
-
-                                    Section::make('Profil Isolir Otomatis MikroTik')
-                                        ->icon('heroicon-o-shield-exclamation')
-                                        ->description('Profil kecepatan yang diterapkan ke pelanggan PPPoE saat menunggak pembayaran')
-                                        ->schema([
-                                            TextInput::make('default_isolir_profile')
-                                                ->label('Nama Profil Isolir MikroTik (/ppp/profile)')
-                                                ->placeholder('cth: PROFIL-ISOLIR atau ISOLIR')
-                                                ->required(),
-
-                                            Placeholder::make('isolir_wizard_link')
-                                                ->label('Alat Redirect Isolir')
-                                                ->content(new HtmlString('<div class="pt-1"><a href="'.url('/admin/isolir-manager').'" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#1a1e1c] text-[#00e07e] border border-[#232826] hover:bg-[#00e07e] hover:text-[#06261a] transition-all"><span>Buka Wizard Script Isolir & Captive MikroTik &rarr;</span></a></div>')),
-                                        ]),
-
-                                    Section::make('Subnet Jaringan PPPoE & Anti-Konflik Hotspot')
-                                        ->icon('heroicon-o-shield-check')
-                                        ->description('Konfigurasi IP Gateway (Local Address) dan Pool IP dinamis yang otomatis disematkan pada secret & profil PPPoE agar terisolasi penuh dari subnet Hotspot')
-                                        ->schema([
-                                            TextInput::make('pppoe_local_address')
-                                                ->label('Local Address (Gateway PPPoE)')
-                                                ->placeholder('cth: 10.20.0.1')
-                                                ->helperText('IP gateway lokal tunnel PPPoE di MikroTik')
-                                                ->required(),
-                                            TextInput::make('pppoe_pool_range')
-                                                ->label('Range IP Pool Dinamis (POOL-PPPOE)')
-                                                ->placeholder('cth: 10.20.0.2-10.20.0.254')
-                                                ->helperText('Dibuat otomatis di /ip/pool MikroTik')
-                                                ->required(),
-                                            TextInput::make('pppoe_dns_servers')
-                                                ->label('DNS Server PPPoE')
-                                                ->placeholder('cth: 8.8.8.8,1.1.1.1')
-                                                ->required(),
-                                        ]),
-                                ]),
-                            ]),
-
-                    ]),
-            ]);
+            ->components([]);
     }
 
     protected function getHeaderActions(): array
@@ -302,7 +138,7 @@ class AppSettings extends Page implements HasForms
                 ->action(function (array $data) {
                     $phone = $data['test_phone'];
                     $service = app(WhatsAppService::class);
-                    $company = $this->data['company_name'] ?? 'ISP Billing';
+                    $company = IspSetting::get('company_name', 'ISP Billing');
                     $msg = "Halo! Ini adalah pesan uji coba integrasi API WhatsApp Gateway dari *{$company}*.\n\nWaktu: ".now()->format('d M Y, H:i:s')."\nStatus: ✅ Sukses Terhubung!";
 
                     $res = $service->sendMessage($phone, $msg);
@@ -318,7 +154,7 @@ class AppSettings extends Page implements HasForms
                 ->icon('heroicon-o-signal')
                 ->color('info')
                 ->action(function () {
-                    $url = $this->data['genieacs_api_url'] ?? '';
+                    $url = IspSetting::get('genieacs_api_url', '');
                     if (empty($url)) {
                         Notification::make()->title('URL GenieACS kosong')->warning()->send();
 
@@ -326,10 +162,13 @@ class AppSettings extends Page implements HasForms
                     }
                     try {
                         $req = Http::timeout(5)->baseUrl(rtrim($url, '/'));
-                        if (! empty($this->data['genieacs_auth_token'])) {
-                            $req->withToken($this->data['genieacs_auth_token']);
-                        } elseif (! empty($this->data['genieacs_username']) && ! empty($this->data['genieacs_password'])) {
-                            $req->withBasicAuth($this->data['genieacs_username'], $this->data['genieacs_password']);
+                        $token = IspSetting::get('genieacs_auth_token', '');
+                        $user = IspSetting::get('genieacs_username', '');
+                        $pass = IspSetting::get('genieacs_password', '');
+                        if (! empty($token)) {
+                            $req->withToken($token);
+                        } elseif (! empty($user) && ! empty($pass)) {
+                            $req->withBasicAuth($user, $pass);
                         }
                         $res = $req->get('/devices', ['limit' => 1]);
                         if ($res->successful()) {
@@ -353,65 +192,6 @@ class AppSettings extends Page implements HasForms
                     IspSetting::set('app_api_key', $newKey);
                     Notification::make()->title('API Key Baru Dibuat')->body($newKey)->success()->send();
                 }),
-
-            Action::make('scanQrisImage')
-                ->label('Scan Foto QRIS')
-                ->icon('heroicon-o-camera')
-                ->color('warning')
-                ->modalHeading('Pindai & Ekstrak Data QRIS Merchant')
-                ->modalDescription('Unggah file foto atau screenshot barcode QRIS toko Anda. Sistem akan memindai QR code dan menerapkan hasilnya langsung ke pengaturan.')
-                ->modalSubmitActionLabel('Pindai & Terapkan Otomatis')
-                ->form([
-                    FileUpload::make('modal_qris_image')
-                        ->label('File Foto / Screenshot QRIS')
-                        ->image()
-                        ->disk('public')
-                        ->directory('qris-uploads')
-                        ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/jpg', 'image/webp'])
-                        ->required(),
-                ])
-                ->action(function (array $data) {
-                    $state = $data['modal_qris_image'] ?? null;
-                    $filePath = self::resolveUploadedFilePath($state);
-
-                    if (! $filePath || ! file_exists($filePath)) {
-                        Notification::make()->title('File gambar tidak ditemukan')->danger()->send();
-
-                        return;
-                    }
-
-                    $service = app(QrisService::class);
-                    $res = $service->decodeFromImage($filePath);
-
-                    if ($res['success']) {
-
-                        $this->data['static_qris_string'] = $res['payload'];
-                        $this->data['qris_image_upload'] = $state;
-                        IspSetting::set('static_qris_string', $res['payload']);
-                        if (is_string($state)) {
-                            IspSetting::set('qris_image_upload', $state);
-                        }
-
-                        Notification::make()
-                            ->title('✅ Barcode QRIS Berhasil Diterapkan!')
-                            ->body("Merchant: {$res['merchant_name']}\nKota: {$res['merchant_city']}\nPengaturan QRIS telah otomatis diperbarui.")
-                            ->success()
-                            ->duration(8000)
-                            ->send();
-                    } else {
-                        Notification::make()
-                            ->title('Gagal Memindai QRIS')
-                            ->body($res['message'])
-                            ->danger()
-                            ->send();
-                    }
-                }),
-
-            Action::make('save')
-                ->label('Simpan Pengaturan')
-                ->icon('heroicon-o-check')
-                ->color('primary')
-                ->action(fn () => $this->save()),
         ];
     }
 
@@ -690,6 +470,50 @@ class AppSettings extends Page implements HasForms
                 @file_put_contents($jsonPath, json_encode($json, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 
                 Notification::make()->title('Pengaturan Peta Berhasil Disimpan')->success()->send();
+            });
+    }
+
+    public function configureNetworkAction(): Action
+    {
+        return Action::make('configureNetwork')
+            ->label('Pengaturan Subnet PPPoE & Isolir')
+            ->icon('heroicon-o-shield-check')
+            ->modalHeading('Pengaturan Subnet Jaringan PPPoE & Anti-Konflik Hotspot')
+            ->modalDescription('Konfigurasi IP Gateway (Local Address) dan Pool IP dinamis yang otomatis disematkan pada secret & profil PPPoE agar terisolasi penuh dari subnet Hotspot.')
+            ->modalSubmitActionLabel('Simpan Subnet PPPoE')
+            ->form([
+                TextInput::make('pppoe_local_address')
+                    ->label('Local Address (Gateway PPPoE)')
+                    ->placeholder('cth: 10.20.0.1')
+                    ->default(fn () => IspSetting::get('pppoe_local_address', '10.20.0.1'))
+                    ->required(),
+                TextInput::make('pppoe_pool_range')
+                    ->label('Range IP Pool Dinamis (POOL-PPPOE)')
+                    ->placeholder('cth: 10.20.0.2-10.20.0.254')
+                    ->default(fn () => IspSetting::get('pppoe_pool_range', '10.20.0.2-10.20.0.254'))
+                    ->required(),
+                TextInput::make('pppoe_dns_servers')
+                    ->label('DNS Server PPPoE')
+                    ->placeholder('cth: 8.8.8.8,1.1.1.1')
+                    ->default(fn () => IspSetting::get('pppoe_dns_servers', '8.8.8.8,1.1.1.1'))
+                    ->required(),
+                TextInput::make('default_isolir_profile')
+                    ->label('Nama Profil Isolir MikroTik Default')
+                    ->placeholder('cth: PROFIL-ISOLIR')
+                    ->default(fn () => IspSetting::get('default_isolir_profile', 'PROFIL-ISOLIR'))
+                    ->required(),
+            ])
+            ->action(function (array $data): void {
+                IspSetting::set('pppoe_local_address', trim($data['pppoe_local_address'] ?? '10.20.0.1'));
+                IspSetting::set('pppoe_pool_range', trim($data['pppoe_pool_range'] ?? '10.20.0.2-10.20.0.254'));
+                IspSetting::set('pppoe_dns_servers', trim($data['pppoe_dns_servers'] ?? '8.8.8.8,1.1.1.1'));
+                IspSetting::set('default_isolir_profile', trim($data['default_isolir_profile'] ?? 'PROFIL-ISOLIR'));
+                IspSetting::set('isolir_profile', trim($data['default_isolir_profile'] ?? 'PROFIL-ISOLIR'));
+                $this->data['pppoe_local_address'] = $data['pppoe_local_address'] ?? '10.20.0.1';
+                $this->data['pppoe_pool_range'] = $data['pppoe_pool_range'] ?? '10.20.0.2-10.20.0.254';
+                $this->data['pppoe_dns_servers'] = $data['pppoe_dns_servers'] ?? '8.8.8.8,1.1.1.1';
+                $this->data['default_isolir_profile'] = $data['default_isolir_profile'] ?? 'PROFIL-ISOLIR';
+                Notification::make()->title('Pengaturan Subnet PPPoE & Isolir Berhasil Disimpan')->success()->send();
             });
     }
 
