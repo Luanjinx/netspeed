@@ -64,7 +64,7 @@
         }
     </style>
 
-    <!-- 1. PUSAT ALAT & KONSOL TERPADU SISTEM (4 MODUL SISTEM) -->
+    <!-- 1. PUSAT ALAT & KONSOL TERPADU SISTEM (3 MODUL SISTEM) -->
     <div class="settings-hub-wrapper" style="margin-bottom: 1.25rem; padding: 1.25rem 1.35rem; background: #131615; border: 1px solid #232826; border-radius: 1rem;">
         <div class="settings-hub-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
             <div>
@@ -74,15 +74,15 @@
                     </span>
                     Pusat Alat &amp; Konsol Terpadu Sistem
                 </h3>
-                <p style="font-size: 0.775rem; color: #9aa49f; margin: 4px 0 0 0;">Akses cepat identitas ISP, konsol push notifikasi, generator isolir, dan pembaruan sistem</p>
+                <p style="font-size: 0.775rem; color: #9aa49f; margin: 4px 0 0 0;">Akses cepat identitas ISP, generator isolir, dan pembaruan sistem</p>
             </div>
             <span class="settings-hub-badge" style="font-size: 0.7rem; font-weight: 700; padding: 4px 10px; border-radius: 6px; background: #1a1e1c; color: #00e07e; border: 1px solid #232826; display: inline-flex; align-items: center; gap: 5px;">
                 <span class="material-symbols-rounded" style="font-size: 14px;">check_circle</span>
-                4 Modul Sistem
+                3 Modul Sistem
             </span>
         </div>
 
-        <div class="settings-grid-4">
+        <div class="settings-grid-3">
             <!-- 1. General & Profil ISP -->
             <a href="{{ url('/admin/company-profile') }}" class="settings-hub-card" style="display: flex; flex-direction: column; justify-content: space-between; padding: 1.1rem; background: #1a1e1c; border: 1px solid #232826; border-radius: 0.75rem; text-decoration: none;">
                 <div style="display: flex; align-items: flex-start; justify-content: space-between;">
@@ -97,21 +97,7 @@
                 </div>
             </a>
 
-            <!-- 2. OneSignal Broadcast -->
-            <a href="{{ url('/admin/onesignal') }}" class="settings-hub-card" style="display: flex; flex-direction: column; justify-content: space-between; padding: 1.1rem; background: #1a1e1c; border: 1px solid #232826; border-radius: 0.75rem; text-decoration: none;">
-                <div style="display: flex; align-items: flex-start; justify-content: space-between;">
-                    <div class="settings-hub-icon-box" style="width: 2.6rem; height: 2.6rem; border-radius: 0.6rem; background: #131615; border: 1px solid #232826; display: flex; align-items: center; justify-content: center; color: #00e07e;">
-                        <span class="material-symbols-rounded" style="font-size: 22px;">campaign</span>
-                    </div>
-                    <span class="settings-hub-badge" style="font-size: 0.7rem; font-weight: 600; padding: 3px 8px; border-radius: 6px; background: #131615; color: #9aa49f; border: 1px solid #232826;">Broadcast &rarr;</span>
-                </div>
-                <div>
-                    <h4 class="settings-hub-title" style="font-size: 0.875rem; font-weight: 700; color: #eef1f0; margin: 0.75rem 0 0.25rem 0;">Push Notifikasi</h4>
-                    <p class="settings-hub-desc" style="font-size: 0.75rem; color: #9aa49f; margin: 0; line-height: 1.35;">Kirim pesan push OneSignal ke user</p>
-                </div>
-            </a>
-
-            <!-- 3. Isolir & Captive Wizard -->
+            <!-- 2. Isolir & Captive Wizard -->
             <a href="{{ url('/admin/isolir-manager') }}" class="settings-hub-card" style="display: flex; flex-direction: column; justify-content: space-between; padding: 1.1rem; background: #1a1e1c; border: 1px solid #232826; border-radius: 0.75rem; text-decoration: none;">
                 <div style="display: flex; align-items: flex-start; justify-content: space-between;">
                     <div class="settings-hub-icon-box" style="width: 2.6rem; height: 2.6rem; border-radius: 0.6rem; background: #131615; border: 1px solid #232826; display: flex; align-items: center; justify-content: center; color: #00e07e;">
@@ -125,7 +111,7 @@
                 </div>
             </a>
 
-            <!-- 4. Pembaruan Sistem (GitHub) -->
+            <!-- 3. Pembaruan Sistem (GitHub) -->
             <a href="{{ url('/admin/system-update') }}" class="settings-hub-card" style="display: flex; flex-direction: column; justify-content: space-between; padding: 1.1rem; background: #1a1e1c; border: 1px solid #232826; border-radius: 0.75rem; text-decoration: none;">
                 <div style="display: flex; align-items: flex-start; justify-content: space-between;">
                     <div class="settings-hub-icon-box" style="width: 2.6rem; height: 2.6rem; border-radius: 0.6rem; background: #131615; border: 1px solid #232826; display: flex; align-items: center; justify-content: center; color: #00e07e;">

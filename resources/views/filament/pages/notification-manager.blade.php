@@ -98,25 +98,25 @@
                         wire:click="sendNotification"
                         wire:loading.attr="disabled"
                         class="noc-btn noc-btn-primary"
-                        style="cursor: pointer; padding: 0.5rem 1.25rem; font-size: 0.8125rem; font-weight: 700; background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%); display: inline-flex; align-items: center; gap: 6px;">
-                    <span wire:loading.remove wire:target="sendNotification" class="material-symbols-rounded" style="font-size: 16px;">send</span>
-                    <span wire:loading wire:target="sendNotification" class="material-symbols-rounded" style="font-size: 16px;">hourglass_empty</span>
-                    Kirim Push Notifikasi Sekarang
+                        style="cursor: pointer; padding: 0.65rem 1.5rem; font-size: 0.875rem; font-weight: 700; background: #16a34a; border: 1px solid #22c55e; color: #ffffff !important; border-radius: 0.5rem; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(22, 163, 74, 0.35);">
+                    <span wire:loading.remove wire:target="sendNotification" class="material-symbols-rounded" style="font-size: 18px; color: #ffffff !important;">send</span>
+                    <span wire:loading wire:target="sendNotification" class="material-symbols-rounded" style="font-size: 18px; color: #ffffff !important;">hourglass_empty</span>
+                    <span style="color: #ffffff !important;">Kirim Notifikasi Sekarang</span>
                 </button>
             </div>
         </div>
 
-        <!-- 3. Riwayat Pengiriman Notifikasi Push (Push Notification History) -->
+        <!-- 3. Riwayat Pengiriman Notifikasi (Push & WhatsApp) -->
         <div class="fi-section" style="overflow: hidden;">
             <div class="noc-header-bar" style="padding: 1rem 1.25rem; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem;">
                 <div class="noc-title-group">
                     <span class="material-symbols-rounded" style="font-size: 22px; color: #818cf8;">history</span>
                     <div>
                         <h3 class="noc-title">
-                            Riwayat Pengiriman Push Notifikasi
+                            Riwayat Pengiriman Notifikasi
                         </h3>
                         <p class="noc-subtitle">
-                            Daftar notifikasi yang dikirimkan ke aplikasi mobile melalui OneSignal REST API.
+                            Daftar notifikasi yang dikirimkan ke aplikasi mobile (OneSignal) dan WhatsApp pelanggan.
                         </p>
                     </div>
                 </div>
@@ -130,11 +130,11 @@
                 <table class="isp-table-clean">
                     <thead>
                         <tr>
-                            <th>Judul & Pesan</th>
+                            <th>Judul &amp; Pesan</th>
                             <th>Target Penerima</th>
                             <th>Penerima</th>
                             <th>Status</th>
-                            <th>OneSignal ID</th>
+                            <th>Ringkasan / Info</th>
                             <th>Waktu Kirim</th>
                             <th style="text-align: right;">Aksi</th>
                         </tr>
@@ -162,7 +162,7 @@
                                     </span>
                                 </td>
                                 <td style="font-family: ui-monospace, monospace; font-weight: 700;">
-                                    {{ $notif->recipients_count }} device
+                                    {{ $notif->recipients_count }} target
                                 </td>
                                 <td>
                                     @if ($notif->status === 'sent')
@@ -175,8 +175,8 @@
                                         </span>
                                     @endif
                                 </td>
-                                <td style="font-family: ui-monospace, monospace; font-size: 0.75rem; color: #71717a;">
-                                    {{ $notif->onesignal_id ?: '-' }}
+                                <td style="font-size: 0.75rem; color: #9aa49f; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                    {{ $notif->response_summary ?: ($notif->onesignal_id ?: '-') }}
                                 </td>
                                 <td style="font-size: 0.75rem; color: #71717a; white-space: nowrap;">
                                     {{ $notif->created_at?->format('d M Y, H:i') }}
@@ -207,7 +207,7 @@
                         @empty
                             <tr>
                                 <td colspan="7" style="padding: 2.5rem; text-align: center; color: #71717a;">
-                                    Belum ada riwayat pengiriman notifikasi OneSignal.
+                                    Belum ada riwayat pengiriman notifikasi.
                                 </td>
                             </tr>
                         @endforelse

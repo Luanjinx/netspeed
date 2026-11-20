@@ -73,7 +73,7 @@
                 </div>
 
                 <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px dashed #232826; font-size: 0.75rem; color: #9aa49f;">
-                    <a href="{{ url('/admin/onesignal') }}" style="color: #00e07e; text-decoration: underline;">Buka Hub Broadcast Pesan Massal &rarr;</a>
+                    <a href="{{ url('/admin/notifications') }}" style="color: #00e07e; text-decoration: underline;">Buka Hub Broadcast Pesan Massal &rarr;</a>
                 </div>
             </div>
         </div>

@@ -6,8 +6,10 @@ use App\Models\Customer;
 use App\Models\IspSetting;
 use App\Models\PushNotification;
 use App\Services\Notification\OneSignalService;
+use App\Services\Notification\WhatsAppService;
 use BackedEnum;
 use Filament\Actions\Action;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -24,26 +26,28 @@ use Filament\Schemas\Schema;
 use Livewire\WithPagination;
 use UnitEnum;
 
-class OneSignalManager extends Page implements HasForms
+class NotificationManager extends Page implements HasForms
 {
     use InteractsWithForms;
     use WithPagination;
 
-    protected static ?string $slug = 'onesignal';
+    protected static ?string $slug = 'notifications';
 
-    protected static bool $shouldRegisterNavigation = false;
+    protected static bool $shouldRegisterNavigation = true;
 
-    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-bell-alert';
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-megaphone';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Sistem';
+    protected static string|UnitEnum|null $navigationGroup = 'Notifikasi & Broadcast';
 
-    protected static ?string $navigationLabel = 'Push Notifikasi OneSignal';
+    protected static ?string $navigationLabel = 'Kirim Notifikasi';
 
-    protected static ?string $title = 'Manajemen Push Notifikasi OneSignal';
+    protected static ?string $title = 'Pusat Pengiriman Notifikasi & Broadcast';
 
-    protected static ?int $navigationSort = 3;
+    protected ?string $subheading = 'Siarkan pesan pengumuman & informasi layanan ke Aplikasi Mobile (Push Notifikasi) dan WhatsApp Pelanggan';
 
-    protected string $view = 'filament.pages.onesignal-manager';
+    protected static ?int $navigationSort = 1;
+
+    protected string $view = 'filament.pages.notification-manager';
 
     public ?array $data = [];
 
@@ -54,21 +58,22 @@ class OneSignalManager extends Page implements HasForms
     public function mount(): void
     {
         $this->form->fill([
-            // Form 1: Settings
-            'onesignal_enabled' => IspSetting::get('onesignal_enabled', '1') === '1',
-            'onesignal_app_id' => IspSetting::get('onesignal_app_id', ''),
-            'onesignal_rest_api_key' => IspSetting::get('onesignal_rest_api_key', ''),
-            'onesignal_notify_invoice' => IspSetting::get('onesignal_notify_invoice', '1') === '1',
-            'onesignal_notify_payment' => IspSetting::get('onesignal_notify_payment', '1') === '1',
-            'onesignal_notify_ticket' => IspSetting::get('onesignal_notify_ticket', '1') === '1',
-
-            // Form 2: Send Form default values
+            // Form 1: Channels & Send default values
+            'channels' => ['mobile', 'whatsapp'],
             'send_title' => '📢 Pengumuman Layanan ISP',
             'send_message' => '',
             'send_target_type' => 'all',
             'send_customer_id' => null,
             'send_action_url' => '',
             'send_image_url' => '',
+
+            // Form 2: Settings
+            'onesignal_enabled' => IspSetting::get('onesignal_enabled', '1') === '1',
+            'onesignal_app_id' => IspSetting::get('onesignal_app_id', ''),
+            'onesignal_rest_api_key' => IspSetting::get('onesignal_rest_api_key', ''),
+            'onesignal_notify_invoice' => IspSetting::get('onesignal_notify_invoice', '1') === '1',
+            'onesignal_notify_payment' => IspSetting::get('onesignal_notify_payment', '1') === '1',
+            'onesignal_notify_ticket' => IspSetting::get('onesignal_notify_ticket', '1') === '1',
         ]);
 
         $this->refreshConnectionStatus();
@@ -102,15 +107,30 @@ class OneSignalManager extends Page implements HasForms
         return $schema
             ->statePath('data')
             ->components([
-                Tabs::make('OneSignal Hub')
+                Tabs::make('Notification Hub')
                     ->tabs([
                         // TAB 1: KIRIM NOTIFIKASI
-                        Tab::make('Kirim Push Notifikasi')
+                        Tab::make('Kirim Notifikasi & Broadcast')
                             ->icon('heroicon-o-paper-airplane')
                             ->schema([
-                                Section::make('Buat & Siarkan Push Notifikasi ke Aplikasi Mobile')
-                                    ->description('Kirim notifikasi langsung ke smartphone pelanggan atau teknisi melalui jaringan OneSignal.')
+                                Section::make('Siarkan Notifikasi ke Aplikasi Mobile & WhatsApp')
+                                    ->description('Kirim pesan pengumuman, tagihan, atau promo serentak ke smartphone pelanggan.')
                                     ->schema([
+                                        CheckboxList::make('channels')
+                                            ->label('Pilih Saluran / Kanal Pengiriman')
+                                            ->options([
+                                                'mobile' => '📱 Aplikasi Mobile (OneSignal Push Notification)',
+                                                'whatsapp' => '💬 WhatsApp Pelanggan (Gateway WhatsApp)',
+                                            ])
+                                            ->descriptions([
+                                                'mobile' => 'Muncul sebagai banner pop-up notifikasi di HP & STB pelanggan.',
+                                                'whatsapp' => 'Pesan terkirim ke obrolan WhatsApp nomor HP pelanggan.',
+                                            ])
+                                            ->default(['mobile', 'whatsapp'])
+                                            ->columns(2)
+                                            ->required()
+                                            ->helperText('Pilih salah satu atau centang keduanya untuk mengirim ke multi-kanal sekaligus.'),
+
                                         Grid::make(2)->schema([
                                             TextInput::make('send_title')
                                                 ->label('Judul Notifikasi (Title)')
@@ -120,10 +140,10 @@ class OneSignalManager extends Page implements HasForms
                                             Select::make('send_target_type')
                                                 ->label('Target Penerima')
                                                 ->options([
-                                                    'all' => '📢 Semua Perangkat Pelanggan (Broadcast)',
+                                                    'all' => '📢 Semua Pelanggan (Broadcast Massal)',
                                                     'customer' => '👤 Pelanggan Spesifik Tertentu',
                                                     'active_customers' => '🟢 Pelanggan Status Aktif Saja',
-                                                    'isolated_customers' => '🔴 Pelanggan Status Isolir (Pengingat Bayar)',
+                                                    'isolated_customers' => '🔴 Pelanggan Status Isolir (Peringatan Bayar)',
                                                 ])
                                                 ->default('all')
                                                 ->live()
@@ -142,25 +162,25 @@ class OneSignalManager extends Page implements HasForms
                                         Textarea::make('send_message')
                                             ->label('Isi Pesan Notifikasi (Message / Body)')
                                             ->placeholder('Tuliskan detail pengumuman atau instruksi...')
-                                            ->rows(3)
+                                            ->rows(4)
                                             ->required(),
 
                                         Grid::make(2)->schema([
                                             TextInput::make('send_action_url')
                                                 ->label('Tautan / Action URL saat Notifikasi Diklik (Opsional)')
                                                 ->placeholder('cth: /invoices atau https://isp.com/promo')
-                                                ->helperText('Dapat berupa deep link halaman aplikasi mobile atau tautan web.'),
+                                                ->helperText('Tautan web atau deep link aplikasi pelanggan.'),
 
                                             TextInput::make('send_image_url')
                                                 ->label('URL Gambar Banner Notifikasi (Opsional)')
                                                 ->placeholder('cth: https://domain.com/banner-promo.jpg')
-                                                ->helperText('Gambar akan ditampilkan sebagai banner besar di notifikasi HP.'),
+                                                ->helperText('Gambar banner besar pada notifikasi HP Android/iOS.'),
                                         ]),
                                     ]),
                             ]),
 
                         // TAB 2: PENGATURAN KREDENSIAL ONESIGNAL
-                        Tab::make('Pengaturan & Otomasi')
+                        Tab::make('Pengaturan & Otomasi OneSignal')
                             ->icon('heroicon-o-cog-6-tooth')
                             ->schema([
                                 Section::make('Kredensial API OneSignal')
@@ -175,16 +195,14 @@ class OneSignalManager extends Page implements HasForms
                                             TextInput::make('onesignal_app_id')
                                                 ->label('OneSignal App ID')
                                                 ->placeholder('cth: 3fa85f64-5717-4562-b3fc-2c963f66afa6')
-                                                ->helperText('Salin dari OneSignal Console')
-                                                ->required(),
+                                                ->helperText('Salin dari OneSignal Console'),
 
                                             TextInput::make('onesignal_rest_api_key')
                                                 ->label('OneSignal REST API Key')
                                                 ->placeholder('Masukkan REST API Key...')
                                                 ->password()
                                                 ->revealable()
-                                                ->helperText('Kunci rahasia untuk otorisasi pengiriman notifikasi dari backend')
-                                                ->required(),
+                                                ->helperText('Kunci rahasia untuk otorisasi pengiriman notifikasi dari backend'),
                                         ]),
                                     ]),
 
@@ -258,11 +276,14 @@ class OneSignalManager extends Page implements HasForms
         $this->form->validate();
         $formData = $this->form->getState();
 
-        $service = app(OneSignalService::class);
-        if (! $service->isEnabled()) {
+        $channels = $formData['channels'] ?? ['mobile'];
+        $sendToMobile = in_array('mobile', $channels);
+        $sendToWhatsApp = in_array('whatsapp', $channels);
+
+        if (! $sendToMobile && ! $sendToWhatsApp) {
             Notification::make()
-                ->title('Layanan OneSignal Belum Aktif')
-                ->body('Pastikan Anda sudah menyimpan OneSignal App ID & REST API Key yang valid terlebih dahulu.')
+                ->title('Pilih Saluran Pengiriman')
+                ->body('Pilih minimal satu saluran pengiriman: Aplikasi Mobile atau WhatsApp Pelanggan.')
                 ->warning()
                 ->send();
 
@@ -270,52 +291,135 @@ class OneSignalManager extends Page implements HasForms
         }
 
         $targetType = $formData['send_target_type'] ?? 'all';
-        $title = $formData['send_title'];
-        $message = $formData['send_message'];
+        $title = trim($formData['send_title'] ?? 'Pengumuman Layanan ISP');
+        $message = trim($formData['send_message'] ?? '');
         $actionUrl = $formData['send_action_url'] ?: null;
         $imageUrl = $formData['send_image_url'] ?: null;
 
-        $params = [
+        $results = [];
+        $totalSent = 0;
+        $oneSignalId = null;
+
+        // 1. Kirim via OneSignal (Aplikasi Mobile)
+        if ($sendToMobile) {
+            $service = app(OneSignalService::class);
+            if ($service->isEnabled()) {
+                $params = [
+                    'title' => $title,
+                    'message' => $message,
+                    'target_type' => $targetType,
+                    'action_url' => $actionUrl,
+                    'image_url' => $imageUrl,
+                    'data' => [
+                        'sender' => 'admin_panel',
+                        'sent_at' => now()->toIso8601String(),
+                    ],
+                ];
+
+                if ($targetType === 'customer') {
+                    $customer = Customer::find($formData['send_customer_id'] ?? null);
+                    if ($customer) {
+                        $params['target_label'] = "{$customer->name} ({$customer->customer_number})";
+                        $params['external_ids'] = ["customer_{$customer->id}"];
+                    }
+                }
+
+                $res = $service->sendPushNotification($params);
+                if (! empty($res['success'])) {
+                    $results[] = 'Push Mobile: Sukses';
+                    $oneSignalId = $res['onesignal_id'] ?? null;
+                    $totalSent++;
+                } else {
+                    $results[] = 'Push Mobile: '.($res['message'] ?? 'Gagal');
+                }
+            } else {
+                $results[] = 'Push Mobile: Dilewati (OneSignal belum dikonfigurasi)';
+            }
+        }
+
+        // 2. Kirim via WhatsApp Gateway
+        if ($sendToWhatsApp) {
+            $waService = app(WhatsAppService::class);
+            $waMessage = "*{$title}*\n\n{$message}";
+            if ($actionUrl) {
+                $waMessage .= "\n\nTautan: {$actionUrl}";
+            }
+
+            $waCount = 0;
+            if ($targetType === 'customer') {
+                $customer = Customer::find($formData['send_customer_id'] ?? null);
+                if ($customer && filled($customer->phone)) {
+                    $resWa = $waService->sendMessage($customer->phone, $waMessage);
+                    if (! empty($resWa['success'])) {
+                        $waCount++;
+                    }
+                }
+            } else {
+                $query = Customer::query()->whereNotNull('phone')->where('phone', '!=', '');
+                if ($targetType === 'active_customers') {
+                    $query->where('status', 'active');
+                } elseif ($targetType === 'isolated_customers') {
+                    $query->where('status', 'isolated');
+                }
+
+                $customers = $query->limit(500)->get();
+                foreach ($customers as $c) {
+                    if (filled($c->phone)) {
+                        $resWa = $waService->sendMessage($c->phone, $waMessage);
+                        if (! empty($resWa['success'])) {
+                            $waCount++;
+                        }
+                    }
+                }
+            }
+
+            $results[] = "WhatsApp: Terkirim ke {$waCount} nomor";
+            $totalSent += $waCount;
+        }
+
+        // 3. Simpan ke Riwayat Notifikasi
+        $channelLabels = [];
+        if ($sendToMobile) {
+            $channelLabels[] = 'Mobile';
+        }
+        if ($sendToWhatsApp) {
+            $channelLabels[] = 'WhatsApp';
+        }
+        $channelText = implode(' & ', $channelLabels);
+
+        $targetCustomer = isset($formData['send_customer_id']) ? Customer::find($formData['send_customer_id']) : null;
+        $targetLabel = match ($targetType) {
+            'customer' => $targetCustomer ? "{$targetCustomer->name} [{$channelText}]" : "Pelanggan [{$channelText}]",
+            'active_customers' => "Pelanggan Aktif [{$channelText}]",
+            'isolated_customers' => "Pelanggan Isolir [{$channelText}]",
+            default => "Semua Pelanggan [{$channelText}]",
+        };
+
+        PushNotification::create([
             'title' => $title,
             'message' => $message,
             'target_type' => $targetType,
-            'action_url' => $actionUrl,
+            'target_label' => $targetLabel,
             'image_url' => $imageUrl,
-            'data' => [
-                'sender' => 'admin_panel',
-                'sent_at' => now()->toIso8601String(),
+            'action_url' => $actionUrl,
+            'status' => $totalSent > 0 ? 'sent' : 'failed',
+            'recipients_count' => $totalSent,
+            'onesignal_id' => $oneSignalId,
+            'response_summary' => implode(' | ', $results),
+            'data_payload' => [
+                'channels' => $channels,
+                'results' => $results,
             ],
-        ];
+        ]);
 
-        if ($targetType === 'customer') {
-            $customer = Customer::find($formData['send_customer_id'] ?? null);
-            if (! $customer) {
-                Notification::make()->title('Pelanggan tidak ditemukan')->danger()->send();
+        Notification::make()
+            ->title('🚀 Notifikasi Berhasil Disiarkan!')
+            ->body(implode(' | ', $results))
+            ->success()
+            ->send();
 
-                return;
-            }
-            $params['target_label'] = "{$customer->name} ({$customer->customer_number})";
-            $params['external_ids'] = ["customer_{$customer->id}"];
-        }
-
-        $res = $service->sendPushNotification($params);
-
-        if ($res['success']) {
-            Notification::make()
-                ->title('🚀 Push Notifikasi Berhasil Dikirim!')
-                ->body($res['message'])
-                ->success()
-                ->send();
-
-            // Clear message form
-            $this->data['send_message'] = '';
-        } else {
-            Notification::make()
-                ->title('Gagal Mengirim Push Notifikasi')
-                ->body($res['message'])
-                ->danger()
-                ->send();
-        }
+        // Reset message input
+        $this->data['send_message'] = '';
     }
 
     public function saveSettings(): void
@@ -374,5 +478,13 @@ class OneSignalManager extends Page implements HasForms
     public function getNotificationsProperty()
     {
         return PushNotification::latest()->paginate(10);
+    }
+
+    public function getBreadcrumbs(): array
+    {
+        return [
+            url('/admin/notifications') => 'Notifikasi & Broadcast',
+            'Kirim Notifikasi',
+        ];
     }
 }

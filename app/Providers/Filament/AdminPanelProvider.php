@@ -56,6 +56,7 @@ class AdminPanelProvider extends PanelProvider
             ->navigationGroups([
                 'Data Pelanggan',
                 'Billing & Keuangan',
+                'Notifikasi & Broadcast',
                 'Manajemen Jaringan',
                 'Manajemen Teknisi',
                 'Pengaturan',
