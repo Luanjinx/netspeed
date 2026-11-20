@@ -18,6 +18,7 @@ use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\Actions;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -40,11 +41,11 @@ class PaymentGatewaySettings extends Page implements HasForms
 
     protected static string|UnitEnum|null $navigationGroup = 'Pengaturan';
 
-    protected static ?string $navigationLabel = 'API Payment Gateway & QRIS Dinamis';
+    protected static ?string $navigationLabel = 'API Payment Gateway & Webhook';
 
     protected static ?string $title = 'Manajemen & Integrasi Payment Gateway';
 
-    protected ?string $subheading = 'Koneksi gateway pembayaran (QRIS Dinamis 0% MDR bawaan, Tripay, Midtrans, CekMutasi, Moota, Xendit) & Webhook pelunasan real-time';
+    protected ?string $subheading = 'Konfigurasi pembayaran QRIS Dinamis 0% MDR bawaan, gateway pihak ketiga (Tripay, Midtrans, CekMutasi, Moota, Xendit), dan webhook pelunasan real-time';
 
     protected string $view = 'filament.pages.payment-gateway-settings';
 
@@ -268,11 +269,34 @@ class PaymentGatewaySettings extends Page implements HasForms
                                 ')),
                         ]),
 
-                    // Card 4: Otomasi Pelunasan (Selalu Tampil)
+                    // Card 4: Otomasi Pelunasan & Simulasi Webhook Lunas
                     Section::make('Otomatisasi Sistem Saat Tagihan Lunas')
                         ->description('Aksi yang otomatis dijalankan sistem tepat setelah pembayaran tagihan berhasil diverifikasi.')
                         ->icon('heroicon-o-bolt')
                         ->columnSpan(['default' => 1, 'lg' => 2])
+                        ->headerActions([
+                            Action::make('testWebhookSimulation')
+                                ->label('Simulasi Webhook Lunas')
+                                ->icon('heroicon-o-bolt')
+                                ->color('warning')
+                                ->modalHeading('Simulasi Webhook Pelunasan Tagihan')
+                                ->modalDescription('Masukkan nomor tagihan (invoice) dan nominal untuk menguji alur otomatisasi sistem saat menerima notifikasi webhook pembayaran lunas.')
+                                ->modalSubmitActionLabel('Jalankan Simulasi Sekarang')
+                                ->form([
+                                    TextInput::make('test_invoice_number')
+                                        ->label('Nomor Tagihan (Invoice)')
+                                        ->placeholder('cth: INV-2026-0001')
+                                        ->required(),
+                                    TextInput::make('test_amount')
+                                        ->label('Nominal Pembayaran (Rp)')
+                                        ->numeric()
+                                        ->placeholder('cth: 150000')
+                                        ->required(),
+                                ])
+                                ->action(function (array $data) {
+                                    $this->executeWebhookSimulation($data);
+                                }),
+                        ])
                         ->schema([
                             Grid::make(3)->schema([
                                 Toggle::make('payment_auto_activate')
@@ -290,138 +314,101 @@ class PaymentGatewaySettings extends Page implements HasForms
                                     ->helperText('Kirim alert pembayaran instan ke grup / admin NOC Telegram.')
                                     ->default(true),
                             ]),
+
+                            Placeholder::make('webhook_simulation_panel')
+                                ->label('Uji Coba & Simulasi Notifikasi Webhook')
+                                ->content(fn () => new HtmlString('
+                                    <div style="background: #131615; border: 1px dashed #2e3532; border-radius: 0.75rem; padding: 1rem 1.25rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+                                        <div style="flex: 1; min-width: 260px;">
+                                            <div style="font-size: 0.875rem; font-weight: 700; color: #eef1f0; display: flex; align-items: center; gap: 6px;">
+                                                <span class="material-symbols-rounded" style="font-size: 20px; color: #f59e0b;">bolt</span>
+                                                Simulasi Webhook Pelunasan Real-Time
+                                            </div>
+                                            <p style="font-size: 0.775rem; color: #9aa49f; margin: 4px 0 0 0; line-height: 1.4;">
+                                                Uji alur buka isolir MikroTik, pengiriman kwitansi WhatsApp, dan notifikasi Bot Telegram secara instan tanpa menunggu transfer pembayaran asli.
+                                            </p>
+                                        </div>
+                                    </div>
+                                ')),
+
+                            Actions::make([
+                                Action::make('runWebhookSimulation')
+                                    ->label('⚡ Jalankan Simulasi Webhook Lunas')
+                                    ->icon('heroicon-o-bolt')
+                                    ->color('warning')
+                                    ->modalHeading('Simulasi Webhook Pelunasan Tagihan')
+                                    ->modalDescription('Masukkan nomor tagihan (invoice) dan nominal untuk menguji alur otomatisasi sistem saat menerima notifikasi webhook pembayaran lunas.')
+                                    ->modalSubmitActionLabel('Jalankan Simulasi Sekarang')
+                                    ->form([
+                                        TextInput::make('test_invoice_number')
+                                            ->label('Nomor Tagihan (Invoice)')
+                                            ->placeholder('cth: INV-2026-0001')
+                                            ->required(),
+                                        TextInput::make('test_amount')
+                                            ->label('Nominal Pembayaran (Rp)')
+                                            ->numeric()
+                                            ->placeholder('cth: 150000')
+                                            ->required(),
+                                    ])
+                                    ->action(function (array $data) {
+                                        $this->executeWebhookSimulation($data);
+                                    }),
+                            ]),
                         ]),
                 ]),
             ]);
     }
 
+    /**
+     * Header actions dikosongkan agar header halaman bersih, rapi, dan tidak ada tombol bertumpuk.
+     */
     protected function getHeaderActions(): array
     {
-        return [
-            Action::make('scanQrisImage')
-                ->label('Pindai Foto QRIS')
-                ->icon('heroicon-o-camera')
-                ->color('warning')
-                ->modalHeading('Pindai & Ekstrak Data QRIS Merchant')
-                ->modalDescription('Unggah file foto atau screenshot barcode QRIS toko Anda. Sistem akan memindai QR code dan menerapkan hasilnya langsung.')
-                ->modalSubmitActionLabel('Pindai & Terapkan Otomatis')
-                ->form([
-                    FileUpload::make('modal_qris_image')
-                        ->label('File Foto / Screenshot QRIS')
-                        ->image()
-                        ->disk('public')
-                        ->directory('qris-uploads')
-                        ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/jpg', 'image/webp'])
-                        ->required(),
-                ])
-                ->action(function (array $data) {
-                    $state = $data['modal_qris_image'] ?? null;
-                    $filePath = self::resolveUploadedFilePath($state);
+        return [];
+    }
 
-                    if (! $filePath || ! file_exists($filePath)) {
-                        Notification::make()->title('File gambar tidak ditemukan')->danger()->send();
+    public function executeWebhookSimulation(array $data): void
+    {
+        $invNum = trim($data['test_invoice_number'] ?? '');
+        $amount = (float) ($data['test_amount'] ?? 0);
 
-                        return;
-                    }
+        $invoice = Invoice::where('invoice_number', $invNum)->first();
+        if (! $invoice) {
+            Notification::make()
+                ->title('Invoice Tidak Ditemukan')
+                ->body("Tagihan dengan nomor {$invNum} tidak ada di database.")
+                ->danger()
+                ->send();
 
-                    $service = app(QrisService::class);
-                    $res = $service->decodeFromImage($filePath);
+            return;
+        }
 
-                    if ($res['success']) {
-                        $this->data['static_qris_string'] = $res['payload'];
-                        $this->data['qris_image_upload'] = $state;
-                        IspSetting::set('static_qris_string', $res['payload']);
-                        if (is_string($state)) {
-                            IspSetting::set('qris_image_upload', $state);
-                        }
+        if ($invoice->status === 'paid') {
+            Notification::make()
+                ->title('Invoice Sudah Lunas')
+                ->body("Tagihan {$invNum} statusnya sudah Lunas.")
+                ->info()
+                ->send();
 
-                        $this->refreshStatus();
+            return;
+        }
 
-                        Notification::make()
-                            ->title('✅ Barcode QRIS Berhasil Diterapkan!')
-                            ->body("Merchant: {$res['merchant_name']}\nKota: {$res['merchant_city']}\nPengaturan QRIS telah otomatis diperbarui.")
-                            ->success()
-                            ->duration(8000)
-                            ->send();
-                    } else {
-                        Notification::make()
-                            ->title('Gagal Memindai QRIS')
-                            ->body($res['message'])
-                            ->danger()
-                            ->send();
-                    }
-                }),
+        try {
+            $billingService = app(BillingService::class);
+            $billingService->processPayment($invoice, $amount, 'payment_gateway', 'SIMULASI-WEBHOOK-'.now()->timestamp);
 
-            Action::make('testWebhookSimulation')
-                ->label('Simulasi Webhook Lunas')
-                ->icon('heroicon-o-bolt')
-                ->color('gray')
-                ->form([
-                    TextInput::make('test_invoice_number')
-                        ->label('Nomor Tagihan (Invoice)')
-                        ->placeholder('cth: INV-2026-0001')
-                        ->required(),
-                    TextInput::make('test_amount')
-                        ->label('Nominal Pembayaran (Rp)')
-                        ->numeric()
-                        ->placeholder('cth: 150000')
-                        ->required(),
-                ])
-                ->action(function (array $data) {
-                    $invNum = trim($data['test_invoice_number']);
-                    $amount = (float) $data['test_amount'];
-
-                    $invoice = Invoice::where('invoice_number', $invNum)->first();
-                    if (! $invoice) {
-                        Notification::make()
-                            ->title('Invoice Tidak Ditemukan')
-                            ->body("Tagihan dengan nomor {$invNum} tidak ada di database.")
-                            ->danger()
-                            ->send();
-
-                        return;
-                    }
-
-                    if ($invoice->status === 'paid') {
-                        Notification::make()
-                            ->title('Invoice Sudah Lunas')
-                            ->body("Tagihan {$invNum} statusnya sudah Lunas.")
-                            ->info()
-                            ->send();
-
-                        return;
-                    }
-
-                    try {
-                        $billingService = app(BillingService::class);
-                        $billingService->processPayment($invoice, $amount, 'payment_gateway', 'SIMULASI-WEBHOOK-'.now()->timestamp);
-
-                        Notification::make()
-                            ->title('✅ Simulasi Webhook Berhasil!')
-                            ->body("Invoice {$invNum} berhasil dilunasi & PPPoE pelanggan telah diaktifkan.")
-                            ->success()
-                            ->send();
-                    } catch (\Exception $e) {
-                        Notification::make()
-                            ->title('Gagal Memproses Pelunasan')
-                            ->body($e->getMessage())
-                            ->danger()
-                            ->send();
-                    }
-                }),
-
-            Action::make('backToSettings')
-                ->label('Kembali ke Pengaturan')
-                ->icon('heroicon-o-arrow-left')
-                ->color('gray')
-                ->url(url('/admin/settings')),
-
-            Action::make('save')
-                ->label('Simpan Pengaturan Gateway')
-                ->icon('heroicon-o-check')
-                ->color('primary')
-                ->action(fn () => $this->save()),
-        ];
+            Notification::make()
+                ->title('✅ Simulasi Webhook Berhasil!')
+                ->body("Invoice {$invNum} berhasil dilunasi & PPPoE pelanggan telah diaktifkan.")
+                ->success()
+                ->send();
+        } catch (\Exception $e) {
+            Notification::make()
+                ->title('Gagal Memproses Pelunasan')
+                ->body($e->getMessage())
+                ->danger()
+                ->send();
+        }
     }
 
     public function save(): void
