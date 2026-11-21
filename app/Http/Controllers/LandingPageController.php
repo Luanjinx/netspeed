@@ -6,6 +6,7 @@ use App\Models\Customer;
 use App\Models\InternetPackage;
 use App\Models\Invoice;
 use App\Models\IspSetting;
+use App\Models\Page;
 use App\Services\InstallationService;
 use App\Services\Payment\QrisService;
 use Exception;
@@ -194,5 +195,18 @@ class LandingPageController extends Controller
             'message' => "Terima kasih, Bpk/Ibu {$validated['name']}! Pengajuan pasang baru berhasil dicatat. Tim kami akan segera menghubungi Anda.",
             'wa_url' => $waUrl,
         ]);
+    }
+
+    /**
+     * Display a public static page (Privacy Policy, Terms of Service, etc.).
+     */
+    public function showPage(string $slug): View
+    {
+        $page = Page::where('slug', $slug)->where('is_active', true)->firstOrFail();
+        $companyName = IspSetting::get('company_name', 'NetSpeed Broadband');
+        $companyPhone = IspSetting::get('company_phone', '0812-3456-7890');
+        $companyEmail = IspSetting::get('company_email', 'cs@netspeed.net.id');
+
+        return view('pages.show', compact('page', 'companyName', 'companyPhone', 'companyEmail'));
     }
 }

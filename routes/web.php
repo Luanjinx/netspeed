@@ -32,6 +32,7 @@ Route::prefix('install')->name('install.')->group(function () {
 
 // Public Landing Page & Self-Service
 Route::get('/', [LandingPageController::class, 'index'])->name('landing');
+Route::get('/page/{slug}', [LandingPageController::class, 'showPage'])->name('page.show');
 Route::post('/cek-tagihan', [LandingPageController::class, 'checkBill'])->name('landing.check-bill');
 Route::post('/daftar-langganan', [LandingPageController::class, 'registerLead'])->name('landing.register');
 

@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Route;
 // Public routes
 Route::get('/public/home', [CustomerPortalController::class, 'publicHome']);
 Route::get('/public/promos/{id}', [CustomerPortalController::class, 'publicPromoDetail']);
+Route::get('/public/pages', [CustomerPortalController::class, 'publicPages']);
+Route::get('/public/pages/{slug}', [CustomerPortalController::class, 'publicPageDetail']);
 Route::post('/auth/login', [AuthController::class, 'login']);
 Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/payment/webhook', [PaymentWebhookController::class, 'handle']);

@@ -7,6 +7,7 @@ use App\Models\Customer;
 use App\Models\InternetPackage;
 use App\Models\Invoice;
 use App\Models\IspSetting;
+use App\Models\Page;
 use App\Models\Payment;
 use App\Models\Promo;
 use App\Models\SupportTicket;
@@ -204,6 +205,51 @@ class CustomerPortalController extends Controller
                 'package_id' => $promo->package_id,
                 'link_url' => $promo->link_url,
                 'package' => $promo->package,
+            ],
+        ]);
+    }
+
+    /**
+     * List all public active static pages for mobile app menu.
+     */
+    public function publicPages(): JsonResponse
+    {
+        $pages = Page::where('is_active', true)
+            ->orderBy('order', 'asc')
+            ->select(['id', 'title', 'slug', 'order', 'updated_at'])
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $pages,
+        ]);
+    }
+
+    /**
+     * Get detail of a specific public static page for native mobile app reader.
+     */
+    public function publicPageDetail(string $slug): JsonResponse
+    {
+        $page = Page::where('slug', $slug)
+            ->where('is_active', true)
+            ->first();
+
+        if (! $page) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Halaman tidak ditemukan',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'id' => $page->id,
+                'title' => $page->title,
+                'slug' => $page->slug,
+                'content' => $page->content,
+                'updated_at' => $page->updated_at?->toIso8601String(),
+                'updated_at_formatted' => $page->updated_at ? $page->updated_at->translatedFormat('d F Y') : null,
             ],
         ]);
     }
