@@ -44,7 +44,8 @@ class CustomerPortalController extends Controller
         $companyAddress = IspSetting::get('company_address', 'Jl. Telekomunikasi No. 1, Cyber Park');
 
         // Dynamic Promos / Banners from Database
-        $promos = Promo::where('is_active', true)
+        $promos = Promo::with('package')
+            ->where('is_active', true)
             ->where(function ($q) {
                 $q->whereNull('starts_at')->orWhere('starts_at', '<=', now());
             })
@@ -62,6 +63,14 @@ class CustomerPortalController extends Controller
                     'subtitle' => $promo->subtitle,
                     'badge' => $promo->badge_text,
                     'image' => $promo->image_url,
+                    'content' => $promo->content,
+                    'offer_title' => $promo->offer_title ?? ($promo->package?->name ?? $promo->title),
+                    'offer_duration' => $promo->offer_duration ?? ($promo->package ? ($promo->package->validity_days.' Hari') : '1 Bulan'),
+                    'original_price' => $promo->original_price,
+                    'promo_price' => $promo->promo_price ?? $promo->package?->price,
+                    'discount_label' => $promo->formatted_discount_label,
+                    'price_unit' => $promo->price_unit ?? '/ bulan',
+                    'cta_text' => $promo->cta_text ?? 'Langganan Sekarang',
                     'action_type' => $promo->action_type,
                     'package_id' => $promo->package_id,
                     'link_url' => $promo->link_url,
@@ -76,8 +85,16 @@ class CustomerPortalController extends Controller
                     'subtitle' => 'Kecepatan Puncak 100 Mbps • Low Latency Gaming',
                     'badge' => '100 MBPS',
                     'image' => 'assets/images/package-gamer-ultimate.webp',
-                    'action_type' => 'none',
-                    'package_id' => null,
+                    'content' => "Nikmati pengalaman gaming online dan streaming video resolusi 4K tanpa kompromi dengan koneksi Gamer Ultimate 100 Mbps.\n\nKeunggulan Utama:\n• Kecepatan simetris dengan direct peering IIX & server game terkemuka\n• Low ping dan ultra-low jitter untuk kompetitif game\n• Tanpa batas kuota (Fair Usage Policy Unlimited)\n• Dukungan router dual-band gigabit generasi terbaru",
+                    'offer_title' => 'Paket Gamer Ultimate 100 Mbps',
+                    'offer_duration' => '1 Bulan',
+                    'original_price' => 220000,
+                    'promo_price' => 175000,
+                    'discount_label' => '-20%',
+                    'price_unit' => '/ bulan',
+                    'cta_text' => 'Langganan Sekarang',
+                    'action_type' => 'package',
+                    'package_id' => 15,
                     'link_url' => null,
                 ],
                 [
@@ -86,8 +103,16 @@ class CustomerPortalController extends Controller
                     'subtitle' => 'Direct Peering IIX & Steam • Bebas Lag',
                     'badge' => '50 MBPS',
                     'image' => 'assets/images/package-gamer-pro-50mbps.webp',
-                    'action_type' => 'none',
-                    'package_id' => null,
+                    'content' => "Paket internet khusus untuk gamer dan streamer yang membutuhkan koneksi stabil, latensi super rendah, dan bebas hambatan sepanjang hari.\n\nFitur Layanan:\n• Prioritas traffic game internasional dan domestik\n• Streaming lancar di berbagai platform sekaligus\n• Instalasi cepat dan modem Wi-Fi canggih",
+                    'offer_title' => 'Paket Gamer Pro 50 Mbps',
+                    'offer_duration' => '1 Bulan',
+                    'original_price' => 135000,
+                    'promo_price' => 100000,
+                    'discount_label' => '-25%',
+                    'price_unit' => '/ bulan',
+                    'cta_text' => 'Langganan Sekarang',
+                    'action_type' => 'package',
+                    'package_id' => 3,
                     'link_url' => null,
                 ],
                 [
@@ -96,8 +121,16 @@ class CustomerPortalController extends Controller
                     'subtitle' => 'Paling Favorit Keluarga • Streaming HD Lancar',
                     'badge' => 'BEST SELLER',
                     'image' => 'assets/images/package-home-ultra-20mbps.webp',
-                    'action_type' => 'none',
-                    'package_id' => null,
+                    'content' => "Pilihan paling tepat dan hemat untuk seluruh anggota keluarga di rumah. Lancar untuk sekolah daring, WFH, meeting Zoom, dan hiburan nonton serial favorit.\n\nKeuntungan:\n• Kecepatan 20 Mbps stabil 24 jam nonstop\n• Ideal untuk 4-6 perangkat sekaligus\n• Sudah termasuk biaya sewa modem Wi-Fi",
+                    'offer_title' => 'Paket Home Ultra 20 Mbps',
+                    'offer_duration' => '1 Bulan',
+                    'original_price' => 95000,
+                    'promo_price' => 75000,
+                    'discount_label' => '-21%',
+                    'price_unit' => '/ bulan',
+                    'cta_text' => 'Langganan Sekarang',
+                    'action_type' => 'package',
+                    'package_id' => 2,
                     'link_url' => null,
                 ],
                 [
@@ -106,8 +139,16 @@ class CustomerPortalController extends Controller
                     'subtitle' => 'Paket Hemat Pelajar & WFH • Tanpa Batas Kuota',
                     'badge' => 'HEMAT',
                     'image' => 'assets/images/package-home-basic-15mbps.webp',
-                    'action_type' => 'none',
-                    'package_id' => null,
+                    'content' => 'Solusi internet rumah terjangkau dengan kualitas serat optik handal untuk browsing, sosial media, dan belajar dari rumah tanpa cemas kuota habis.',
+                    'offer_title' => 'Paket Home Basic 15 Mbps',
+                    'offer_duration' => '1 Bulan',
+                    'original_price' => 65000,
+                    'promo_price' => 50000,
+                    'discount_label' => '-23%',
+                    'price_unit' => '/ bulan',
+                    'cta_text' => 'Langganan Sekarang',
+                    'action_type' => 'package',
+                    'package_id' => 1,
                     'link_url' => null,
                 ],
             ];
@@ -125,6 +166,44 @@ class CustomerPortalController extends Controller
                 'pppoe_packages' => $pppoePackages,
                 'hotspot_packages' => $hotspotPackages,
                 'banners' => $banners,
+            ],
+        ]);
+    }
+
+    /**
+     * Get detail of a specific promo for the blog/promo detail page.
+     */
+    public function publicPromoDetail(int $id): JsonResponse
+    {
+        $promo = Promo::with('package')->find($id);
+
+        if (! $promo) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Promo tidak ditemukan',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'id' => $promo->id,
+                'title' => $promo->title,
+                'subtitle' => $promo->subtitle,
+                'badge' => $promo->badge_text,
+                'image' => $promo->image_url,
+                'content' => $promo->content,
+                'offer_title' => $promo->offer_title ?? ($promo->package?->name ?? $promo->title),
+                'offer_duration' => $promo->offer_duration ?? ($promo->package ? ($promo->package->validity_days.' Hari') : '1 Bulan'),
+                'original_price' => $promo->original_price,
+                'promo_price' => $promo->promo_price ?? $promo->package?->price,
+                'discount_label' => $promo->formatted_discount_label,
+                'price_unit' => $promo->price_unit ?? '/ bulan',
+                'cta_text' => $promo->cta_text ?? 'Langganan Sekarang',
+                'action_type' => $promo->action_type,
+                'package_id' => $promo->package_id,
+                'link_url' => $promo->link_url,
+                'package' => $promo->package,
             ],
         ]);
     }

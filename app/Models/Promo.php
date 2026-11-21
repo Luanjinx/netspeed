@@ -15,6 +15,14 @@ class Promo extends Model
         'title',
         'subtitle',
         'badge_text',
+        'content',
+        'offer_title',
+        'offer_duration',
+        'original_price',
+        'promo_price',
+        'discount_label',
+        'price_unit',
+        'cta_text',
         'image',
         'action_type',
         'package_id',
@@ -28,6 +36,8 @@ class Promo extends Model
     protected $casts = [
         'is_active' => 'boolean',
         'order' => 'integer',
+        'original_price' => 'float',
+        'promo_price' => 'float',
         'starts_at' => 'datetime',
         'ends_at' => 'datetime',
     ];
@@ -52,5 +62,20 @@ class Promo extends Model
         }
 
         return url(Storage::disk('public')->url($this->image));
+    }
+
+    public function getFormattedDiscountLabelAttribute(): ?string
+    {
+        if (! empty($this->discount_label)) {
+            return $this->discount_label;
+        }
+
+        if ($this->original_price && $this->promo_price && $this->original_price > $this->promo_price) {
+            $pct = round((($this->original_price - $this->promo_price) / $this->original_price) * 100);
+
+            return "-{$pct}%";
+        }
+
+        return null;
     }
 }
