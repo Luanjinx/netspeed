@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use PDO;
 use Throwable;
 
@@ -20,7 +21,27 @@ class InstallationService
      */
     public static function isInstalled(): bool
     {
-        return File::exists(storage_path('installed'));
+        if (File::exists(storage_path('installed'))) {
+            return true;
+        }
+
+        // Auto-detect: if user is authenticated or users table has accounts,
+        // the app is already installed. Create lock file automatically.
+        try {
+            if (auth()->check() || (Schema::hasTable('users') && User::count() > 0)) {
+                @File::put(storage_path('installed'), json_encode([
+                    'installed_at' => now()->toIso8601String(),
+                    'app_version' => '1.0.0',
+                    'installed_by' => 'Auto-Detected System',
+                ], JSON_PRETTY_PRINT));
+
+                return true;
+            }
+        } catch (Throwable) {
+            // Database not ready or tables not yet migrated
+        }
+
+        return false;
     }
 
     /**
