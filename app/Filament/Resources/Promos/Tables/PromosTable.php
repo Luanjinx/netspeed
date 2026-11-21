@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\Promos\Tables;
 
-use App\Models\Promo;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -30,13 +29,15 @@ class PromosTable
                 TextColumn::make('title')
                     ->label('Judul Promo')
                     ->searchable()
-                    ->weight('bold')
-                    ->description(fn (Promo $record) => $record->subtitle),
+                    ->weight('bold'),
 
-                TextColumn::make('badge_text')
-                    ->label('Badge')
-                    ->badge()
-                    ->color('warning')
+                TextColumn::make('offer_title')
+                    ->label('Penawaran')
+                    ->placeholder('-'),
+
+                TextColumn::make('promo_price')
+                    ->label('Harga Promo')
+                    ->money('IDR')
                     ->placeholder('-'),
 
                 TextColumn::make('action_type')
@@ -67,7 +68,7 @@ class PromosTable
 
                 TextColumn::make('starts_at')
                     ->label('Jadwal Tayang')
-                    ->formatStateUsing(function (Promo $record) {
+                    ->formatStateUsing(function ($record) {
                         if (! $record->starts_at && ! $record->ends_at) {
                             return 'Selamanya';
                         }
