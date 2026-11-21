@@ -8,6 +8,7 @@ use App\Models\InternetPackage;
 use App\Models\Invoice;
 use App\Models\IspSetting;
 use App\Models\Payment;
+use App\Models\Promo;
 use App\Models\SupportTicket;
 use App\Services\Genieacs\GenieacsApiService;
 use App\Services\Payment\QrisService;
@@ -42,6 +43,76 @@ class CustomerPortalController extends Controller
         $companyEmail = IspSetting::get('company_email', 'cs@netspeed.net.id');
         $companyAddress = IspSetting::get('company_address', 'Jl. Telekomunikasi No. 1, Cyber Park');
 
+        // Dynamic Promos / Banners from Database
+        $promos = Promo::where('is_active', true)
+            ->where(function ($q) {
+                $q->whereNull('starts_at')->orWhere('starts_at', '<=', now());
+            })
+            ->where(function ($q) {
+                $q->whereNull('ends_at')->orWhere('ends_at', '>=', now());
+            })
+            ->orderBy('order', 'asc')
+            ->get();
+
+        if ($promos->isNotEmpty()) {
+            $banners = $promos->map(function (Promo $promo) {
+                return [
+                    'id' => $promo->id,
+                    'title' => $promo->title,
+                    'subtitle' => $promo->subtitle,
+                    'badge' => $promo->badge_text,
+                    'image' => $promo->image_url,
+                    'action_type' => $promo->action_type,
+                    'package_id' => $promo->package_id,
+                    'link_url' => $promo->link_url,
+                ];
+            })->toArray();
+        } else {
+            // Default built-in fallback banners
+            $banners = [
+                [
+                    'id' => 1,
+                    'title' => 'Gamer Ultimate 100 Mbps',
+                    'subtitle' => 'Kecepatan Puncak 100 Mbps • Low Latency Gaming',
+                    'badge' => '100 MBPS',
+                    'image' => 'assets/images/package-gamer-ultimate.webp',
+                    'action_type' => 'none',
+                    'package_id' => null,
+                    'link_url' => null,
+                ],
+                [
+                    'id' => 2,
+                    'title' => 'Gamer Pro 50 Mbps',
+                    'subtitle' => 'Direct Peering IIX & Steam • Bebas Lag',
+                    'badge' => '50 MBPS',
+                    'image' => 'assets/images/package-gamer-pro-50mbps.webp',
+                    'action_type' => 'none',
+                    'package_id' => null,
+                    'link_url' => null,
+                ],
+                [
+                    'id' => 3,
+                    'title' => 'Home Ultra 20 Mbps',
+                    'subtitle' => 'Paling Favorit Keluarga • Streaming HD Lancar',
+                    'badge' => 'BEST SELLER',
+                    'image' => 'assets/images/package-home-ultra-20mbps.webp',
+                    'action_type' => 'none',
+                    'package_id' => null,
+                    'link_url' => null,
+                ],
+                [
+                    'id' => 4,
+                    'title' => 'Home Basic 15 Mbps',
+                    'subtitle' => 'Paket Hemat Pelajar & WFH • Tanpa Batas Kuota',
+                    'badge' => 'HEMAT',
+                    'image' => 'assets/images/package-home-basic-15mbps.webp',
+                    'action_type' => 'none',
+                    'package_id' => null,
+                    'link_url' => null,
+                ],
+            ];
+        }
+
         return response()->json([
             'success' => true,
             'data' => [
@@ -53,32 +124,7 @@ class CustomerPortalController extends Controller
                 ],
                 'pppoe_packages' => $pppoePackages,
                 'hotspot_packages' => $hotspotPackages,
-                'banners' => [
-                    [
-                        'id' => 1,
-                        'title' => 'Gamer Ultimate 100 Mbps',
-                        'subtitle' => 'Koneksi Gaming Latensi Rendah & Peering Langsung',
-                        'image' => 'images/package-gamer-ultimate.jpg',
-                    ],
-                    [
-                        'id' => 2,
-                        'title' => 'Gamer Pro 50 Mbps',
-                        'subtitle' => 'Gaming & Streaming Lancar Tanpa Lag',
-                        'image' => 'images/package-gamer-pro-50mbps.jpg',
-                    ],
-                    [
-                        'id' => 3,
-                        'title' => 'Home Ultra 20 Mbps',
-                        'subtitle' => 'Paling Populer untuk Keluarga Modern',
-                        'image' => 'images/package-home-ultra-20mbps.jpg',
-                    ],
-                    [
-                        'id' => 4,
-                        'title' => 'Home Basic 15 Mbps',
-                        'subtitle' => 'Pilihan Hemat Browsing & Belajar Online',
-                        'image' => 'images/package-home-basic-15mbps.jpg',
-                    ],
-                ],
+                'banners' => $banners,
             ],
         ]);
     }
