@@ -84,6 +84,7 @@ Homestead.yaml
 /public/fonts-manifest.dev.json
 
 /storage/*.key
+/storage/installed
 /storage/pail
 /storage/logs/*.log
 /storage/framework/cache/data/*
