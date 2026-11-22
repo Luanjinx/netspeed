@@ -4,7 +4,6 @@ namespace App\Filament\Pages;
 
 use App\Models\IspSetting;
 use App\Models\Router;
-use App\Services\Notification\WhatsAppService;
 use App\Services\Payment\QrisService;
 use App\Services\Router\MikrotikApiService;
 use BackedEnum;
@@ -122,50 +121,7 @@ class AppSettings extends Page implements HasForms
 
     protected function getHeaderActions(): array
     {
-        return [
-            Action::make('testWhatsApp')
-                ->label('Test Kirim WhatsApp')
-                ->icon('heroicon-o-chat-bubble-left-right')
-                ->color('success')
-                ->form([
-                    TextInput::make('test_phone')
-                        ->label('Nomor WhatsApp Tujuan')
-                        ->placeholder('cth: 081234567890')
-                        ->tel()
-                        ->required(),
-                ])
-                ->action(function (array $data) {
-                    $phone = $data['test_phone'];
-                    $service = app(WhatsAppService::class);
-                    $company = IspSetting::get('company_name', 'ISP Billing');
-                    $msg = "Halo! Ini adalah pesan uji coba integrasi API WhatsApp Gateway dari *{$company}*.\n\nWaktu: ".now()->format('d M Y, H:i:s')."\nStatus: ✅ Sukses Terhubung!";
-
-                    $res = $service->sendMessage($phone, $msg);
-                    if ($res['success'] ?? false) {
-                        Notification::make()->title('WhatsApp Berhasil Terkirim!')->success()->send();
-                    } else {
-                        Notification::make()->title('Gagal Kirim WhatsApp')->body($res['message'] ?? 'Error')->danger()->send();
-                    }
-                }),
-
-            Action::make('generateNewApiKey')
-                ->label('Buat API Key Mobile Baru')
-                ->icon('heroicon-o-arrow-path')
-                ->color('gray')
-                ->requiresConfirmation()
-                ->action(function () {
-                    $newKey = 'isp_'.Str::random(32);
-                    $this->data['app_api_key'] = $newKey;
-                    IspSetting::set('app_api_key', $newKey);
-                    Notification::make()->title('API Key Baru Dibuat')->body($newKey)->success()->send();
-                }),
-
-            Action::make('scanQris')
-                ->label('Scan Foto QRIS')
-                ->icon('heroicon-o-camera')
-                ->color('warning')
-                ->url(url('/admin/payment-gateway')),
-        ];
+        return [];
     }
 
     public function configureWhatsAppAction(): Action
