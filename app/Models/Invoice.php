@@ -31,7 +31,7 @@ class Invoice extends Model
         'amount' => 'decimal:2',
         'unique_code' => 'integer',
         'total_amount' => 'decimal:2',
-        'due_date' => 'date',
+        'due_date' => 'date:Y-m-d',
         'paid_at' => 'datetime',
     ];
 
