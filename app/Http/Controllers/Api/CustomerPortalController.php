@@ -9,6 +9,7 @@ use App\Models\Invoice;
 use App\Models\IspSetting;
 use App\Models\Page;
 use App\Models\Payment;
+use App\Models\PaymentGateway;
 use App\Models\Promo;
 use App\Models\SupportTicket;
 use App\Services\Genieacs\GenieacsApiService;
@@ -344,12 +345,63 @@ class CustomerPortalController extends Controller
             }
         }
 
+        $activeGateways = PaymentGateway::active()->get()->map(function ($gw) {
+            return [
+                'id' => $gw->id,
+                'code' => $gw->code,
+                'name' => $gw->name,
+                'category' => $gw->category,
+                'logo' => $gw->logo,
+                'description' => $gw->description,
+                'fee_formatted' => $gw->fee_formatted,
+                'instructions' => $gw->instructions,
+                'bank_info' => $gw->code === 'manual_transfer' ? [
+                    'bank_name' => $gw->config['bank_name'] ?? 'BCA',
+                    'account_number' => $gw->config['account_number'] ?? '',
+                    'account_holder' => $gw->config['account_holder'] ?? '',
+                ] : null,
+            ];
+        });
+
         return response()->json([
             'success' => true,
             'data' => [
                 'invoice' => $invoice,
                 'qr_data_uri' => $qrDataUri,
+                'active_gateways' => $activeGateways,
             ],
+        ]);
+    }
+
+    /**
+     * Get active multi-payment gateways.
+     */
+    public function paymentGateways(): JsonResponse
+    {
+        $gateways = PaymentGateway::active()->get()->map(function ($gw) {
+            return [
+                'id' => $gw->id,
+                'code' => $gw->code,
+                'name' => $gw->name,
+                'category' => $gw->category,
+                'logo' => $gw->logo,
+                'description' => $gw->description,
+                'fee_type' => $gw->fee_type,
+                'fee_flat' => (float) $gw->fee_flat,
+                'fee_percent' => (float) $gw->fee_percent,
+                'fee_formatted' => $gw->fee_formatted,
+                'instructions' => $gw->instructions,
+                'bank_info' => $gw->code === 'manual_transfer' ? [
+                    'bank_name' => $gw->config['bank_name'] ?? 'BCA',
+                    'account_number' => $gw->config['account_number'] ?? '',
+                    'account_holder' => $gw->config['account_holder'] ?? '',
+                ] : null,
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $gateways,
         ]);
     }
 

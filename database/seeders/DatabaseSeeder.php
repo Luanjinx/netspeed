@@ -149,5 +149,8 @@ class DatabaseSeeder extends Seeder
 
         // 7. Generate Initial Invoice for Customer
         app(BillingService::class)->generateInvoice($customer, now()->format('Y-m'));
+
+        // 8. Seed Default Multi Payment Gateways
+        $this->call(PaymentGatewaySeeder::class);
     }
 }

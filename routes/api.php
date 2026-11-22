@@ -17,6 +17,7 @@ Route::get('/public/pages/{slug}', [CustomerPortalController::class, 'publicPage
 Route::post('/auth/login', [AuthController::class, 'login']);
 Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/payment/webhook', [PaymentWebhookController::class, 'handle']);
+Route::get('/payment/gateways', [CustomerPortalController::class, 'paymentGateways']);
 Route::post('/telegram/webhook', [TelegramWebhookController::class, 'handle']);
 
 // Network Ping & Speedtest for Flutter
@@ -38,6 +39,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/profile', [CustomerPortalController::class, 'profile']);
         Route::get('/invoices', [CustomerPortalController::class, 'invoices']);
         Route::get('/invoices/{id}', [CustomerPortalController::class, 'invoiceDetail']);
+        Route::get('/payment-gateways', [CustomerPortalController::class, 'paymentGateways']);
         Route::post('/invoices/{id}/proof', [CustomerPortalController::class, 'uploadProof']);
         Route::post('/fcm-token', [CustomerPortalController::class, 'updateFcmToken']);
         Route::post('/onesignal-id', [CustomerPortalController::class, 'updateOneSignalId']);

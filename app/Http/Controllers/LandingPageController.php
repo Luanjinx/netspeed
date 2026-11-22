@@ -7,6 +7,7 @@ use App\Models\InternetPackage;
 use App\Models\Invoice;
 use App\Models\IspSetting;
 use App\Models\Page;
+use App\Models\PaymentGateway;
 use App\Services\InstallationService;
 use App\Services\Payment\QrisService;
 use Exception;
@@ -152,6 +153,23 @@ class LandingPageController extends Controller
             ] : null,
             'qris_qr' => $qrisQr,
             'qris_data_uri' => $qrisQr,
+            'active_gateways' => PaymentGateway::active()->get()->map(function ($gw) {
+                return [
+                    'id' => $gw->id,
+                    'code' => $gw->code,
+                    'name' => $gw->name,
+                    'category' => $gw->category,
+                    'logo' => $gw->logo,
+                    'description' => $gw->description,
+                    'fee_formatted' => $gw->fee_formatted,
+                    'instructions' => $gw->instructions,
+                    'bank_info' => $gw->code === 'manual_transfer' ? [
+                        'bank_name' => $gw->config['bank_name'] ?? 'BCA',
+                        'account_number' => $gw->config['account_number'] ?? '',
+                        'account_holder' => $gw->config['account_holder'] ?? '',
+                    ] : null,
+                ];
+            }),
             'wa_url' => $waUrl,
             'company_name' => $companyName,
             'company_phone' => $companyPhone,

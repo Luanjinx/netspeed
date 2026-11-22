@@ -1,113 +1,615 @@
 <x-filament-panels::page>
-    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-        
-        <!-- Live Status Metric Cards -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem;">
-            
-            <!-- Card 1: Provider Aktif -->
-            <div style="background: #1a1e1c; border: 1px solid #232826; border-radius: 0.75rem; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between;">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                    <div>
-                        <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #9aa49f;">
-                            Provider Payment Gateway
-                        </div>
-                        <div style="font-size: 1.15rem; font-weight: 800; margin-top: 0.35rem; color: #eef1f0; display: flex; align-items: center; gap: 0.5rem;">
-                            @if ($isConfigured)
-                                <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #00e07e; box-shadow: 0 0 10px #00e07e;"></span>
-                                <span style="color: #00e07e;">{{ $activeProviderName }}</span>
-                            @else
-                                <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #eab308; box-shadow: 0 0 10px #eab308;"></span>
-                                <span style="color: #eab308;">{{ $activeProviderName }} (Kunci Kosong)</span>
-                            @endif
-                        </div>
-                    </div>
-                    <div style="background: #131615; border: 1px solid #232826; border-radius: 0.5rem; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #00e07e;">
-                        <span class="material-symbols-rounded" style="font-size: 24px;">credit_card</span>
-                    </div>
-                </div>
+    <style>
+        .pg-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            width: 100%;
+        }
 
-                <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px dashed #232826; font-size: 0.8125rem; color: #9aa49f;">
-                    Status: <strong style="color: #eef1f0;">Pelunasan Otomatis Aktif</strong>
+        .pg-kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1rem;
+            width: 100%;
+        }
+
+        .pg-card {
+            background: #131615;
+            border: 1px solid #232826;
+            border-radius: 0.875rem;
+            padding: 1.15rem 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            transition: border-color 0.2s ease;
+        }
+
+        .pg-card:hover {
+            border-color: #38423e;
+        }
+
+        .pg-card-label {
+            font-size: 0.6875rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #9aa49f;
+        }
+
+        .pg-card-val {
+            font-size: 1.625rem;
+            font-weight: 800;
+            margin-top: 0.25rem;
+            font-family: 'Plus Jakarta Sans', ui-monospace, monospace;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .pg-card-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 0.625rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .pg-toolbar {
+            background: #131615;
+            border: 1px solid #232826;
+            border-radius: 0.875rem;
+            padding: 0.85rem 1.25rem;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .pg-input {
+            padding: 0.5rem 0.85rem;
+            background: #1a1e1c;
+            border: 1px solid #232826;
+            border-radius: 0.5rem;
+            font-size: 0.8125rem;
+            color: #eef1f0;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .pg-input:focus {
+            border-color: #00e07e;
+        }
+
+        .pg-table-card {
+            background: #131615;
+            border: 1px solid #232826;
+            border-radius: 0.875rem;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .pg-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 0.8125rem;
+            text-align: left;
+        }
+
+        .pg-th {
+            padding: 0.85rem 1rem;
+            font-size: 0.6875rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #9aa49f;
+            background: #171b19;
+            border-bottom: 1px solid #232826;
+            white-space: nowrap;
+        }
+
+        .pg-td {
+            padding: 0.95rem 1rem;
+            border-bottom: 1px solid #232826;
+            vertical-align: middle;
+            color: #cbd5e1;
+        }
+
+        .pg-tr:hover {
+            background: rgba(26, 30, 28, 0.6);
+        }
+
+        .pg-badge-active {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 0.25rem 0.65rem;
+            border-radius: 0.375rem;
+            font-size: 0.6875rem;
+            font-weight: 800;
+            background: #00e07e;
+            color: #06261a;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .pg-badge-inactive {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 0.25rem 0.65rem;
+            border-radius: 0.375rem;
+            font-size: 0.6875rem;
+            font-weight: 800;
+            background: #1a1e1c;
+            color: #9aa49f;
+            border: 1px solid #232826;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .pg-badge-inactive:hover {
+            border-color: #38423e;
+            color: #eef1f0;
+        }
+
+        .pg-btn-edit {
+            width: 32px;
+            height: 32px;
+            border-radius: 0.375rem;
+            background: #1a1e1c;
+            border: 1px solid #232826;
+            color: #eef1f0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .pg-btn-edit:hover {
+            background: #232826;
+            color: #00e07e;
+            border-color: #00e07e;
+        }
+
+        .pg-modal-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(4px);
+        }
+
+        .pg-modal-card {
+            background: #131615;
+            border: 1px solid #232826;
+            border-radius: 1rem;
+            width: 100%;
+            max-width: 640px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.85);
+        }
+
+        .pg-logo-box {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 800;
+            font-size: 0.9375rem;
+        }
+
+        .pg-pulse-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 9999px;
+            display: inline-block;
+        }
+    </style>
+
+    <div class="pg-container">
+
+        <!-- 1. KPI SUMMARY CARDS -->
+        <div class="pg-kpi-grid">
+            <div class="pg-card">
+                <div>
+                    <div class="pg-card-label">Total Payment Gateways</div>
+                    <div class="pg-card-val" style="color: #eef1f0;">{{ count($this->gateways) }}</div>
+                    <div style="font-size: 0.6875rem; color: #9aa49f; margin-top: 2px;">Tersedia di NetSpeed ISP</div>
+                </div>
+                <div class="pg-card-icon" style="background: #1a1e1c; border: 1px solid #232826; color: #9aa49f;">
+                    <span class="material-symbols-rounded" style="font-size: 24px;">account_balance_wallet</span>
                 </div>
             </div>
 
-            <!-- Card 2: QRIS Merchant & Auto-Scanner -->
-            <div style="background: #1a1e1c; border: 1px solid #232826; border-radius: 0.75rem; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between;">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                    <div>
-                        <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #9aa49f;">
-                            QRIS Dinamis 0% MDR
-                        </div>
-                        <div style="font-size: 1.15rem; font-weight: 800; margin-top: 0.35rem; color: #eef1f0; display: flex; align-items: center; gap: 0.5rem;">
-                            @if ($hasQrisConfigured)
-                                <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #00e07e; box-shadow: 0 0 10px #00e07e;"></span>
-                                <span style="color: #00e07e;">{{ $qrisMerchantName }}</span>
-                            @else
-                                <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #eab308; box-shadow: 0 0 10px #eab308;"></span>
-                                <span style="color: #eab308;">Belum Upload QRIS</span>
-                            @endif
-                        </div>
+            <div class="pg-card">
+                <div>
+                    <div class="pg-card-label">Gateway Aktif (Multi-Payment)</div>
+                    <div class="pg-card-val" style="color: #00e07e;">
+                        <span>{{ \App\Models\PaymentGateway::where('is_active', true)->count() }}</span>
+                        <span class="pg-pulse-dot" style="background: #00e07e; animation: pulse 2s infinite;"></span>
                     </div>
-                    <div style="background: #131615; border: 1px solid #232826; border-radius: 0.5rem; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #00e07e;">
-                        <span class="material-symbols-rounded" style="font-size: 24px;">qr_code_2</span>
-                    </div>
+                    <div style="font-size: 0.6875rem; color: #00e07e; margin-top: 2px;">Siap digunakan pelanggan</div>
                 </div>
-
-                <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px dashed #232826; font-size: 0.75rem; color: #9aa49f;">
-                    @if ($hasQrisConfigured)
-                        <span style="color: #00e07e;">Standar EMVCo Valid &bull; Auto Scanner Aktif</span>
-                    @else
-                        <span>Unggah foto barcode QRIS di form bawah untuk auto-scan</span>
-                    @endif
+                <div class="pg-card-icon" style="background: rgba(0,224,126,0.1); border: 1px solid rgba(0,224,126,0.25); color: #00e07e;">
+                    <span class="material-symbols-rounded" style="font-size: 24px;">credit_card</span>
                 </div>
             </div>
 
-            <!-- Card 3: Webhook & Otomasi Pelunasan -->
-            <div style="background: #1a1e1c; border: 1px solid #232826; border-radius: 0.75rem; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between;">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                    <div>
-                        <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #9aa49f;">
-                            Webhook &amp; Otomasi Sistem
-                        </div>
-                        <div style="font-size: 1.15rem; font-weight: 800; margin-top: 0.35rem; color: #eef1f0;">
-                            <span style="color: #38bdf8;">Auto-Unblock PPPoE</span>
-                        </div>
+            <div class="pg-card">
+                <div>
+                    <div class="pg-card-label">Saluran Bebas Biaya (0% MDR)</div>
+                    <div class="pg-card-val" style="color: #38bdf8;">
+                        <span>{{ \App\Models\PaymentGateway::where('is_active', true)->where('fee_flat', 0)->where('fee_percent', 0)->count() }}</span>
                     </div>
-                    <div style="background: #131615; border: 1px solid #232826; border-radius: 0.5rem; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #38bdf8;">
-                        <span class="material-symbols-rounded" style="font-size: 24px;">bolt</span>
-                    </div>
+                    <div style="font-size: 0.6875rem; color: #9aa49f; margin-top: 2px;">Bebas potongan per transaksi</div>
                 </div>
-
-                <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px dashed #232826; font-size: 0.75rem; color: #9aa49f;">
-                    Kwitansi WhatsApp + Alert Telegram NOC otomatis saat tagihan lunas
+                <div class="pg-card-icon" style="background: rgba(56,189,248,0.1); border: 1px solid rgba(56,189,248,0.25); color: #38bdf8;">
+                    <span class="material-symbols-rounded" style="font-size: 24px;">percent</span>
                 </div>
             </div>
         </div>
 
-        <!-- Form Pengaturan -->
-        <form wire:submit="save" class="space-y-6">
-            {{ $this->form }}
+        <!-- 2. TOOLBAR (SEARCH & FILTER - MIRIP SCREENSHOT) -->
+        <div class="pg-toolbar">
+            <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1; max-width: 450px;">
+                <div style="position: relative; width: 100%;">
+                    <span class="material-symbols-rounded" style="position: absolute; left: 10px; top: 9px; font-size: 16px; color: #9aa49f;">search</span>
+                    <input type="text" wire:model.live.debounce.300ms="searchQuery" placeholder="Search gateway name, code, description..."
+                        class="pg-input" style="padding-left: 2rem; width: 100%;">
+                </div>
+            </div>
 
-            <!-- Card Aksi Simpan (Posisi Kanan) -->
-            <div style="background: #1a1e1c; border: 1px solid #232826; border-radius: 0.75rem; padding: 1.15rem 1.35rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-top: 1.5rem;">
-                <div style="display: flex; align-items: center; gap: 0.85rem;">
-                    <div style="width: 2.6rem; height: 2.6rem; border-radius: 0.5rem; background: #131615; border: 1px solid #232826; display: flex; align-items: center; justify-content: center; color: #22c55e; flex-shrink: 0;">
-                        <span class="material-symbols-rounded" style="font-size: 22px;">save</span>
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <select wire:model.live="statusFilter" class="pg-input" style="cursor: pointer; min-width: 130px;">
+                    <option value="all">Status: Semua</option>
+                    <option value="active">Status: Active</option>
+                    <option value="inactive">Status: Inactive</option>
+                </select>
+
+                <button type="button" wire:click="resetFilters" class="pg-input" style="cursor: pointer; background: #1a1e1c; font-weight: 700;">
+                    Reset
+                </button>
+            </div>
+        </div>
+
+        <!-- 3. PAYMENT GATEWAYS TABLE (MIRIP PERSIS SCREENSHOT) -->
+        <div class="pg-table-card">
+            <div style="overflow-x: auto; width: 100%;">
+                <table class="pg-table">
+                    <thead>
+                        <tr>
+                            <th class="pg-th" style="padding-left: 1.25rem; width: 50px;">#</th>
+                            <th class="pg-th" style="width: 170px;">Logo</th>
+                            <th class="pg-th">Name</th>
+                            <th class="pg-th" style="width: 140px;">Fees</th>
+                            <th class="pg-th" style="width: 120px;">Status</th>
+                            <th class="pg-th" style="padding-right: 1.25rem; width: 80px; text-align: center;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($this->gateways as $idx => $gw)
+                            <tr class="pg-tr">
+                                <!-- # Sort Handle -->
+                                <td class="pg-td" style="padding-left: 1.25rem;">
+                                    <span class="material-symbols-rounded" style="font-size: 18px; color: #9aa49f; opacity: 0.6;">drag_indicator</span>
+                                </td>
+
+                                <!-- Logo -->
+                                <td class="pg-td">
+                                    <div class="pg-logo-box">
+                                        @if ($gw->code === 'qris_manual')
+                                            <span style="background: #e11d48; color: #ffffff; padding: 0.25rem 0.55rem; border-radius: 4px; font-size: 0.75rem; font-weight: 900; letter-spacing: 0.05em;">
+                                                QRIS
+                                            </span>
+                                        @elseif ($gw->code === 'tripay')
+                                            <span style="background: #0284c7; color: #ffffff; padding: 0.25rem 0.55rem; border-radius: 4px; font-size: 0.75rem; font-weight: 900; letter-spacing: 0.05em;">
+                                                TriPay
+                                            </span>
+                                        @elseif ($gw->code === 'duitku')
+                                            <span style="background: #ea580c; color: #ffffff; padding: 0.25rem 0.55rem; border-radius: 4px; font-size: 0.75rem; font-weight: 900; letter-spacing: 0.05em;">
+                                                duitku
+                                            </span>
+                                        @elseif ($gw->code === 'midtrans')
+                                            <span style="background: #1e3a8a; color: #ffffff; padding: 0.25rem 0.55rem; border-radius: 4px; font-size: 0.75rem; font-weight: 900; letter-spacing: 0.05em;">
+                                                midtrans
+                                            </span>
+                                        @elseif ($gw->code === 'xendit')
+                                            <span style="background: #2563eb; color: #ffffff; padding: 0.25rem 0.55rem; border-radius: 4px; font-size: 0.75rem; font-weight: 900; letter-spacing: 0.05em;">
+                                                xendit
+                                            </span>
+                                        @elseif ($gw->code === 'cekmutasi')
+                                            <span style="background: #059669; color: #ffffff; padding: 0.25rem 0.55rem; border-radius: 4px; font-size: 0.75rem; font-weight: 900; letter-spacing: 0.05em;">
+                                                CekMutasi
+                                            </span>
+                                        @else
+                                            <span style="background: #4f46e5; color: #ffffff; padding: 0.25rem 0.55rem; border-radius: 4px; font-size: 0.75rem; font-weight: 900; letter-spacing: 0.05em;">
+                                                BANK
+                                            </span>
+                                        @endif
+                                    </div>
+                                </td>
+
+                                <!-- Name & Description -->
+                                <td class="pg-td">
+                                    <div style="font-weight: 700; color: #eef1f0; font-size: 0.875rem;">{{ $gw->name }}</div>
+                                    <div style="font-size: 0.6875rem; color: #9aa49f; margin-top: 2px;">{{ $gw->description }}</div>
+                                </td>
+
+                                <!-- Fees -->
+                                <td class="pg-td" style="font-family: ui-monospace, monospace; font-size: 0.8125rem; font-weight: 700; color: #eef1f0;">
+                                    @if ($gw->fee_formatted === '0% (Gratis)')
+                                        <span style="color: #00e07e;">- (Gratis)</span>
+                                    @else
+                                        <span style="color: #f2c56b;">{{ $gw->fee_formatted }}</span>
+                                    @endif
+                                </td>
+
+                                <!-- Status (Toggleable Livewire Button) -->
+                                <td class="pg-td">
+                                    <button type="button" wire:click="toggleGateway({{ $gw->id }})" title="Klik untuk mengubah status">
+                                        @if ($gw->is_active)
+                                            <span class="pg-badge-active">
+                                                <span>Active</span>
+                                                <span class="pg-pulse-dot" style="background: #06261a;"></span>
+                                            </span>
+                                        @else
+                                            <span class="pg-badge-inactive">
+                                                <span>Inactive</span>
+                                            </span>
+                                        @endif
+                                    </button>
+                                </td>
+
+                                <!-- Action (Edit Button) -->
+                                <td class="pg-td" style="padding-right: 1.25rem; text-align: center;">
+                                    <button type="button" wire:click="editGateway({{ $gw->id }})" class="pg-btn-edit" title="Edit Gateway Configuration">
+                                        <span class="material-symbols-rounded" style="font-size: 16px;">edit_square</span>
+                                    </button>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" style="padding: 3rem 1.5rem; text-align: center; color: #64748b;">
+                                    <span class="material-symbols-rounded" style="font-size: 36px; opacity: 0.4; display: block; margin: 0 auto 0.5rem auto;">credit_card_off</span>
+                                    <div>Tidak ada gateway pembayaran yang sesuai filter pencarian.</div>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 4. GLOBAL WEBHOOK & AUTOMATION BOX -->
+        <div style="background: #131615; border: 1px solid #232826; border-radius: 0.875rem; padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.6rem;">
+                    <div style="width: 36px; height: 36px; border-radius: 0.5rem; background: rgba(56,189,248,0.12); border: 1px solid rgba(56,189,248,0.25); display: flex; align-items: center; justify-content: center; color: #38bdf8;">
+                        <span class="material-symbols-rounded" style="font-size: 20px;">webhook</span>
                     </div>
                     <div>
-                        <h4 style="font-size: 0.875rem; font-weight: 700; color: #eef1f0; margin: 0;">Simpan Pengaturan Gateway</h4>
-                        <p style="font-size: 0.75rem; color: #9aa49f; margin: 3px 0 0 0;">Terapkan seluruh konfigurasi metode pembayaran, barcode QRIS &amp; otomasi sistem</p>
+                        <h4 style="font-weight: 700; font-size: 0.875rem; color: #eef1f0; margin: 0;">Universal Webhook Callback URL</h4>
+                        <p style="font-size: 0.6875rem; color: #9aa49f; margin: 2px 0 0 0;">Salin URL ini ke dashboard gateway Anda (TriPay, Midtrans, CekMutasi, Moota, Xendit) untuk pelunasan instan</p>
                     </div>
                 </div>
 
-                <button type="submit"
-                        style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 0.7rem 2rem; font-size: 0.875rem; font-weight: 700; color: #ffffff !important; background: #16a34a; border: 1px solid #22c55e; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 14px rgba(22, 163, 74, 0.35);"
-                        onmouseover="this.style.background='#15803d'; this.style.borderColor='#16a34a'; this.style.transform='translateY(-1px)';"
-                        onmouseout="this.style.background='#16a34a'; this.style.borderColor='#22c55e'; this.style.transform='none';">
-                    <span class="material-symbols-rounded" style="font-size: 20px; color: #ffffff !important; line-height: 1;">check</span>
-                    <span style="color: #ffffff !important; font-weight: 700; font-size: 0.95rem; letter-spacing: 0.02em;">Simpan</span>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <code style="font-family: ui-monospace, monospace; font-size: 0.75rem; color: #00e07e; background: #1a1e1c; padding: 0.4rem 0.75rem; border-radius: 0.375rem; border: 1px solid #232826;">
+                        {{ $webhookUrl }}
+                    </code>
+                    <button type="button" onclick="navigator.clipboard.writeText('{{ $webhookUrl }}'); alert('Webhook URL berhasil disalin!');"
+                        class="pg-input" style="cursor: pointer; background: #1a1e1c; font-weight: 700; color: #38bdf8;">
+                        Salin URL
+                    </button>
+                </div>
+            </div>
+
+            <div style="border-top: 1px solid #232826; padding-top: 1rem; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem;">
+                <div style="display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;">
+                    <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; color: #eef1f0; cursor: pointer;">
+                        <input type="checkbox" wire:model="autoActivate" style="accent-color: #00e07e; width: 15px; height: 15px;">
+                        <span>Auto-Unblock / Buka Isolir PPPoE</span>
+                    </label>
+
+                    <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; color: #eef1f0; cursor: pointer;">
+                        <input type="checkbox" wire:model="autoReceipt" style="accent-color: #00e07e; width: 15px; height: 15px;">
+                        <span>Auto-Kirim Kwitansi WhatsApp</span>
+                    </label>
+
+                    <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; color: #eef1f0; cursor: pointer;">
+                        <input type="checkbox" wire:model="autoTelegram" style="accent-color: #00e07e; width: 15px; height: 15px;">
+                        <span>Alert Telegram NOC Lunas</span>
+                    </label>
+                </div>
+
+                <button type="button" wire:click="saveGlobalAutomation"
+                    class="pg-input" style="background: #00e07e; color: #06261a; font-weight: 800; border: none; cursor: pointer; padding: 0.45rem 1rem;">
+                    Simpan Otomasi
                 </button>
             </div>
-        </form>
+        </div>
+
+        <!-- ============================================================== -->
+        <!-- MODAL: EDIT GATEWAY SETTINGS                                   -->
+        <!-- ============================================================== -->
+        @if ($showEditModal)
+            <div class="pg-modal-backdrop" x-data @keydown.escape.window="$wire.closeEditModal()">
+                <div class="pg-modal-card">
+                    <!-- Modal Header -->
+                    <div style="padding: 1rem 1.25rem; border-bottom: 1px solid #232826; background: #171b19; display: flex; align-items: center; justify-content: space-between;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <div style="width: 38px; height: 38px; border-radius: 0.5rem; background: rgba(0,224,126,0.12); border: 1px solid rgba(0,224,126,0.3); display: flex; align-items: center; justify-content: center; color: #00e07e;">
+                                <span class="material-symbols-rounded" style="font-size: 20px;">tune</span>
+                            </div>
+                            <div>
+                                <h3 style="font-weight: 700; font-size: 0.9375rem; color: #eef1f0; margin: 0;">Konfigurasi {{ $editName }}</h3>
+                                <p style="font-size: 0.6875rem; color: #9aa49f; margin: 2px 0 0 0;">Atur kredensial API, biaya admin (fee), dan status aktif</p>
+                            </div>
+                        </div>
+                        <button type="button" wire:click="closeEditModal()" style="color: #9aa49f; background: transparent; border: none; font-size: 1.25rem; cursor: pointer;">✕</button>
+                    </div>
+
+                    <!-- Modal Body -->
+                    <div style="padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem; max-height: 70vh; overflow-y: auto;">
+                        
+                        <!-- Nama & Status -->
+                        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 0.75rem;">
+                            <div>
+                                <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #eef1f0; margin-bottom: 0.25rem;">Nama Gateway</label>
+                                <input type="text" wire:model="editName" class="pg-input" style="width: 100%;">
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #eef1f0; margin-bottom: 0.25rem;">Status</label>
+                                <select wire:model="editIsActive" class="pg-input" style="width: 100%; cursor: pointer;">
+                                    <option value="1">Aktif (Active)</option>
+                                    <option value="0">Nonaktif (Inactive)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Deskripsi -->
+                        <div>
+                            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #eef1f0; margin-bottom: 0.25rem;">Deskripsi Singkat</label>
+                            <input type="text" wire:model="editDescription" class="pg-input" style="width: 100%;">
+                        </div>
+
+                        <!-- Biaya Admin (Fee) -->
+                        <div style="padding: 0.85rem; border-radius: 0.5rem; background: #1a1e1c; border: 1px solid #232826;">
+                            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #00e07e; margin-bottom: 0.5rem;">
+                                Biaya Transaksi / Admin Fee Pelanggan
+                            </label>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                                <div>
+                                    <span style="font-size: 0.6875rem; color: #9aa49f;">Biaya Nominal Tetap (Flat Rp)</span>
+                                    <input type="number" wire:model="editFeeFlat" placeholder="cth: 1500" class="pg-input" style="width: 100%; margin-top: 2px;">
+                                </div>
+                                <div>
+                                    <span style="font-size: 0.6875rem; color: #9aa49f;">Biaya Persentase (% Fee)</span>
+                                    <input type="number" step="0.1" wire:model="editFeePercent" placeholder="cth: 1.5" class="pg-input" style="width: 100%; margin-top: 2px;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- KHUSUS QRIS DINAMIS MANDIRI -->
+                        @if ($editCode === 'qris_manual')
+                            <div style="padding: 0.85rem; border-radius: 0.5rem; background: #1a1e1c; border: 1px solid #232826; display: flex; flex-direction: column; gap: 0.75rem;">
+                                <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #e11d48;">
+                                    Konfigurasi Barcode QRIS Toko (EMVCo)
+                                </label>
+
+                                <div>
+                                    <span style="font-size: 0.6875rem; color: #9aa49f;">Upload Foto / Screenshot Barcode QRIS Toko</span>
+                                    <input type="file" wire:model="editQrisImage" accept="image/*" class="pg-input" style="width: 100%; margin-top: 2px;">
+                                    <button type="button" wire:click="scanUploadedQris" wire:loading.attr="disabled"
+                                        class="pg-input" style="margin-top: 6px; background: #e11d48; color: #ffffff; font-weight: 700; border: none; cursor: pointer;">
+                                        <span wire:loading.remove wire:target="scanUploadedQris">🔍 Scan Otomatis Barcode</span>
+                                        <span wire:loading wire:target="scanUploadedQris">Memindai QRIS...</span>
+                                    </button>
+                                </div>
+
+                                <div>
+                                    <span style="font-size: 0.6875rem; color: #9aa49f;">Raw String QRIS Statis EMVCo</span>
+                                    <textarea wire:model="editStaticQris" rows="3" class="pg-input" style="width: 100%; font-family: ui-monospace, monospace; font-size: 0.75rem;"></textarea>
+                                </div>
+
+                                <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; color: #eef1f0; cursor: pointer;">
+                                    <input type="checkbox" wire:model="editUseUniqueCode" style="accent-color: #00e07e; width: 15px; height: 15px;">
+                                    <span>Gunakan 3 digit kode unik nominal (cth: Rp 150.848) untuk mempermudah deteksi</span>
+                                </label>
+                            </div>
+                        @endif
+
+                        <!-- KHUSUS TRANSFER BANK MANUAL -->
+                        @if ($editCode === 'manual_transfer')
+                            <div style="padding: 0.85rem; border-radius: 0.5rem; background: #1a1e1c; border: 1px solid #232826; display: flex; flex-direction: column; gap: 0.75rem;">
+                                <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #4f46e5;">
+                                    Informasi Rekening Bank Tujuan
+                                </label>
+
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                                    <div>
+                                        <span style="font-size: 0.6875rem; color: #9aa49f;">Nama Bank</span>
+                                        <input type="text" wire:model="editBankName" placeholder="BCA / BRI / Mandiri" class="pg-input" style="width: 100%; margin-top: 2px;">
+                                    </div>
+                                    <div>
+                                        <span style="font-size: 0.6875rem; color: #9aa49f;">Nomor Rekening</span>
+                                        <input type="text" wire:model="editAccountNumber" placeholder="1234567890" class="pg-input" style="width: 100%; margin-top: 2px; font-family: ui-monospace, monospace;">
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <span style="font-size: 0.6875rem; color: #9aa49f;">Atas Nama (Pemilik Rekening)</span>
+                                    <input type="text" wire:model="editAccountHolder" placeholder="NetSpeed Internet" class="pg-input" style="width: 100%; margin-top: 2px;">
+                                </div>
+                            </div>
+                        @endif
+
+                        <!-- KHUSUS GATEWAY PIHAK KETIGA (TriPay, Duitku, Midtrans, Xendit, CekMutasi) -->
+                        @if ($editCode !== 'qris_manual' && $editCode !== 'manual_transfer')
+                            <div style="padding: 0.85rem; border-radius: 0.5rem; background: #1a1e1c; border: 1px solid #232826; display: flex; flex-direction: column; gap: 0.75rem;">
+                                <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #38bdf8;">
+                                    Kredensial API &amp; Kunci Rahasia Gateway
+                                </label>
+
+                                <div>
+                                    <span style="font-size: 0.6875rem; color: #9aa49f;">Endpoint URL API</span>
+                                    <input type="text" wire:model="editApiUrl" class="pg-input" style="width: 100%; margin-top: 2px; font-family: ui-monospace, monospace;">
+                                </div>
+
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                                    <div>
+                                        <span style="font-size: 0.6875rem; color: #9aa49f;">Server Key / API Key / Secret</span>
+                                        <input type="text" wire:model="editServerKey" class="pg-input" style="width: 100%; margin-top: 2px; font-family: ui-monospace, monospace;">
+                                    </div>
+                                    <div>
+                                        <span style="font-size: 0.6875rem; color: #9aa49f;">Merchant Code / ID</span>
+                                        <input type="text" wire:model="editMerchantCode" class="pg-input" style="width: 100%; margin-top: 2px; font-family: ui-monospace, monospace;">
+                                    </div>
+                                </div>
+
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                                    <div>
+                                        <span style="font-size: 0.6875rem; color: #9aa49f;">Client Key (Opsional)</span>
+                                        <input type="text" wire:model="editClientKey" class="pg-input" style="width: 100%; margin-top: 2px; font-family: ui-monospace, monospace;">
+                                    </div>
+                                    <div>
+                                        <span style="font-size: 0.6875rem; color: #9aa49f;">Webhook Secret / Signature Key</span>
+                                        <input type="text" wire:model="editWebhookSecret" class="pg-input" style="width: 100%; margin-top: 2px; font-family: ui-monospace, monospace;">
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
+                        <!-- Instruksi Pembayaran -->
+                        <div>
+                            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #eef1f0; margin-bottom: 0.25rem;">Instruksi Pembayaran Pelanggan</label>
+                            <textarea wire:model="editInstructions" rows="2" class="pg-input" style="width: 100%; font-size: 0.75rem;"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Modal Footer -->
+                    <div style="padding: 1rem 1.25rem; border-top: 1px solid #232826; background: #171b19; display: flex; justify-content: flex-end; gap: 0.5rem;">
+                        <button type="button" wire:click="closeEditModal()" class="pg-input" style="background: #1a1e1c; color: #9aa49f; cursor: pointer;">
+                            Batal
+                        </button>
+                        <button type="button" wire:click="saveGateway()"
+                            class="pg-input" style="background: #00e07e; color: #06261a; font-weight: 800; border: none; cursor: pointer; padding: 0.5rem 1.25rem;">
+                            Simpan Perubahan
+                        </button>
+                    </div>
+                </div>
+            </div>
+        @endif
+
     </div>
 </x-filament-panels::page>
