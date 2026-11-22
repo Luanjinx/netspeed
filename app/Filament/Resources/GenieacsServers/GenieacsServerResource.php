@@ -16,6 +16,8 @@ use UnitEnum;
 
 class GenieacsServerResource extends Resource
 {
+    protected static bool $shouldRegisterNavigation = false;
+
     protected static ?string $model = GenieacsServer::class;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-cpu-chip';
