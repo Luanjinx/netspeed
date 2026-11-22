@@ -110,6 +110,17 @@
         </div>
 
         <!-- NOTIFICATION ALERTS IF ANY -->
+        @if (isset($versionInfo['is_git_writable']) && ! $versionInfo['is_git_writable'])
+            <div style="background: rgba(242, 123, 123, 0.12); border: 1px solid rgba(242, 123, 123, 0.35); border-radius: 0.75rem; padding: 1rem 1.25rem; display: flex; align-items: flex-start; gap: 12px; color: #f27b7b;">
+                <span class="material-symbols-rounded" style="font-size: 26px; color: #f27b7b; flex-shrink: 0; margin-top: 2px;">lock</span>
+                <div style="font-size: 0.8rem; line-height: 1.5;">
+                    <div style="font-weight: 700; font-size: 0.875rem; color: #fca5a5;">Perhatian: Izin Folder .git Terbatas (Permission Denied)</div>
+                    <div style="color: #cbd5e1; margin-top: 2px;">Web server tidak dapat menulis ke folder <code>.git</code> (biasanya karena folder dimiliki oleh user <code>root</code>). Untuk memperbaikinya secara permanen, jalankan perintah ini di terminal server (SSH):</div>
+                    <code style="display: block; margin-top: 6px; padding: 6px 12px; background: #070908; border: 1px solid #232826; border-radius: 6px; color: #00e07e; font-family: monospace; font-size: 0.75rem;">sudo chown -R www-data:www-data .git &amp;&amp; sudo chmod -R 775 .git storage bootstrap/cache</code>
+                </div>
+            </div>
+        @endif
+
         @if ($lastSuccessMessage)
             <div style="background: rgba(0, 224, 126, 0.1); border: 1px solid rgba(0, 224, 126, 0.3); border-radius: 0.75rem; padding: 1rem 1.25rem; display: flex; align-items: center; justify-content: space-between; color: #00e07e;">
                 <div style="display: flex; align-items: center; gap: 10px;">

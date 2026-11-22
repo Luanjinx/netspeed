@@ -69,8 +69,12 @@ class SystemUpdateService
 
         $repoDetails = $this->parseRepoDetails($remoteUrl);
 
+        $gitDir = $this->basePath.DIRECTORY_SEPARATOR.'.git';
+        $isGitWritable = is_dir($gitDir) && is_writable($gitDir);
+
         return [
             'has_git' => true,
+            'is_git_writable' => $isGitWritable,
             'commit_hash' => $shortHash,
             'commit_full_hash' => $fullHash,
             'commit_message' => $message,
@@ -107,57 +111,64 @@ class SystemUpdateService
 
         // 1. Try Git Fetch method first if git directory exists
         if ($versionInfo['has_git']) {
+            $fetchSucceeded = true;
             if ($forceFetch) {
+                // Clear unwriteable FETCH_HEAD if possible
+                $this->clearUnwriteableFetchHead();
                 $fetchRes = $this->runGitCommand(['fetch', 'origin', $branch], 30);
                 if (! $fetchRes['success']) {
+                    $fetchSucceeded = false;
                     Log::warning('Git fetch origin failed, attempting fallback to GitHub API: '.$fetchRes['error']);
                 }
             }
 
-            $countRes = $this->runGitCommand(['rev-list', "HEAD..origin/{$branch}", '--count']);
+            // Only trust local rev-list if fetch succeeded or wasn't forced
+            if ($fetchSucceeded) {
+                $countRes = $this->runGitCommand(['rev-list', "HEAD..origin/{$branch}", '--count']);
 
-            if ($countRes['success']) {
-                $behindCount = (int) trim($countRes['output']);
-                $incomingCommits = [];
+                if ($countRes['success']) {
+                    $behindCount = (int) trim($countRes['output']);
+                    $incomingCommits = [];
 
-                if ($behindCount > 0) {
-                    $logRes = $this->runGitCommand(['log', "HEAD..origin/{$branch}", '--pretty=format:%h|%s|%an|%ci', '-n', '25']);
-                    if ($logRes['success'] && ! empty($logRes['output'])) {
-                        $lines = explode("\n", trim($logRes['output']));
-                        foreach ($lines as $line) {
-                            $parts = explode('|', $line, 4);
-                            if (count($parts) >= 2) {
-                                $hash = trim($parts[0]);
-                                $incomingCommits[] = [
-                                    'hash' => $hash,
-                                    'message' => trim($parts[1] ?? ''),
-                                    'author' => trim($parts[2] ?? 'Developer'),
-                                    'date' => trim($parts[3] ?? ''),
-                                    'url' => "https://github.com/{$owner}/{$repo}/commit/{$hash}",
-                                ];
+                    if ($behindCount > 0) {
+                        $logRes = $this->runGitCommand(['log', "HEAD..origin/{$branch}", '--pretty=format:%h|%s|%an|%ci', '-n', '25']);
+                        if ($logRes['success'] && ! empty($logRes['output'])) {
+                            $lines = explode("\n", trim($logRes['output']));
+                            foreach ($lines as $line) {
+                                $parts = explode('|', $line, 4);
+                                if (count($parts) >= 2) {
+                                    $hash = trim($parts[0]);
+                                    $incomingCommits[] = [
+                                        'hash' => $hash,
+                                        'message' => trim($parts[1] ?? ''),
+                                        'author' => trim($parts[2] ?? 'Developer'),
+                                        'date' => trim($parts[3] ?? ''),
+                                        'url' => "https://github.com/{$owner}/{$repo}/commit/{$hash}",
+                                    ];
+                                }
                             }
                         }
                     }
+
+                    $remoteHashRes = $this->runGitCommand(['rev-parse', '--short', "origin/{$branch}"]);
+                    $remoteHash = $remoteHashRes['success'] ? trim($remoteHashRes['output']) : $versionInfo['commit_hash'];
+                    $remoteMsg = ! empty($incomingCommits) ? $incomingCommits[0]['message'] : $versionInfo['commit_message'];
+
+                    $result = [
+                        'success' => true,
+                        'is_up_to_date' => $behindCount === 0,
+                        'commits_behind' => $behindCount,
+                        'latest_remote_hash' => $remoteHash,
+                        'latest_remote_message' => $remoteMsg,
+                        'incoming_commits' => $incomingCommits,
+                        'checked_at' => now()->format('d M Y, H:i:s'),
+                        'error' => null,
+                    ];
+
+                    $this->saveCheckCache($result);
+
+                    return $result;
                 }
-
-                $remoteHashRes = $this->runGitCommand(['rev-parse', '--short', "origin/{$branch}"]);
-                $remoteHash = $remoteHashRes['success'] ? trim($remoteHashRes['output']) : $versionInfo['commit_hash'];
-                $remoteMsg = ! empty($incomingCommits) ? $incomingCommits[0]['message'] : $versionInfo['commit_message'];
-
-                $result = [
-                    'success' => true,
-                    'is_up_to_date' => $behindCount === 0,
-                    'commits_behind' => $behindCount,
-                    'latest_remote_hash' => $remoteHash,
-                    'latest_remote_message' => $remoteMsg,
-                    'incoming_commits' => $incomingCommits,
-                    'checked_at' => now()->format('d M Y, H:i:s'),
-                    'error' => null,
-                ];
-
-                $this->saveCheckCache($result);
-
-                return $result;
             }
         }
 
@@ -288,6 +299,7 @@ class SystemUpdateService
             }
 
             // STEP 2: Git Pull / Fetch & Reset
+            $this->clearUnwriteableFetchHead();
             if ($forceReset) {
                 $stepGit = [
                     'step' => '2. Mengambil Pembaruan dari GitHub (Git Fetch & Reset Hard)',
@@ -453,6 +465,17 @@ class SystemUpdateService
     }
 
     /**
+     * Clear unwriteable FETCH_HEAD file if parent .git directory allows it.
+     */
+    protected function clearUnwriteableFetchHead(): void
+    {
+        $fetchHead = $this->basePath.DIRECTORY_SEPARATOR.'.git'.DIRECTORY_SEPARATOR.'FETCH_HEAD';
+        if (file_exists($fetchHead) && ! is_writable($fetchHead)) {
+            @unlink($fetchHead);
+        }
+    }
+
+    /**
      * Run a git command in the project directory using Symfony Process.
      *
      * @param  array<int, string>  $args
@@ -466,10 +489,19 @@ class SystemUpdateService
             $process->setTimeout($timeout);
             $process->run();
 
+            $errorOutput = trim($process->getErrorOutput());
+            if (! empty($errorOutput) && (str_contains($errorOutput, 'FETCH_HEAD') || str_contains($errorOutput, 'Permission denied') || str_contains($errorOutput, 'permission denied'))) {
+                $errorOutput .= "\n\n💡 [PENYEBAB & SOLUSI IZIN FILE]:\n"
+                    ."Folder '.git' di server tidak memiliki izin tulis untuk user web server (misal: www-data).\n"
+                    ."Jalankan perintah berikut di terminal SSH server:\n"
+                    ."  sudo chown -R www-data:www-data .git\n"
+                    ."  sudo chmod -R 775 .git storage bootstrap/cache\n";
+            }
+
             return [
                 'success' => $process->isSuccessful(),
                 'output' => trim($process->getOutput()),
-                'error' => trim($process->getErrorOutput()),
+                'error' => $errorOutput,
                 'exit_code' => (int) $process->getExitCode(),
             ];
         } catch (Exception $e) {
