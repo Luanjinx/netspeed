@@ -56,23 +56,17 @@ class AdminPanelProvider extends PanelProvider
             ->collapsibleNavigationGroups()
             ->navigationGroups([
                 NavigationGroup::make('Pelanggan')
-                    ->icon('heroicon-o-users')
-                    ->collapsed(),
+                    ->icon('heroicon-o-users'),
                 NavigationGroup::make('Billing')
-                    ->icon('heroicon-o-banknotes')
-                    ->collapsed(),
+                    ->icon('heroicon-o-banknotes'),
                 NavigationGroup::make('Jaringan')
-                    ->icon('heroicon-o-signal')
-                    ->collapsed(),
+                    ->icon('heroicon-o-signal'),
                 NavigationGroup::make('Teknisi')
-                    ->icon('heroicon-o-wrench-screwdriver')
-                    ->collapsed(),
+                    ->icon('heroicon-o-wrench-screwdriver'),
                 NavigationGroup::make('Notifikasi')
-                    ->icon('heroicon-o-chat-bubble-left-right')
-                    ->collapsed(),
+                    ->icon('heroicon-o-chat-bubble-left-right'),
                 NavigationGroup::make('Pengaturan')
-                    ->icon('heroicon-o-cog-6-tooth')
-                    ->collapsed(),
+                    ->icon('heroicon-o-cog-6-tooth'),
             ])
             ->spa()
             ->unsavedChangesAlerts(! DemoModeServiceProvider::isDemo())

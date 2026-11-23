@@ -1531,19 +1531,12 @@
 
 <script>
     document.addEventListener('alpine:init', () => {
-        const defaultCollapsedGroups = [
-            'Pelanggan',
-            'Billing',
-            'Jaringan',
-            'Teknisi',
-            'Notifikasi',
-            'Pengaturan'
-        ];
-        if (!localStorage.getItem('filament:sidebar:collapsed_v3')) {
-            localStorage.setItem('filament:sidebar:collapsed_groups', JSON.stringify(defaultCollapsedGroups));
-            localStorage.setItem('filament:sidebar:collapsed_v3', '1');
+        // Reset collapsed groups to empty array so all menu groups are open/expanded by default
+        if (!localStorage.getItem('filament:sidebar:expanded_default_v4')) {
+            localStorage.setItem('filament:sidebar:collapsed_groups', JSON.stringify([]));
+            localStorage.setItem('filament:sidebar:expanded_default_v4', '1');
             if (window.Alpine && window.Alpine.store('sidebar')) {
-                window.Alpine.store('sidebar').collapsedGroups = defaultCollapsedGroups;
+                window.Alpine.store('sidebar').collapsedGroups = [];
             }
         }
     });
