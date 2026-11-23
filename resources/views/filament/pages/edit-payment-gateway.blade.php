@@ -87,7 +87,7 @@
 
         .pg-btn-primary {
             background: #00e07e;
-            color: #06261a;
+            color: #ffffff;
             font-weight: 800;
             font-size: 0.875rem;
             padding: 0.65rem 1.5rem;
@@ -102,19 +102,19 @@
 
         .pg-btn-primary:hover {
             background: #4deda4;
-            color: #06261a;
+            color: #ffffff;
             transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(0, 224, 126, 0.3);
         }
 
         .pg-btn-secondary {
-            background: var(--surface2);
-            color: var(--text);
+            background: #06261a;
+            color: #ffffff;
             font-weight: 700;
             font-size: 0.875rem;
             padding: 0.65rem 1.25rem;
             border-radius: 0.625rem;
-            border: 1px solid var(--border);
+            border: 1px solid rgba(0, 224, 126, 0.3);
             cursor: pointer;
             display: inline-flex;
             align-items: center;
@@ -124,8 +124,8 @@
         }
 
         .pg-btn-secondary:hover {
-            background: var(--border);
-            color: var(--text);
+            background: #0f3a25;
+            color: #ffffff;
         }
 
         .pg-pill-badge {
@@ -139,7 +139,7 @@
 
         .pg-pill-active {
             background: #00e07e;
-            color: #06261a;
+            color: #ffffff;
         }
 
         .pg-pill-inactive {

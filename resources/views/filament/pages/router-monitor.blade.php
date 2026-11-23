@@ -145,10 +145,10 @@
                         wire:click="refreshData"
                         wire:loading.attr="disabled"
                         wire:target="refreshData, loadData"
-                        style="height: 38px; padding: 0 1rem; border-radius: 0.5rem; font-size: 0.8125rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s ease; background: #00e07e; color: #06261a; border: 1px solid #00e07e; box-shadow: 0 2px 8px rgba(0, 224, 126, 0.25);">
-                    <span wire:loading.remove wire:target="refreshData, loadData" class="material-symbols-rounded" style="font-size: 18px; color: #06261a; font-weight: 700;">sync</span>
-                    <span wire:loading wire:target="refreshData, loadData" class="material-symbols-rounded" style="font-size: 18px; color: #06261a; animation: spin 1s linear infinite;">sync</span>
-                    <span>Perbarui Data</span>
+                        style="height: 38px; padding: 0 1rem; border-radius: 0.5rem; font-size: 0.8125rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s ease; background: #00e07e; color: #ffffff !important; border: 1px solid #00e07e; box-shadow: 0 2px 8px rgba(0, 224, 126, 0.25);">
+                    <span wire:loading.remove wire:target="refreshData, loadData" class="material-symbols-rounded" style="font-size: 18px; color: #ffffff !important; font-weight: 700;">sync</span>
+                    <span wire:loading wire:target="refreshData, loadData" class="material-symbols-rounded" style="font-size: 18px; color: #ffffff !important; animation: spin 1s linear infinite;">sync</span>
+                    <span style="color: #ffffff !important;">Perbarui Data</span>
                 </button>
 
                 @if ($activeTab === 'router')
@@ -164,31 +164,31 @@
                     <button type="button"
                             wire:click="importAllPppoeSecrets"
                             wire:loading.attr="disabled"
-                            style="height: 38px; padding: 0 0.95rem; border-radius: 0.5rem; font-size: 0.8125rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s ease; background: var(--surface2); color: var(--text); border: 1px solid var(--border);">
+                            style="height: 38px; padding: 0 0.95rem; border-radius: 0.5rem; font-size: 0.8125rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s ease; background: #06261a; color: #ffffff !important; border: 1px solid rgba(0, 224, 126, 0.3);">
                         <span class="material-symbols-rounded" style="font-size: 17px; color: #38bdf8;">cloud_download</span>
                         <span>Tarik PPPoE ke Pelanggan</span>
                     </button>
                     <button type="button"
                             wire:click="pushAllPppoeCustomers"
                             wire:loading.attr="disabled"
-                            style="height: 38px; padding: 0 1rem; border-radius: 0.5rem; font-size: 0.8125rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s ease; background: #00e07e; color: #06261a; border: 1px solid #00e07e; box-shadow: 0 2px 8px rgba(0, 224, 126, 0.25);">
-                        <span class="material-symbols-rounded" style="font-size: 18px; color: #06261a; font-weight: 700;">cloud_upload</span>
-                        <span>Kirim Pelanggan ke MikroTik</span>
+                            style="height: 38px; padding: 0 1rem; border-radius: 0.5rem; font-size: 0.8125rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s ease; background: #00e07e; color: #ffffff !important; border: 1px solid #00e07e; box-shadow: 0 2px 8px rgba(0, 224, 126, 0.25);">
+                        <span class="material-symbols-rounded" style="font-size: 18px; color: #ffffff !important; font-weight: 700;">cloud_upload</span>
+                        <span style="color: #ffffff !important;">Kirim Pelanggan ke MikroTik</span>
                     </button>
                 @elseif ($activeTab === 'hotspot')
                     <button type="button"
                             wire:click="pullHotspotProfiles"
                             wire:loading.attr="disabled"
-                            style="height: 38px; padding: 0 0.95rem; border-radius: 0.5rem; font-size: 0.8125rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s ease; background: var(--surface2); color: var(--text); border: 1px solid var(--border);">
+                            style="height: 38px; padding: 0 0.95rem; border-radius: 0.5rem; font-size: 0.8125rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s ease; background: #06261a; color: #ffffff !important; border: 1px solid rgba(0, 224, 126, 0.3);">
                         <span class="material-symbols-rounded" style="font-size: 17px; color: #38bdf8;">cloud_download</span>
                         <span>Tarik Profil ke Database</span>
                     </button>
                     <button type="button"
                             wire:click="syncHotspotVoucherStatus"
                             wire:loading.attr="disabled"
-                            style="height: 38px; padding: 0 1rem; border-radius: 0.5rem; font-size: 0.8125rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s ease; background: #00e07e; color: #06261a; border: 1px solid #00e07e; box-shadow: 0 2px 8px rgba(0, 224, 126, 0.25);">
-                        <span class="material-symbols-rounded" style="font-size: 18px; color: #06261a; font-weight: 700;">sync</span>
-                        <span>Sinkron Status Voucher</span>
+                            style="height: 38px; padding: 0 1rem; border-radius: 0.5rem; font-size: 0.8125rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s ease; background: #00e07e; color: #ffffff !important; border: 1px solid #00e07e; box-shadow: 0 2px 8px rgba(0, 224, 126, 0.25);">
+                        <span class="material-symbols-rounded" style="font-size: 18px; color: #ffffff !important; font-weight: 700;">sync</span>
+                        <span style="color: #ffffff !important;">Sinkron Status Voucher</span>
                     </button>
                 @endif
             </div>
