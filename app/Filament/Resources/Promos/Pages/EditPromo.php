@@ -22,7 +22,11 @@ class EditPromo extends EditRecord
         if (($data['image_type'] ?? 'upload') === 'url') {
             $data['image'] = trim($data['image_url'] ?? '');
         } else {
-            $data['image'] = $data['image_upload'] ?? $this->record->image;
+            $image = $data['image_upload'] ?? null;
+            if (is_array($image)) {
+                $image = reset($image);
+            }
+            $data['image'] = $image ?: ($this->record->image ?? null);
         }
         unset($data['image_type'], $data['image_url'], $data['image_upload']);
 

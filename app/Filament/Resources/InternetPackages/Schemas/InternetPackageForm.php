@@ -86,7 +86,6 @@ class InternetPackageForm
                             ->default('upload')
                             ->inline()
                             ->live()
-                            ->dehydrated(false)
                             ->afterStateHydrated(function ($component, $record) {
                                 if ($record && ! empty($record->image) && (str_starts_with($record->image, 'http://') || str_starts_with($record->image, 'https://'))) {
                                     $component->state('url');
@@ -106,7 +105,6 @@ class InternetPackageForm
                             ->maxSize(5120)
                             ->columnSpanFull()
                             ->visible(fn ($get) => $get('image_type') !== 'url')
-                            ->dehydrated(false)
                             ->afterStateHydrated(function ($component, $record) {
                                 if ($record && ! empty($record->image) && ! (str_starts_with($record->image, 'http://') || str_starts_with($record->image, 'https://'))) {
                                     $component->state($record->image);
@@ -120,7 +118,6 @@ class InternetPackageForm
                             ->url()
                             ->columnSpanFull()
                             ->visible(fn ($get) => $get('image_type') === 'url')
-                            ->dehydrated(false)
                             ->afterStateHydrated(function ($component, $record) {
                                 if ($record && ! empty($record->image) && (str_starts_with($record->image, 'http://') || str_starts_with($record->image, 'https://'))) {
                                     $component->state($record->image);

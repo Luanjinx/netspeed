@@ -14,7 +14,11 @@ class CreatePromo extends CreateRecord
         if (($data['image_type'] ?? 'upload') === 'url') {
             $data['image'] = trim($data['image_url'] ?? '');
         } else {
-            $data['image'] = $data['image_upload'] ?? null;
+            $image = $data['image_upload'] ?? ($data['image'] ?? null);
+            if (is_array($image)) {
+                $image = reset($image);
+            }
+            $data['image'] = $image ?: null;
         }
         unset($data['image_type'], $data['image_url'], $data['image_upload']);
 

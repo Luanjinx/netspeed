@@ -40,7 +40,6 @@ class PromoForm
                                         ->default('upload')
                                         ->inline()
                                         ->live()
-                                        ->dehydrated(false)
                                         ->afterStateHydrated(function ($component, $record) {
                                             if ($record && ! empty($record->image) && (str_starts_with($record->image, 'http://') || str_starts_with($record->image, 'https://'))) {
                                                 $component->state('url');
@@ -61,7 +60,6 @@ class PromoForm
                                         ->columnSpanFull()
                                         ->visible(fn ($get) => $get('image_type') !== 'url')
                                         ->required(fn ($get, $operation, $record) => $get('image_type') !== 'url' && ($operation === 'create' || empty($record?->image)))
-                                        ->dehydrated(false)
                                         ->afterStateHydrated(function ($component, $record) {
                                             if ($record && ! empty($record->image) && ! (str_starts_with($record->image, 'http://') || str_starts_with($record->image, 'https://'))) {
                                                 $component->state($record->image);
@@ -76,7 +74,6 @@ class PromoForm
                                         ->columnSpanFull()
                                         ->visible(fn ($get) => $get('image_type') === 'url')
                                         ->required(fn ($get) => $get('image_type') === 'url')
-                                        ->dehydrated(false)
                                         ->afterStateHydrated(function ($component, $record) {
                                             if ($record && ! empty($record->image) && (str_starts_with($record->image, 'http://') || str_starts_with($record->image, 'https://'))) {
                                                 $component->state($record->image);
