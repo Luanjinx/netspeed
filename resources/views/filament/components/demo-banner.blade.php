@@ -56,7 +56,7 @@
                 <div style="display: flex; justify-content: flex-end;">
                     <button type="button"
                             @click="open = false; if (redirectUrl && (window.location.pathname.includes('/edit') || window.location.pathname.includes('/create'))) { window.location.href = redirectUrl; }"
-                            style="padding: 0.65rem 1.4rem; border-radius: 0.75rem; background: #00e07e; color: #ffffff; font-weight: 800; font-size: 0.8125rem; border: none; cursor: pointer; box-shadow: 0 4px 15px rgba(0, 224, 126, 0.35); transition: all 0.2s ease;">
+                            style="padding: 0.65rem 1.4rem; border-radius: 0.75rem; background: #00e07e; color: #000000; font-weight: 800; font-size: 0.8125rem; border: none; cursor: pointer; box-shadow: 0 4px 15px rgba(0, 224, 126, 0.35); transition: all 0.2s ease;">
                         Saya Mengerti
                     </button>
                 </div>

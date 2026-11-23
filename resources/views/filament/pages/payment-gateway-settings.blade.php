@@ -137,7 +137,7 @@
             font-size: 0.6875rem;
             font-weight: 800;
             background: #00e07e;
-            color: #ffffff;
+            color: #000000;
             cursor: pointer;
             transition: all 0.15s ease;
         }
@@ -441,7 +441,7 @@
                 </div>
 
                 <button type="button" wire:click="saveGlobalAutomation"
-                    class="pg-input" style="background: #00e07e; color: #ffffff; font-weight: 800; border: none; cursor: pointer; padding: 0.45rem 1rem;">
+                    class="pg-input" style="background: #00e07e; color: #000000; font-weight: 800; border: none; cursor: pointer; padding: 0.45rem 1rem;">
                     Simpan
                 </button>
             </div>

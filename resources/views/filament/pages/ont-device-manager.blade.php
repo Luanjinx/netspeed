@@ -511,9 +511,9 @@
                                     </td>
                                     <td class="ont-td" style="padding-right: 1.25rem; text-align: right;">
                                         <button type="button" wire:click="openAssignModal('{{ $unassigned['device_id'] }}', '{{ $unassigned['model'] }}')"
-                                            class="ont-btn-action" style="background: #00e07e; color: #ffffff; border: none; padding: 0.45rem 0.85rem; font-weight: 800;">
-                                            <span class="material-symbols-rounded" style="font-size: 15px;">person_add</span>
-                                            <span>Pasangkan ke Pelanggan</span>
+                                            class="ont-btn-action" style="background: #00e07e; color: #000000; border: none; padding: 0.45rem 0.85rem; font-weight: 800;">
+                                            <span class="material-symbols-rounded" style="font-size: 15px; color: #000000;">person_add</span>
+                                            <span style="color: #000000;">Pasangkan ke Pelanggan</span>
                                         </button>
                                     </td>
                                 </tr>
@@ -595,7 +595,7 @@
                         <div style="display: flex; gap: 0.5rem;">
                             <button type="button" wire:click="closeServerConfigModal()" class="ont-btn-action" style="padding: 0.5rem 1rem; color: var(--muted);">Batal</button>
                             <button type="button" wire:click="saveServerConfig()"
-                                class="ont-btn-action" style="background: #00e07e; color: #ffffff; border: none; padding: 0.5rem 1.2rem; font-weight: 800;">
+                                class="ont-btn-action" style="background: #00e07e; color: #000000; border: none; padding: 0.5rem 1.2rem; font-weight: 800;">
                                 Simpan
                             </button>
                         </div>
@@ -712,7 +712,7 @@
                     <div style="padding: 1rem 1.25rem; border-top: 1px solid var(--border); background: var(--surface2); display: flex; justify-content: flex-end; gap: 0.5rem;">
                         <button type="button" wire:click="closeWifiModal()" class="ont-btn-action" style="padding: 0.5rem 1rem; color: var(--muted);">Batal</button>
                         <button type="button" wire:click="saveWifi()" wire:loading.attr="disabled"
-                            class="ont-btn-action" style="background: #00e07e; color: #ffffff; border: none; padding: 0.5rem 1.1rem; font-weight: 800;">
+                            class="ont-btn-action" style="background: #00e07e; color: #000000; border: none; padding: 0.5rem 1.1rem; font-weight: 800;">
                             <span wire:loading.remove wire:target="saveWifi">💾 Terapkan ke Modem</span>
                             <span wire:loading wire:target="saveWifi">Mengirim via TR-069...</span>
                         </button>
@@ -752,7 +752,7 @@
 
                     <div style="padding: 1rem 1.25rem; border-top: 1px solid var(--border); background: var(--surface2); display: flex; justify-content: flex-end; gap: 0.5rem;">
                         <button type="button" wire:click="closeAssignModal()" class="ont-btn-action" style="padding: 0.5rem 1rem; color: var(--muted);">Batal</button>
-                        <button type="button" wire:click="assignDevice()" class="ont-btn-action" style="background: #00e07e; color: #ffffff; border: none; padding: 0.5rem 1.1rem; font-weight: 800;">Pasangkan</button>
+                        <button type="button" wire:click="assignDevice()" class="ont-btn-action" style="background: #00e07e; color: #000000; border: none; padding: 0.5rem 1.1rem; font-weight: 800;">Pasangkan</button>
                     </div>
                 </div>
             </div>

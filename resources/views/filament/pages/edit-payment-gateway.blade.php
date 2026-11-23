@@ -87,7 +87,7 @@
 
         .pg-btn-primary {
             background: #00e07e;
-            color: #ffffff;
+            color: #000000;
             font-weight: 800;
             font-size: 0.875rem;
             padding: 0.65rem 1.5rem;
@@ -102,7 +102,7 @@
 
         .pg-btn-primary:hover {
             background: #4deda4;
-            color: #ffffff;
+            color: #000000;
             transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(0, 224, 126, 0.3);
         }
@@ -139,7 +139,7 @@
 
         .pg-pill-active {
             background: #00e07e;
-            color: #ffffff;
+            color: #000000;
         }
 
         .pg-pill-inactive {

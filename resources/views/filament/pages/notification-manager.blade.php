@@ -98,10 +98,10 @@
                         wire:click="sendNotification"
                         wire:loading.attr="disabled"
                         class="noc-btn noc-btn-primary"
-                        style="cursor: pointer; padding: 0.65rem 1.5rem; font-size: 0.875rem; font-weight: 700; background: #16a34a; border: 1px solid #22c55e; color: #ffffff !important; border-radius: 0.5rem; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(22, 163, 74, 0.35);">
-                    <span wire:loading.remove wire:target="sendNotification" class="material-symbols-rounded" style="font-size: 18px; color: #ffffff !important;">send</span>
-                    <span wire:loading wire:target="sendNotification" class="material-symbols-rounded" style="font-size: 18px; color: #ffffff !important;">hourglass_empty</span>
-                    <span style="color: #ffffff !important;">Kirim Notifikasi Sekarang</span>
+                        style="cursor: pointer; padding: 0.65rem 1.5rem; font-size: 0.875rem; font-weight: 700; background: #00e07e; border: 1px solid #00e07e; color: #000000 !important; border-radius: 0.5rem; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(0, 224, 126, 0.35);">
+                    <span wire:loading.remove wire:target="sendNotification" class="material-symbols-rounded" style="font-size: 18px; color: #000000 !important;">send</span>
+                    <span wire:loading wire:target="sendNotification" class="material-symbols-rounded" style="font-size: 18px; color: #000000 !important;">hourglass_empty</span>
+                    <span style="color: #000000 !important;">Kirim Notifikasi Sekarang</span>
                 </button>
             </div>
         </div>

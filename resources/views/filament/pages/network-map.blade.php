@@ -98,7 +98,7 @@
             </div>
 
             <div class="flex items-center gap-3">
-                <a href="{{ route('tech.map') }}" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#00e07e] hover:bg-[#4deda4] text-white text-xs font-bold rounded-lg shadow-sm transition">
+                <a href="{{ route('tech.map') }}" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#00e07e] hover:bg-[#4deda4] text-black text-xs font-bold rounded-lg shadow-sm transition">
                     <span class="material-symbols-rounded text-sm">smartphone</span>
                     <span>Buka Peta Teknisi (Mobile)</span>
                 </a>
