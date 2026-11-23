@@ -153,7 +153,7 @@
                     <a href="{{ route('agent.profile') }}" class="text-xs font-semibold text-white hidden sm:inline hover:text-accent transition">
                         {{ Auth::user()->name }}
                     </a>
-                    <form action="{{ route('customer.logout') }}" method="POST" class="inline">
+                    <form action="{{ route('agent.logout') }}" method="POST" class="inline">
                         @csrf
                         <button type="submit" title="Keluar" class="p-2 rounded-lg text-muted hover:text-danger hover:bg-surface2 transition">
                             <span class="material-symbols-rounded text-lg">logout</span>
@@ -211,3 +211,4 @@
     @stack('scripts')
 </body>
 </html>
+

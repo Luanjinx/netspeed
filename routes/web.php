@@ -94,14 +94,31 @@ Route::middleware(['auth', EnsureTechnicianUser::class])->prefix('teknisi')->nam
 });
 
 // Agent Web Portal Routes
-Route::middleware(['auth', EnsureAgentUser::class])->prefix('agen')->name('agent.')->group(function () {
-    Route::get('/dashboard', [AgentPortalController::class, 'dashboard'])->name('dashboard');
-    Route::get('/loket', [AgentPortalController::class, 'paymentPoint'])->name('payment-point');
-    Route::get('/ajax/search-invoices', [AgentPortalController::class, 'searchInvoices'])->name('ajax.search-invoices');
-    Route::post('/ajax/pay-invoice', [AgentPortalController::class, 'processPayment'])->name('ajax.pay-invoice');
-    Route::get('/riwayat', [AgentPortalController::class, 'history'])->name('history');
-    Route::get('/profil', [AgentPortalController::class, 'profile'])->name('profile');
-    Route::post('/profil/password', [AgentPortalController::class, 'updatePassword'])->name('profile.password');
+Route::prefix('agen')->name('agent.')->group(function () {
+    Route::get('/', function () {
+        if (auth()->check()) {
+            return redirect()->route('agent.dashboard');
+        }
+
+        return redirect()->route('agent.login');
+    });
+
+    Route::middleware('guest')->group(function () {
+        Route::get('/login', [AgentPortalController::class, 'showLoginForm'])->name('login');
+        Route::post('/login', [AgentPortalController::class, 'login'])->name('login.submit');
+    });
+
+    Route::post('/logout', [AgentPortalController::class, 'logout'])->name('logout');
+
+    Route::middleware(['auth', EnsureAgentUser::class])->group(function () {
+        Route::get('/dashboard', [AgentPortalController::class, 'dashboard'])->name('dashboard');
+        Route::get('/loket', [AgentPortalController::class, 'paymentPoint'])->name('payment-point');
+        Route::get('/ajax/search-invoices', [AgentPortalController::class, 'searchInvoices'])->name('ajax.search-invoices');
+        Route::post('/ajax/pay-invoice', [AgentPortalController::class, 'processPayment'])->name('ajax.pay-invoice');
+        Route::get('/riwayat', [AgentPortalController::class, 'history'])->name('history');
+        Route::get('/profil', [AgentPortalController::class, 'profile'])->name('profile');
+        Route::post('/profil/password', [AgentPortalController::class, 'updatePassword'])->name('profile.password');
+    });
 });
 
 // Network map endpoints for Admin and Tech

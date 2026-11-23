@@ -7,6 +7,7 @@ use App\Models\Agent;
 use App\Models\AgentTransaction;
 use App\Models\Invoice;
 use App\Models\IspSetting;
+use App\Models\User;
 use App\Services\Agent\AgentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -33,6 +34,95 @@ class AgentPortalController extends Controller
         }
 
         return null;
+    }
+
+    /**
+     * Show Agent Login Form.
+     */
+    public function showLoginForm(): View|RedirectResponse
+    {
+        if (Auth::check()) {
+            $user = Auth::user();
+            if ($user->role === 'agent' || $user->role === 'admin') {
+                return redirect()->route('agent.dashboard');
+            }
+            if ($user->role === 'technician') {
+                return redirect()->route('technician.dashboard');
+            }
+
+            return redirect()->route('customer.dashboard');
+        }
+
+        $companyName = IspSetting::get('company_name', 'NetSpeed ISP');
+        $companyPhone = IspSetting::get('company_phone', '0812-3456-7890');
+
+        return view('agent.login', compact('companyName', 'companyPhone'));
+    }
+
+    /**
+     * Authenticate Agent via Email or WhatsApp Phone.
+     */
+    public function login(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'login' => 'required|string',
+            'password' => 'required|string',
+        ], [
+            'login.required' => 'Email atau Nomor WhatsApp wajib diisi.',
+            'password.required' => 'Password wajib diisi.',
+        ]);
+
+        $login = trim((string) $request->input('login'));
+        $password = (string) $request->input('password');
+
+        $cleanPhone = preg_replace('/[^0-9]/', '', $login);
+        $phoneVariants = [$login];
+        if (str_starts_with($cleanPhone, '08')) {
+            $phoneVariants[] = '62'.substr($cleanPhone, 1);
+        } elseif (str_starts_with($cleanPhone, '62')) {
+            $phoneVariants[] = '08'.substr($cleanPhone, 2);
+        }
+
+        $user = User::where('email', $login)
+            ->orWhereIn('phone', $phoneVariants)
+            ->first();
+
+        if (! $user || ! Hash::check($password, $user->password)) {
+            return back()
+                ->withErrors(['login' => 'Email / Nomor WhatsApp atau password salah.'])
+                ->withInput($request->only('login', 'remember'));
+        }
+
+        if ($user->role !== 'agent' && $user->role !== 'admin') {
+            return back()
+                ->withErrors(['login' => 'Akun ini bukan akun mitra agen. Silakan masuk melalui portal pelanggan atau teknisi.'])
+                ->withInput($request->only('login', 'remember'));
+        }
+
+        if (! $user->is_active) {
+            return back()
+                ->withErrors(['login' => 'Akun loket agen Anda sedang dinonaktifkan oleh administrator.'])
+                ->withInput($request->only('login', 'remember'));
+        }
+
+        Auth::login($user, $request->boolean('remember'));
+        $request->session()->regenerate();
+
+        return redirect()->route('agent.dashboard')
+            ->with('success', "Selamat datang kembali di Loket Agen, {$user->name}!");
+    }
+
+    /**
+     * Agent Logout.
+     */
+    public function logout(Request $request): RedirectResponse
+    {
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('agent.login')
+            ->with('success', 'Anda telah berhasil keluar dari akun loket agen.');
     }
 
     /**
