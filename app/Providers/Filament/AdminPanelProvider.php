@@ -11,6 +11,7 @@ use Filament\FontProviders\LocalFontProvider;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\NavigationGroup;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -54,12 +55,24 @@ class AdminPanelProvider extends PanelProvider
             ->collapsedSidebarWidth('4.5rem')
             ->collapsibleNavigationGroups()
             ->navigationGroups([
-                'Data Pelanggan',
-                'Billing & Keuangan',
-                'Notifikasi & Broadcast',
-                'Manajemen Jaringan',
-                'Manajemen Teknisi',
-                'Pengaturan',
+                NavigationGroup::make('Data Pelanggan')
+                    ->icon('heroicon-o-users')
+                    ->collapsed(),
+                NavigationGroup::make('Billing & Keuangan')
+                    ->icon('heroicon-o-banknotes')
+                    ->collapsed(),
+                NavigationGroup::make('Notifikasi & Broadcast')
+                    ->icon('heroicon-o-chat-bubble-left-right')
+                    ->collapsed(),
+                NavigationGroup::make('Manajemen Jaringan')
+                    ->icon('heroicon-o-signal')
+                    ->collapsed(),
+                NavigationGroup::make('Manajemen Teknisi')
+                    ->icon('heroicon-o-wrench-screwdriver')
+                    ->collapsed(),
+                NavigationGroup::make('Pengaturan')
+                    ->icon('heroicon-o-cog-6-tooth')
+                    ->collapsed(),
             ])
             ->spa()
             ->unsavedChangesAlerts(! DemoModeServiceProvider::isDemo())

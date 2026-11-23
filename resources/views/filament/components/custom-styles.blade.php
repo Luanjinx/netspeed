@@ -188,6 +188,48 @@
         font-size: 0.7rem !important;
     }
 
+    /* Collapsible Navigation Group Menu styling (Click to open) */
+    .fi-sidebar-group.fi-collapsible .fi-sidebar-group-btn,
+    .dark .fi-sidebar-group.fi-collapsible .fi-sidebar-group-btn {
+        display: flex !important;
+        align-items: center !important;
+        padding: 0.5rem 0.65rem !important;
+        border-radius: 0.5rem !important;
+        cursor: pointer !important;
+        transition: all 0.15s ease !important;
+        gap: 0.5rem !important;
+    }
+
+    .fi-sidebar-group.fi-collapsible .fi-sidebar-group-btn:hover,
+    .dark .fi-sidebar-group.fi-collapsible .fi-sidebar-group-btn:hover {
+        background-color: var(--surface2) !important;
+    }
+
+    .fi-sidebar-group.fi-collapsible .fi-sidebar-group-btn .fi-sidebar-group-label,
+    .dark .fi-sidebar-group.fi-collapsible .fi-sidebar-group-btn .fi-sidebar-group-label {
+        color: var(--text) !important;
+        font-weight: 700 !important;
+        font-size: 0.8125rem !important;
+        text-transform: none !important;
+        letter-spacing: normal !important;
+        flex: 1 !important;
+    }
+
+    .fi-sidebar-group.fi-collapsible .fi-sidebar-group-btn svg,
+    .dark .fi-sidebar-group.fi-collapsible .fi-sidebar-group-btn svg {
+        color: var(--muted) !important;
+        transition: color 0.15s ease !important;
+    }
+
+    .fi-sidebar-group.fi-collapsible .fi-sidebar-group-btn:hover svg,
+    .dark .fi-sidebar-group.fi-collapsible .fi-sidebar-group-btn:hover svg {
+        color: var(--accent) !important;
+    }
+
+    .fi-sidebar-group.fi-collapsible .fi-sidebar-group-collapse-btn {
+        margin-left: auto !important;
+    }
+
     /* 3. TOPBAR GLASSMORPHISM */
     .fi-topbar,
     .dark .fi-topbar {
@@ -1486,3 +1528,23 @@
         transform: translateX(-2px) !important;
     }
 </style>
+
+<script>
+    document.addEventListener('alpine:init', () => {
+        const defaultCollapsedGroups = [
+            'Data Pelanggan',
+            'Billing & Keuangan',
+            'Notifikasi & Broadcast',
+            'Manajemen Jaringan',
+            'Manajemen Teknisi',
+            'Pengaturan'
+        ];
+        if (!localStorage.getItem('filament:sidebar:collapsed_v2')) {
+            localStorage.setItem('filament:sidebar:collapsed_groups', JSON.stringify(defaultCollapsedGroups));
+            localStorage.setItem('filament:sidebar:collapsed_v2', '1');
+            if (window.Alpine && window.Alpine.store('sidebar')) {
+                window.Alpine.store('sidebar').collapsedGroups = defaultCollapsedGroups;
+            }
+        }
+    });
+</script>
