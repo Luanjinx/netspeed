@@ -15,6 +15,11 @@ use UnitEnum;
 
 class OntDeviceManager extends Page
 {
+    public static function canAccess(): bool
+    {
+        return auth()->user()?->role === 'admin';
+    }
+
     protected static ?string $slug = 'ont-manager';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-signal';

@@ -16,6 +16,11 @@ use UnitEnum;
 
 class TechnicianResource extends Resource
 {
+    public static function canViewAny(): bool
+    {
+        return auth()->user()?->role === 'admin';
+    }
+
     protected static ?string $model = Technician::class;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-wrench-screwdriver';

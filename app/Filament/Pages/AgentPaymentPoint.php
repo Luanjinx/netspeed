@@ -12,6 +12,16 @@ use UnitEnum;
 
 class AgentPaymentPoint extends Page
 {
+    public static function canAccess(): bool
+    {
+        return in_array(auth()->user()?->role, ['admin', 'agent']);
+    }
+
+    public static function getNavigationGroup(): ?string
+    {
+        return auth()->user()?->role === 'agent' ? null : 'Billing & Keuangan';
+    }
+
     protected static ?string $slug = 'agent-payment-point';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-receipt-percent';

@@ -16,6 +16,11 @@ use UnitEnum;
 
 class OdpResource extends Resource
 {
+    public static function canViewAny(): bool
+    {
+        return auth()->user()?->role === 'admin';
+    }
+
     protected static ?string $model = Odp::class;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-map-pin';

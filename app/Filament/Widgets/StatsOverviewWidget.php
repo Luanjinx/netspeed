@@ -11,6 +11,11 @@ use Illuminate\Support\Facades\Cache;
 
 class StatsOverviewWidget extends BaseWidget
 {
+    public static function canView(): bool
+    {
+        return auth()->user()?->role === 'admin';
+    }
+
     protected static ?int $sort = 1;
 
     protected function getStats(): array

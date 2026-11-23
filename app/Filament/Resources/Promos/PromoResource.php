@@ -16,6 +16,11 @@ use UnitEnum;
 
 class PromoResource extends Resource
 {
+    public static function canViewAny(): bool
+    {
+        return auth()->user()?->role === 'admin';
+    }
+
     protected static ?string $model = Promo::class;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-sparkles';

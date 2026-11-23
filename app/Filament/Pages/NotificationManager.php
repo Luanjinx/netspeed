@@ -28,6 +28,11 @@ use UnitEnum;
 
 class NotificationManager extends Page implements HasForms
 {
+    public static function canAccess(): bool
+    {
+        return auth()->user()?->role === 'admin';
+    }
+
     use InteractsWithForms;
     use WithPagination;
 

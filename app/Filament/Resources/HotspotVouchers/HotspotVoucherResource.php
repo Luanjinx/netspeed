@@ -16,6 +16,11 @@ use UnitEnum;
 
 class HotspotVoucherResource extends Resource
 {
+    public static function canViewAny(): bool
+    {
+        return auth()->user()?->role === 'admin';
+    }
+
     protected static ?string $model = HotspotVoucher::class;
 
     protected static bool $shouldRegisterNavigation = false;

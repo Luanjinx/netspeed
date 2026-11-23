@@ -13,6 +13,11 @@ use UnitEnum;
 
 class IsolirManager extends Page
 {
+    public static function canAccess(): bool
+    {
+        return auth()->user()?->role === 'admin';
+    }
+
     protected static ?string $slug = 'isolir-manager';
 
     protected static bool $shouldRegisterNavigation = false;

@@ -16,6 +16,11 @@ use UnitEnum;
 
 class PaymentGatewaySettings extends Page
 {
+    public static function canAccess(): bool
+    {
+        return auth()->user()?->role === 'admin';
+    }
+
     protected static ?string $slug = 'payment-gateway';
 
     protected static bool $shouldRegisterNavigation = true;

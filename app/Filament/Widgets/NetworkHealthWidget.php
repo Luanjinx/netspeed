@@ -11,6 +11,11 @@ use Illuminate\Support\Facades\Cache;
 
 class NetworkHealthWidget extends Widget
 {
+    public static function canView(): bool
+    {
+        return auth()->user()?->role === 'admin';
+    }
+
     protected static ?int $sort = 2;
 
     protected int|string|array $columnSpan = 'full';

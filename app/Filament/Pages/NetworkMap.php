@@ -9,6 +9,11 @@ use UnitEnum;
 
 class NetworkMap extends Page
 {
+    public static function canAccess(): bool
+    {
+        return auth()->user()?->role === 'admin';
+    }
+
     protected static ?string $slug = 'map';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-globe-alt';

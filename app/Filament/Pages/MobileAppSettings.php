@@ -19,6 +19,11 @@ use UnitEnum;
 
 class MobileAppSettings extends Page implements HasForms
 {
+    public static function canAccess(): bool
+    {
+        return auth()->user()?->role === 'admin';
+    }
+
     use InteractsWithForms;
 
     protected static ?string $slug = 'mobile-api';

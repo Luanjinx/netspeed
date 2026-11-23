@@ -18,6 +18,11 @@ use UnitEnum;
 
 class EditPaymentGateway extends Page
 {
+    public static function canAccess(): bool
+    {
+        return auth()->user()?->role === 'admin';
+    }
+
     use WithFileUploads;
 
     protected static ?string $slug = 'payment-gateway/edit';

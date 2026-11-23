@@ -27,6 +27,11 @@ use UnitEnum;
 
 class QrisSettings extends Page implements HasForms
 {
+    public static function canAccess(): bool
+    {
+        return auth()->user()?->role === 'admin';
+    }
+
     use InteractsWithForms;
     use WithFileUploads;
 

@@ -18,6 +18,11 @@ use UnitEnum;
 
 class PppoeManager extends Page
 {
+    public static function canAccess(): bool
+    {
+        return auth()->user()?->role === 'admin';
+    }
+
     protected static ?string $slug = 'pppoe';
 
     protected static bool $shouldRegisterNavigation = true;

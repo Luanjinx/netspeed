@@ -17,6 +17,11 @@ use UnitEnum;
 
 class HotspotManager extends Page
 {
+    public static function canAccess(): bool
+    {
+        return auth()->user()?->role === 'admin';
+    }
+
     use WithPagination;
 
     protected static ?string $slug = 'hotspot';

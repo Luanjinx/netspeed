@@ -17,6 +17,11 @@ use UnitEnum;
 
 class MapSettings extends Page implements HasForms
 {
+    public static function canAccess(): bool
+    {
+        return auth()->user()?->role === 'admin';
+    }
+
     use InteractsWithForms;
 
     protected static ?string $slug = 'map-settings';

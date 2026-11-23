@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Agents\Pages;
 
 use App\Filament\Resources\Agents\AgentResource;
 use App\Models\Agent;
+use App\Models\User;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateAgent extends CreateRecord
@@ -18,6 +19,29 @@ class CreateAgent extends CreateRecord
         }
 
         return $data;
+    }
+
+    protected function afterCreate(): void
+    {
+        $data = $this->form->getRawState();
+        if (! empty($data['email']) && ! empty($data['password'])) {
+            $user = User::firstOrCreate(
+                ['email' => $data['email']],
+                [
+                    'name' => $this->record->name,
+                    'password' => bcrypt($data['password']),
+                    'role' => 'agent',
+                    'phone' => $this->record->phone,
+                    'is_active' => $this->record->is_active,
+                ]
+            );
+
+            if ($user->role !== 'agent') {
+                $user->update(['role' => 'agent']);
+            }
+
+            $this->record->update(['user_id' => $user->id]);
+        }
     }
 
     protected function getRedirectUrl(): string

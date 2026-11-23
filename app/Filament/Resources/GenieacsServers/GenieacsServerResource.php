@@ -16,6 +16,11 @@ use UnitEnum;
 
 class GenieacsServerResource extends Resource
 {
+    public static function canViewAny(): bool
+    {
+        return auth()->user()?->role === 'admin';
+    }
+
     protected static bool $shouldRegisterNavigation = false;
 
     protected static ?string $model = GenieacsServer::class;

@@ -39,11 +39,7 @@ class AgentForm
                                 ->helperText('Digunakan untuk konfirmasi setoran & notifikasi transaksi.'),
                         ]),
 
-                        Grid::make(['default' => 1, 'sm' => 2, 'lg' => 3])->schema([
-                            TextInput::make('email')
-                                ->label('Email Agen (Opsional)')
-                                ->email()
-                                ->placeholder('cth: agen.berkah@gmail.com'),
+                        Grid::make(['default' => 1, 'sm' => 2])->schema([
                             TextInput::make('commission_per_transaction')
                                 ->label('Komisi per Transaksi PPPoE')
                                 ->numeric()
@@ -75,6 +71,28 @@ class AgentForm
                             ->label('Status Agen Aktif')
                             ->helperText('Jika nonaktif, agen tidak dapat melakukan pembayaran atau transaksi loket.')
                             ->default(true),
+                    ]),
+
+                Section::make('Akun Login Portal Agen')
+                    ->description('Buat akun login agar mitra agen dapat mengakses Dashboard & Loket Pembayaran secara mandiri')
+                    ->icon('heroicon-o-key')
+                    ->columnSpanFull()
+                    ->schema([
+                        Grid::make(['default' => 1, 'sm' => 2])->schema([
+                            TextInput::make('email')
+                                ->label('Email Login Portal Agen')
+                                ->email()
+                                ->required()
+                                ->placeholder('cth: agen.berkah@gmail.com')
+                                ->helperText('Email ini digunakan agen untuk masuk ke Admin Panel.'),
+                            TextInput::make('password')
+                                ->label('Kata Sandi (Password)')
+                                ->password()
+                                ->revealable()
+                                ->required(fn (string $operation): bool => $operation === 'create')
+                                ->dehydrated(false)
+                                ->helperText('Minimal 6 karakter. Kosongkan saat edit jika tidak ingin mengubah password.'),
+                        ]),
                     ]),
             ]);
     }

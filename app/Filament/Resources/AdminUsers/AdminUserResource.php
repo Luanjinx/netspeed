@@ -16,6 +16,11 @@ use UnitEnum;
 
 class AdminUserResource extends Resource
 {
+    public static function canViewAny(): bool
+    {
+        return auth()->user()?->role === 'admin';
+    }
+
     protected static ?string $model = AdminUser::class;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-shield-check';
