@@ -334,7 +334,7 @@
                                     @if (str_starts_with($currentLogo, 'http://') || str_starts_with($currentLogo, 'https://'))
                                         <img src="{{ $currentLogo }}" style="max-height: 100%; max-width: 100%; object-fit: contain;">
                                     @else
-                                        <img src="{{ asset('storage/' . $currentLogo) }}" style="max-height: 100%; max-width: 100%; object-fit: contain;">
+                                        <img src="{{ $gateway?->logo_url ?? asset('storage/' . $currentLogo) }}" style="max-height: 100%; max-width: 100%; object-fit: contain;">
                                     @endif
                                 @else
                                     <span class="material-symbols-rounded" style="color: var(--muted); font-size: 26px;">image</span>
