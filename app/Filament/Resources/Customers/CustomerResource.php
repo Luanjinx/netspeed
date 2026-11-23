@@ -25,9 +25,9 @@ class CustomerResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-users';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Data Pelanggan';
+    protected static string|UnitEnum|null $navigationGroup = 'Pelanggan';
 
-    protected static ?string $navigationLabel = 'Data Pelanggan';
+    protected static ?string $navigationLabel = 'Pelanggan';
 
     protected static ?int $navigationSort = 1;
 

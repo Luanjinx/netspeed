@@ -18,13 +18,13 @@ class NetworkMap extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-globe-alt';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Manajemen Jaringan';
+    protected static string|UnitEnum|null $navigationGroup = 'Jaringan';
 
-    protected static ?string $navigationLabel = 'Peta Jaringan & ODP';
+    protected static ?string $navigationLabel = 'Peta Jaringan';
 
     protected static ?string $title = 'Peta Geografis Jaringan & Pelanggan';
 
-    protected static ?int $navigationSort = 3;
+    protected static ?int $navigationSort = 5;
 
     protected string $view = 'filament.pages.network-map';
 

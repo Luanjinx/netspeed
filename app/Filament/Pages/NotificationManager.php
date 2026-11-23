@@ -42,9 +42,9 @@ class NotificationManager extends Page implements HasForms
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-megaphone';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Notifikasi & Broadcast';
+    protected static string|UnitEnum|null $navigationGroup = 'Notifikasi';
 
-    protected static ?string $navigationLabel = 'Kirim Notifikasi';
+    protected static ?string $navigationLabel = 'Broadcast';
 
     protected static ?string $title = 'Pusat Pengiriman Notifikasi & Broadcast';
 

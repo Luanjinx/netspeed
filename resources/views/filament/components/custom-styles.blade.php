@@ -1532,16 +1532,16 @@
 <script>
     document.addEventListener('alpine:init', () => {
         const defaultCollapsedGroups = [
-            'Data Pelanggan',
-            'Billing & Keuangan',
-            'Notifikasi & Broadcast',
-            'Manajemen Jaringan',
-            'Manajemen Teknisi',
+            'Pelanggan',
+            'Billing',
+            'Jaringan',
+            'Teknisi',
+            'Notifikasi',
             'Pengaturan'
         ];
-        if (!localStorage.getItem('filament:sidebar:collapsed_v2')) {
+        if (!localStorage.getItem('filament:sidebar:collapsed_v3')) {
             localStorage.setItem('filament:sidebar:collapsed_groups', JSON.stringify(defaultCollapsedGroups));
-            localStorage.setItem('filament:sidebar:collapsed_v2', '1');
+            localStorage.setItem('filament:sidebar:collapsed_v3', '1');
             if (window.Alpine && window.Alpine.store('sidebar')) {
                 window.Alpine.store('sidebar').collapsedGroups = defaultCollapsedGroups;
             }

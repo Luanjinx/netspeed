@@ -27,9 +27,9 @@ class SitePageResource extends Resource
 
     protected static string|UnitEnum|null $navigationGroup = 'Pengaturan';
 
-    protected static ?string $navigationLabel = 'Halaman (Pages)';
+    protected static ?string $navigationLabel = 'Halaman Web';
 
-    protected static ?int $navigationSort = 15;
+    protected static ?int $navigationSort = 3;
 
     protected static ?string $modelLabel = 'Halaman';
 

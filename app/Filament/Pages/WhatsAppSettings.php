@@ -32,9 +32,9 @@ class WhatsAppSettings extends Page implements HasForms
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-chat-bubble-left-right';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Pengaturan';
+    protected static string|UnitEnum|null $navigationGroup = 'Notifikasi';
 
-    protected static ?string $navigationLabel = 'API WhatsApp Gateway';
+    protected static ?string $navigationLabel = 'WhatsApp';
 
     protected static ?string $title = 'Manajemen & Integrasi WhatsApp Gateway';
 

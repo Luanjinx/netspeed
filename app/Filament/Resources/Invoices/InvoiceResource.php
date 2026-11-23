@@ -25,9 +25,9 @@ class InvoiceResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-document-text';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Billing & Keuangan';
+    protected static string|UnitEnum|null $navigationGroup = 'Billing';
 
-    protected static ?string $navigationLabel = 'Tagihan (Invoices)';
+    protected static ?string $navigationLabel = 'Tagihan';
 
     protected static ?int $navigationSort = 1;
 

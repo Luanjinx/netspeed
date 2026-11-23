@@ -27,11 +27,11 @@ class SystemUpdate extends Page implements HasForms
 
     protected static string|UnitEnum|null $navigationGroup = 'Pengaturan';
 
-    protected static ?string $navigationLabel = 'Pembaruan Sistem';
+    protected static ?string $navigationLabel = 'Update Sistem';
 
     protected static ?string $title = 'Pembaruan Sistem & GitHub Updater';
 
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 4;
 
     protected string $view = 'filament.pages.system-update';
 

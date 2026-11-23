@@ -25,7 +25,7 @@ class WorkOrderResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-clipboard-document-list';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Manajemen Teknisi';
+    protected static string|UnitEnum|null $navigationGroup = 'Teknisi';
 
     protected static ?string $navigationLabel = 'Surat Tugas (SPK)';
 

@@ -24,13 +24,13 @@ class OntDeviceManager extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-signal';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Manajemen Jaringan';
+    protected static string|UnitEnum|null $navigationGroup = 'Jaringan';
 
-    protected static ?string $navigationLabel = 'Modem ONT (TR-069)';
+    protected static ?string $navigationLabel = 'Modem ONT';
 
     protected static ?string $title = 'Modem ONT Pelanggan (TR-069)';
 
-    protected static ?int $navigationSort = 6;
+    protected static ?int $navigationSort = 7;
 
     protected string $view = 'filament.pages.ont-device-manager';
 

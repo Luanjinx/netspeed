@@ -25,9 +25,9 @@ class PaymentResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-credit-card';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Billing & Keuangan';
+    protected static string|UnitEnum|null $navigationGroup = 'Billing';
 
-    protected static ?string $navigationLabel = 'Riwayat Pembayaran';
+    protected static ?string $navigationLabel = 'Pembayaran';
 
     protected static ?int $navigationSort = 2;
 

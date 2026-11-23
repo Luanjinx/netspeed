@@ -33,9 +33,9 @@ class TelegramBotManager extends Page implements HasForms
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-paper-airplane';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Sistem';
+    protected static string|UnitEnum|null $navigationGroup = 'Notifikasi';
 
-    protected static ?string $navigationLabel = 'Bot Telegram';
+    protected static ?string $navigationLabel = 'Telegram';
 
     protected static ?string $title = 'Manajemen & Integrasi Bot Telegram';
 

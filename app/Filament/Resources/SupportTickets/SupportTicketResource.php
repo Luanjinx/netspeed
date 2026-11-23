@@ -26,11 +26,11 @@ class SupportTicketResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-ticket';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Data Pelanggan';
+    protected static string|UnitEnum|null $navigationGroup = 'Teknisi';
 
     protected static ?string $navigationLabel = 'Tiket Gangguan';
 
-    protected static ?int $navigationSort = 3;
+    protected static ?int $navigationSort = 1;
 
     protected static ?string $modelLabel = 'Tiket Gangguan';
 

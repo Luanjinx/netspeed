@@ -27,13 +27,13 @@ class AdminUserResource extends Resource
 
     protected static string|UnitEnum|null $navigationGroup = 'Pengaturan';
 
-    protected static ?string $navigationLabel = 'Kelola Akun Admin';
+    protected static ?string $navigationLabel = 'Akun Admin';
 
     protected static ?string $modelLabel = 'Administrator';
 
     protected static ?string $pluralModelLabel = 'Administrator';
 
-    protected static ?int $navigationSort = 98;
+    protected static ?int $navigationSort = 2;
 
     public static function form(Schema $schema): Schema
     {

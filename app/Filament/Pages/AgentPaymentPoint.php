@@ -19,16 +19,16 @@ class AgentPaymentPoint extends Page
 
     public static function getNavigationGroup(): ?string
     {
-        return auth()->user()?->role === 'agent' ? null : 'Billing & Keuangan';
+        return auth()->user()?->role === 'agent' ? null : 'Billing';
     }
 
     protected static ?string $slug = 'agent-payment-point';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-receipt-percent';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Billing & Keuangan';
+    protected static string|UnitEnum|null $navigationGroup = 'Billing';
 
-    protected static ?string $navigationLabel = 'Loket Pembayaran Agen';
+    protected static ?string $navigationLabel = 'Loket Agen';
 
     protected static ?string $title = 'Loket Pembayaran Tagihan PPPoE (Agen & Kasir)';
 

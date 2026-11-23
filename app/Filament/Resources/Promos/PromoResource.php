@@ -25,7 +25,7 @@ class PromoResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-sparkles';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Data Pelanggan';
+    protected static string|UnitEnum|null $navigationGroup = 'Pelanggan';
 
     protected static ?string $navigationLabel = 'Promo';
 

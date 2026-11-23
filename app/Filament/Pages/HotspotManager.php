@@ -30,13 +30,13 @@ class HotspotManager extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-wifi';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Manajemen Jaringan';
+    protected static string|UnitEnum|null $navigationGroup = 'Jaringan';
 
-    protected static ?string $navigationLabel = 'Voucher Hotspot';
+    protected static ?string $navigationLabel = 'Hotspot';
 
     protected static ?string $title = 'Manajemen Voucher & Layanan Hotspot';
 
-    protected static ?int $navigationSort = 6;
+    protected static ?int $navigationSort = 4;
 
     protected string $view = 'filament.pages.hotspot-manager';
 

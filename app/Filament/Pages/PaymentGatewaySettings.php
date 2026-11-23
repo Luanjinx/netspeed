@@ -27,9 +27,9 @@ class PaymentGatewaySettings extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-credit-card';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Billing & Keuangan';
+    protected static string|UnitEnum|null $navigationGroup = 'Billing';
 
-    protected static ?string $navigationLabel = 'Payment Gateways';
+    protected static ?string $navigationLabel = 'Gateway';
 
     protected static ?int $navigationSort = 3;
 

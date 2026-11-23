@@ -21,9 +21,9 @@ class RouterMonitor extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-presentation-chart-line';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Manajemen Jaringan';
+    protected static string|UnitEnum|null $navigationGroup = 'Jaringan';
 
-    protected static ?string $navigationLabel = 'Monitoring Jaringan & MikroTik';
+    protected static ?string $navigationLabel = 'Monitoring';
 
     protected static ?string $title = 'Monitoring Real-time Jaringan & MikroTik';
 

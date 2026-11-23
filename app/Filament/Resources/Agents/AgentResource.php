@@ -25,9 +25,9 @@ class AgentResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-user-group';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Billing & Keuangan';
+    protected static string|UnitEnum|null $navigationGroup = 'Billing';
 
-    protected static ?string $navigationLabel = 'Kemitraan & Agen';
+    protected static ?string $navigationLabel = 'Mitra Agen';
 
     protected static ?string $modelLabel = 'Agen';
 

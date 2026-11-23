@@ -55,20 +55,20 @@ class AdminPanelProvider extends PanelProvider
             ->collapsedSidebarWidth('4.5rem')
             ->collapsibleNavigationGroups()
             ->navigationGroups([
-                NavigationGroup::make('Data Pelanggan')
+                NavigationGroup::make('Pelanggan')
                     ->icon('heroicon-o-users')
                     ->collapsed(),
-                NavigationGroup::make('Billing & Keuangan')
+                NavigationGroup::make('Billing')
                     ->icon('heroicon-o-banknotes')
                     ->collapsed(),
-                NavigationGroup::make('Notifikasi & Broadcast')
-                    ->icon('heroicon-o-chat-bubble-left-right')
-                    ->collapsed(),
-                NavigationGroup::make('Manajemen Jaringan')
+                NavigationGroup::make('Jaringan')
                     ->icon('heroicon-o-signal')
                     ->collapsed(),
-                NavigationGroup::make('Manajemen Teknisi')
+                NavigationGroup::make('Teknisi')
                     ->icon('heroicon-o-wrench-screwdriver')
+                    ->collapsed(),
+                NavigationGroup::make('Notifikasi')
+                    ->icon('heroicon-o-chat-bubble-left-right')
                     ->collapsed(),
                 NavigationGroup::make('Pengaturan')
                     ->icon('heroicon-o-cog-6-tooth')

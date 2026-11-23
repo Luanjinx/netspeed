@@ -25,9 +25,9 @@ class RouterResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-server-stack';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Manajemen Jaringan';
+    protected static string|UnitEnum|null $navigationGroup = 'Jaringan';
 
-    protected static ?string $navigationLabel = 'Router MikroTik';
+    protected static ?string $navigationLabel = 'Router';
 
     protected static ?int $navigationSort = 1;
 

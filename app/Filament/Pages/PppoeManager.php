@@ -29,13 +29,13 @@ class PppoeManager extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-shield-check';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Manajemen Jaringan';
+    protected static string|UnitEnum|null $navigationGroup = 'Jaringan';
 
-    protected static ?string $navigationLabel = 'Manajemen PPPoE';
+    protected static ?string $navigationLabel = 'PPPoE';
 
     protected static ?string $title = 'Manajemen Layanan PPPoE';
 
-    protected static ?int $navigationSort = 5;
+    protected static ?int $navigationSort = 3;
 
     protected string $view = 'filament.pages.pppoe-manager';
 
