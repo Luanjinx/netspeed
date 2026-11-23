@@ -307,7 +307,11 @@
                                 <!-- Logo -->
                                 <td class="pg-td">
                                     <div class="pg-logo-box">
-                                        @if ($gw->code === 'qris_manual')
+                                        @if ($gw->logo_url)
+                                            <div style="background: #ffffff; padding: 3px 6px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; min-width: 55px; height: 32px; border: 1px solid #232826;">
+                                                <img src="{{ $gw->logo_url }}" alt="{{ $gw->name }}" style="max-height: 24px; max-width: 80px; object-fit: contain;">
+                                            </div>
+                                        @elseif ($gw->code === 'qris_manual')
                                             <span style="background: #e11d48; color: #ffffff; padding: 0.25rem 0.55rem; border-radius: 4px; font-size: 0.75rem; font-weight: 900; letter-spacing: 0.05em;">
                                                 QRIS
                                             </span>

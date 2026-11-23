@@ -33,12 +33,37 @@ class PaymentGateway extends Model
         'sort_order' => 'integer',
     ];
 
+    protected $appends = [
+        'fee_formatted',
+        'logo_url',
+    ];
+
     /**
      * Scope for active gateways sorted by order.
      */
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true)->orderBy('sort_order', 'asc');
+    }
+
+    /**
+     * Get accessible URL for logo (direct URL or stored asset).
+     */
+    public function getLogoUrlAttribute(): ?string
+    {
+        if (empty($this->logo)) {
+            return null;
+        }
+
+        if (str_starts_with($this->logo, 'http://') || str_starts_with($this->logo, 'https://')) {
+            return $this->logo;
+        }
+
+        if (str_starts_with($this->logo, 'storage/')) {
+            return asset($this->logo);
+        }
+
+        return asset('storage/'.$this->logo);
     }
 
     /**

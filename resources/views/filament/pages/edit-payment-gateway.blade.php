@@ -174,8 +174,10 @@
         <!-- 2. GATEWAY IDENTITY HERO BANNER -->
         <div class="pg-card" style="padding: 1.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1.25rem; background: linear-gradient(135deg, #161a18 0%, #131615 100%);">
             <div style="display: flex; align-items: center; gap: 1rem;">
-                <div style="width: 56px; height: 56px; border-radius: 0.875rem; background: #1a1e1c; border: 1.5px solid #232826; display: flex; align-items: center; justify-content: center;">
-                    @if ($code === 'qris_manual')
+                <div style="width: 56px; height: 56px; border-radius: 0.875rem; background: #ffffff; border: 1.5px solid #232826; display: flex; align-items: center; justify-content: center; overflow: hidden; padding: 6px;">
+                    @if ($gateway && $gateway->logo_url)
+                        <img src="{{ $gateway->logo_url }}" alt="{{ $name }}" style="max-height: 100%; max-width: 100%; object-fit: contain;">
+                    @elseif ($code === 'qris_manual')
                         <span class="material-symbols-rounded" style="font-size: 32px; color: #00e07e;">qr_code_2</span>
                     @elseif ($code === 'manual_transfer')
                         <span class="material-symbols-rounded" style="font-size: 32px; color: #38bdf8;">account_balance</span>
@@ -188,7 +190,7 @@
                     @elseif ($code === 'xendit')
                         <span class="material-symbols-rounded" style="font-size: 32px; color: #10b981;">wallet</span>
                     @else
-                        <span class="material-symbols-rounded" style="font-size: 32px; color: #eef1f0;">toll</span>
+                        <span class="material-symbols-rounded" style="font-size: 32px; color: #131615;">toll</span>
                     @endif
                 </div>
 
@@ -245,6 +247,79 @@
                         <label class="pg-label">Deskripsi Singkat untuk Pelanggan</label>
                         <input type="text" wire:model="description" class="pg-input" placeholder="Contoh: Pembayaran instan mendukung semua E-Wallet & Mobile Banking nasional">
                         <span style="font-size: 0.6875rem; color: #9aa49f; margin-top: 0.25rem; display: block;">Keterangan yang tampil di bawah nama gateway pada aplikasi mobile pelanggan.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. LOGO / BRANDING GATEWAY (UPLOAD LANGSUNG ATAU DIRECT URL) -->
+            <div class="pg-card">
+                <div class="pg-card-header">
+                    <h3 class="pg-card-title">
+                        <span class="material-symbols-rounded" style="color: #00e07e;">image</span>
+                        <span>Logo / Ikon Gateway (Upload Langsung atau Direct URL)</span>
+                    </h3>
+                </div>
+                <div class="pg-card-body">
+                    <div>
+                        <label class="pg-label">Pilih Metode Input Gambar Logo *</label>
+                        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.75rem;">
+                            <label style="display: flex; align-items: center; gap: 0.5rem; background: {{ $logoType === 'upload' ? '#1f2522' : '#1a1e1c' }}; border: 1.5px solid {{ $logoType === 'upload' ? '#00e07e' : '#232826' }}; padding: 0.65rem 1.1rem; border-radius: 0.625rem; cursor: pointer; color: {{ $logoType === 'upload' ? '#00e07e' : '#9aa49f' }}; font-weight: 700; font-size: 0.8125rem; transition: all 0.15s ease;">
+                                <input type="radio" wire:model.live="logoType" value="upload" style="accent-color: #00e07e;">
+                                <span class="material-symbols-rounded" style="font-size: 18px;">cloud_upload</span>
+                                <span>Upload Langsung (Berkas dari Perangkat)</span>
+                            </label>
+
+                            <label style="display: flex; align-items: center; gap: 0.5rem; background: {{ $logoType === 'url' ? '#1f2522' : '#1a1e1c' }}; border: 1.5px solid {{ $logoType === 'url' ? '#00e07e' : '#232826' }}; padding: 0.65rem 1.1rem; border-radius: 0.625rem; cursor: pointer; color: {{ $logoType === 'url' ? '#00e07e' : '#9aa49f' }}; font-weight: 700; font-size: 0.8125rem; transition: all 0.15s ease;">
+                                <input type="radio" wire:model.live="logoType" value="url" style="accent-color: #00e07e;">
+                                <span class="material-symbols-rounded" style="font-size: 18px;">link</span>
+                                <span>Direct URL (Tautan Gambar Eksternal)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    @if ($logoType === 'upload')
+                        <div>
+                            <label class="pg-label">Unggah File Gambar Logo</label>
+                            <input type="file" wire:model="logoFile" accept="image/*" class="pg-input" style="padding: 0.45rem;">
+                            <span style="font-size: 0.6875rem; color: #9aa49f; margin-top: 0.25rem; display: block;">Format didukung: PNG, JPG, JPEG, WEBP, SVG (Maks. 2MB). Disarankan berlatar transparan atau terang.</span>
+                        </div>
+                    @else
+                        <div>
+                            <label class="pg-label">Direct URL Gambar Logo *</label>
+                            <input type="url" wire:model.live.debounce.300ms="logoUrl" class="pg-input" placeholder="https://example.com/images/gateway-logo.png">
+                            <span style="font-size: 0.6875rem; color: #9aa49f; margin-top: 0.25rem; display: block;">Masukkan tautan/URL langsung gambar logo (diawali http:// atau https://).</span>
+                        </div>
+                    @endif
+
+                    <!-- PREVIEW LOGO LIVE -->
+                    <div style="background: #1a1e1c; border: 1px dashed #232826; border-radius: 0.75rem; padding: 1rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <div style="width: 80px; height: 50px; background: #ffffff; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; overflow: hidden; padding: 4px; border: 1px solid #232826;">
+                                @if ($logoType === 'upload' && $logoFile)
+                                    <img src="{{ $logoFile->temporaryUrl() }}" style="max-height: 100%; max-width: 100%; object-fit: contain;">
+                                @elseif ($logoType === 'url' && !empty($logoUrl))
+                                    <img src="{{ $logoUrl }}" style="max-height: 100%; max-width: 100%; object-fit: contain;" onerror="this.style.display='none'">
+                                @elseif ($currentLogo)
+                                    @if (str_starts_with($currentLogo, 'http://') || str_starts_with($currentLogo, 'https://'))
+                                        <img src="{{ $currentLogo }}" style="max-height: 100%; max-width: 100%; object-fit: contain;">
+                                    @else
+                                        <img src="{{ asset('storage/' . $currentLogo) }}" style="max-height: 100%; max-width: 100%; object-fit: contain;">
+                                    @endif
+                                @else
+                                    <span class="material-symbols-rounded" style="color: #9aa49f; font-size: 26px;">image</span>
+                                @endif
+                            </div>
+                            <div>
+                                <div style="font-size: 0.8125rem; font-weight: 700; color: #eef1f0;">Preview Logo Gateway</div>
+                                <div style="font-size: 0.6875rem; color: #9aa49f;">Logo ini akan tampil pada tabel Payment Gateway & aplikasi pelanggan.</div>
+                            </div>
+                        </div>
+                        @if ($currentLogo || $logoFile || ($logoType === 'url' && $logoUrl))
+                            <button type="button" wire:click="deleteLogo" class="pg-btn-secondary" style="color: #ef4444; border-color: rgba(239,68,68,0.3); padding: 0.4rem 0.85rem; font-size: 0.75rem;">
+                                <span class="material-symbols-rounded" style="font-size: 16px;">delete</span>
+                                <span>Hapus / Reset Logo</span>
+                            </button>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -326,16 +401,37 @@
                 <div class="pg-card-body">
                     @if ($code === 'qris_manual')
                         <!-- QRIS CONFIGURATION -->
-                        <div style="background: rgba(0,224,126,0.05); border: 1px solid rgba(0,224,126,0.2); border-radius: 0.75rem; padding: 1rem;">
+                        <div style="background: rgba(0,224,126,0.05); border: 1px solid rgba(0,224,126,0.2); border-radius: 0.75rem; padding: 1.25rem;">
                             <h4 style="font-size: 0.875rem; font-weight: 800; color: #00e07e; margin: 0 0 0.5rem 0; display: flex; align-items: center; gap: 0.5rem;">
                                 <span class="material-symbols-rounded">document_scanner</span>
                                 <span>Pindai Foto Barcode QRIS Otomatis</span>
                             </h4>
-                            <p style="font-size: 0.75rem; color: #9aa49f; margin: 0 0 0.75rem 0;">
-                                Unggah foto atau tangkapan layar barcode QRIS toko Anda. Sistem akan memindai format EMVCo dan mengisi kode di bawah secara otomatis.
+                            <p style="font-size: 0.75rem; color: #9aa49f; margin: 0 0 0.875rem 0;">
+                                Pilih metode input barcode QRIS: unggah file gambar langsung atau masukkan direct URL gambar QRIS toko Anda. Sistem akan memindai format EMVCo dan mengisi kode secara otomatis.
                             </p>
+
+                            <!-- Pilihan Sumber Barcode QRIS -->
+                            <div style="display: flex; gap: 0.75rem; margin-bottom: 0.875rem; flex-wrap: wrap;">
+                                <label style="display: flex; align-items: center; gap: 0.5rem; background: {{ $qrisSourceType === 'upload' ? '#1f2522' : '#1a1e1c' }}; border: 1px solid {{ $qrisSourceType === 'upload' ? '#00e07e' : '#232826' }}; padding: 0.45rem 0.85rem; border-radius: 0.5rem; cursor: pointer; color: {{ $qrisSourceType === 'upload' ? '#00e07e' : '#9aa49f' }}; font-weight: 700; font-size: 0.8125rem;">
+                                    <input type="radio" wire:model.live="qrisSourceType" value="upload" style="accent-color: #00e07e;">
+                                    <span class="material-symbols-rounded" style="font-size: 16px;">cloud_upload</span>
+                                    <span>Upload Langsung</span>
+                                </label>
+
+                                <label style="display: flex; align-items: center; gap: 0.5rem; background: {{ $qrisSourceType === 'url' ? '#1f2522' : '#1a1e1c' }}; border: 1px solid {{ $qrisSourceType === 'url' ? '#00e07e' : '#232826' }}; padding: 0.45rem 0.85rem; border-radius: 0.5rem; cursor: pointer; color: {{ $qrisSourceType === 'url' ? '#00e07e' : '#9aa49f' }}; font-weight: 700; font-size: 0.8125rem;">
+                                    <input type="radio" wire:model.live="qrisSourceType" value="url" style="accent-color: #00e07e;">
+                                    <span class="material-symbols-rounded" style="font-size: 16px;">link</span>
+                                    <span>Direct URL</span>
+                                </label>
+                            </div>
+
                             <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
-                                <input type="file" wire:model="qrisImage" accept="image/*" class="pg-input" style="max-width: 320px; padding: 0.4rem;">
+                                @if ($qrisSourceType === 'upload')
+                                    <input type="file" wire:model="qrisImage" accept="image/*" class="pg-input" style="max-width: 320px; padding: 0.4rem;">
+                                @else
+                                    <input type="url" wire:model="qrisImageUrl" class="pg-input" placeholder="https://example.com/qris-barcode.png" style="max-width: 420px;">
+                                @endif
+
                                 <button type="button" wire:click="scanUploadedQris" class="pg-btn-secondary" style="border-color: #00e07e; color: #00e07e;">
                                     <span class="material-symbols-rounded" style="font-size: 18px;">qr_code_scanner</span>
                                     <span>Scan & Auto-Decode</span>

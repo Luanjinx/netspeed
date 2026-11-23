@@ -8,6 +8,7 @@ use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -18,6 +19,7 @@ use Filament\Pages\Page;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
@@ -67,6 +69,16 @@ class QrisSettings extends Page implements HasForms
                         ->icon('heroicon-o-qr-code')
                         ->description('Unggah gambar atau foto screenshot barcode QRIS toko Anda (BCA, Mandiri, BRI, ShopeePay, GoPay, Nobu, dll). Sistem akan otomatis membaca string EMVCo dan info merchant.')
                         ->schema([
+                            Radio::make('qris_input_mode')
+                                ->label('Metode Input Gambar QRIS')
+                                ->options([
+                                    'upload' => 'Upload Langsung (File dari Perangkat)',
+                                    'url' => 'Direct URL (Tautan Gambar QRIS)',
+                                ])
+                                ->default('upload')
+                                ->inline()
+                                ->live(),
+
                             FileUpload::make('qris_image_upload')
                                 ->label('Upload Foto / Barcode QRIS Merchant (Scan Otomatis)')
                                 ->image()
@@ -76,6 +88,7 @@ class QrisSettings extends Page implements HasForms
                                 ->maxSize(5120)
                                 ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/jpg', 'image/webp'])
                                 ->live()
+                                ->visible(fn ($get) => $get('qris_input_mode') !== 'url')
                                 ->helperText('Pilih atau drag & drop file foto/screenshot barcode QRIS toko Anda. Sistem akan langsung membaca QR code dan mengisi string EMVCo secara instan.')
                                 ->afterStateUpdated(function ($state, callable $set) {
                                     if (! $state) {
@@ -108,6 +121,58 @@ class QrisSettings extends Page implements HasForms
                                             ->send();
                                     }
                                 }),
+
+                            TextInput::make('qris_image_url')
+                                ->label('Direct URL Gambar Barcode QRIS')
+                                ->placeholder('https://example.com/qris-merchant.png')
+                                ->url()
+                                ->visible(fn ($get) => $get('qris_input_mode') === 'url')
+                                ->helperText('Masukkan tautan langsung gambar QRIS, lalu klik tombol Pindai URL di sebelah kanan.')
+                                ->suffixAction(
+                                    Action::make('scanUrl')
+                                        ->label('Pindai')
+                                        ->icon('heroicon-o-camera')
+                                        ->action(function ($state, callable $set) {
+                                            if (empty(trim($state ?? ''))) {
+                                                Notification::make()->title('Masukkan URL Gambar QRIS')->warning()->send();
+
+                                                return;
+                                            }
+                                            $tempPath = null;
+                                            try {
+                                                $response = Http::timeout(15)->get(trim($state));
+                                                if (! $response->successful()) {
+                                                    Notification::make()->title('Gagal mengunduh gambar dari URL')->danger()->send();
+
+                                                    return;
+                                                }
+                                                $tempPath = tempnam(sys_get_temp_dir(), 'qris_').'.png';
+                                                file_put_contents($tempPath, $response->body());
+                                                $service = app(QrisService::class);
+                                                $result = $service->decodeFromImage($tempPath);
+                                                if ($result['success'] ?? false) {
+                                                    $set('static_qris_string', $result['payload']);
+                                                    Notification::make()
+                                                        ->title('✅ Barcode QRIS Berhasil Dipindai!')
+                                                        ->body("Merchant: {$result['merchant_name']}\nKota: {$result['merchant_city']}")
+                                                        ->success()
+                                                        ->send();
+                                                } else {
+                                                    Notification::make()
+                                                        ->title('Gagal Memindai QR Code')
+                                                        ->body($result['message'] ?? 'Tidak ditemukan QR code yang valid.')
+                                                        ->danger()
+                                                        ->send();
+                                                }
+                                            } catch (\Throwable $e) {
+                                                Notification::make()->title('Error: '.$e->getMessage())->danger()->send();
+                                            } finally {
+                                                if ($tempPath && file_exists($tempPath)) {
+                                                    @unlink($tempPath);
+                                                }
+                                            }
+                                        })
+                                ),
 
                             Placeholder::make('qris_preview_display')
                                 ->label('Status & Preview Barcode QRIS Merchant')

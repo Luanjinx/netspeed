@@ -12,6 +12,7 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Panel;
 use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Support\Facades\Http;
 use Livewire\WithFileUploads;
 use UnitEnum;
 
@@ -56,10 +57,23 @@ class EditPaymentGateway extends Page
     // Instructions
     public string $instructions = '';
 
+    // Logo Configuration
+    public string $logoType = 'upload'; // 'upload' or 'url'
+
+    public ?string $logoUrl = '';
+
+    public $logoFile = null;
+
+    public ?string $currentLogo = null;
+
     // QRIS Config
     public ?string $staticQris = '';
 
     public bool $useUniqueCode = true;
+
+    public string $qrisSourceType = 'upload'; // 'upload' or 'url'
+
+    public ?string $qrisImageUrl = '';
 
     public $qrisImage = null;
 
@@ -122,6 +136,16 @@ class EditPaymentGateway extends Page
         $this->accountNumber = $config['account_number'] ?? '';
         $this->accountHolder = $config['account_holder'] ?? '';
 
+        // Logo
+        $this->currentLogo = $this->gateway->logo;
+        if (! empty($this->currentLogo) && (str_starts_with($this->currentLogo, 'http://') || str_starts_with($this->currentLogo, 'https://'))) {
+            $this->logoType = 'url';
+            $this->logoUrl = $this->currentLogo;
+        } else {
+            $this->logoType = 'upload';
+            $this->logoUrl = '';
+        }
+
         // Digital APIs
         $this->mode = $config['mode'] ?? 'production';
         $this->apiUrl = $config['api_url'] ?? '';
@@ -146,21 +170,65 @@ class EditPaymentGateway extends Page
         ];
     }
 
+    public function deleteLogo(): void
+    {
+        $this->currentLogo = null;
+        $this->logoUrl = '';
+        $this->logoFile = null;
+        $this->gateway->update(['logo' => null]);
+
+        Notification::make()
+            ->title('Logo Dihapus')
+            ->body('Logo gateway berhasil direset.')
+            ->success()
+            ->send();
+    }
+
     public function scanUploadedQris(): void
     {
-        if (! $this->qrisImage) {
-            Notification::make()
-                ->title('Pilih Foto QRIS')
-                ->body('Silakan pilih berkas foto barcode QRIS terlebih dahulu.')
-                ->warning()
-                ->send();
-
-            return;
-        }
+        $service = app(QrisService::class);
+        $tempPath = null;
 
         try {
-            $path = $this->qrisImage->getRealPath();
-            $service = app(QrisService::class);
+            if ($this->qrisSourceType === 'url') {
+                if (empty(trim($this->qrisImageUrl ?? ''))) {
+                    Notification::make()
+                        ->title('Masukkan URL Gambar QRIS')
+                        ->body('Silakan masukkan direct URL gambar barcode QRIS terlebih dahulu.')
+                        ->warning()
+                        ->send();
+
+                    return;
+                }
+
+                $response = Http::timeout(15)->get(trim($this->qrisImageUrl));
+                if (! $response->successful()) {
+                    Notification::make()
+                        ->title('Gagal Mengunduh Gambar')
+                        ->body('Server tidak dapat mengunduh gambar dari URL. Pastikan URL dapat diakses publik.')
+                        ->danger()
+                        ->send();
+
+                    return;
+                }
+
+                $tempPath = tempnam(sys_get_temp_dir(), 'qris_').'.png';
+                file_put_contents($tempPath, $response->body());
+                $path = $tempPath;
+            } else {
+                if (! $this->qrisImage) {
+                    Notification::make()
+                        ->title('Pilih Foto QRIS')
+                        ->body('Silakan pilih berkas foto barcode QRIS terlebih dahulu.')
+                        ->warning()
+                        ->send();
+
+                    return;
+                }
+
+                $path = $this->qrisImage->getRealPath();
+            }
+
             $result = $service->decodeFromImage($path);
 
             if (! empty($result['success']) && ! empty($result['payload'])) {
@@ -173,7 +241,7 @@ class EditPaymentGateway extends Page
             } else {
                 Notification::make()
                     ->title('Gagal Memindai QR Code')
-                    ->body($result['message'] ?? 'Tidak ditemukan QR code yang valid.')
+                    ->body($result['message'] ?? 'Tidak ditemukan QR code yang valid pada gambar.')
                     ->danger()
                     ->send();
             }
@@ -183,6 +251,10 @@ class EditPaymentGateway extends Page
                 ->body($e->getMessage())
                 ->danger()
                 ->send();
+        } finally {
+            if ($tempPath && file_exists($tempPath)) {
+                @unlink($tempPath);
+            }
         }
     }
 
@@ -222,8 +294,23 @@ class EditPaymentGateway extends Page
             IspSetting::set('payment_webhook_secret', $config['webhook_secret']);
         }
 
+        // Process Logo (URL or Upload)
+        $logoToSave = $this->currentLogo;
+        if ($this->logoType === 'url') {
+            $logoToSave = trim($this->logoUrl ?? '');
+            $logoToSave = $logoToSave ?: null;
+            $this->currentLogo = $logoToSave;
+        } elseif ($this->logoType === 'upload') {
+            if ($this->logoFile) {
+                $logoToSave = $this->logoFile->store('payment-gateways', 'public');
+                $this->currentLogo = $logoToSave;
+                $this->logoFile = null;
+            }
+        }
+
         $this->gateway->update([
             'name' => $this->name,
+            'logo' => $logoToSave,
             'description' => $this->description,
             'fee_type' => $this->feeType,
             'fee_flat' => $this->feeFlat,
