@@ -54,6 +54,8 @@ Route::middleware('auth:sanctum')->group(function () {
         // Trouble Tickets
         Route::get('/tickets', [CustomerPortalController::class, 'tickets']);
         Route::post('/tickets', [CustomerPortalController::class, 'createTicket']);
+        Route::get('/tickets/{id}', [CustomerPortalController::class, 'ticketDetail']);
+        Route::post('/tickets/{id}/reply', [CustomerPortalController::class, 'replyTicket']);
     });
 
     // Admin & Technician Endpoints for Flutter Admin App

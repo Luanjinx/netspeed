@@ -9,6 +9,7 @@ use App\Models\IspSetting;
 use App\Models\Odp;
 use App\Models\Router;
 use App\Models\SupportTicket;
+use App\Models\TicketReply;
 use App\Models\WorkOrder;
 use App\Services\Genieacs\GenieacsApiService;
 use App\Services\Notification\WhatsAppService;
@@ -98,7 +99,7 @@ class TechnicianPortalController extends Controller
             'customer.odp',
             'customer.router',
             'customer.genieacsServer',
-            'ticket',
+            'ticket.replies.user',
             'technician',
         ])->findOrFail($id);
 
@@ -635,5 +636,39 @@ class TechnicianPortalController extends Controller
         ]);
 
         return back()->with('success', 'Password Anda berhasil diperbarui!');
+    }
+
+    /**
+     * Send reply from technician to a support ticket.
+     */
+    public function replyTicket(Request $request, int $id): RedirectResponse
+    {
+        $request->validate([
+            'message' => 'required|string|max:5000',
+            'attachment' => 'nullable|image|max:5120',
+        ]);
+
+        $technician = Auth::user();
+        $ticket = SupportTicket::findOrFail($id);
+
+        $attachmentPath = null;
+        if ($request->hasFile('attachment')) {
+            $attachmentPath = $request->file('attachment')->store('tickets', 'public');
+        }
+
+        TicketReply::create([
+            'support_ticket_id' => $ticket->id,
+            'user_id' => $technician->id,
+            'sender_type' => 'technician',
+            'message' => $request->input('message'),
+            'attachment' => $attachmentPath,
+            'is_internal' => (bool) $request->boolean('is_internal'),
+        ]);
+
+        if ($ticket->status === 'open') {
+            $ticket->update(['status' => 'in_progress', 'technician_id' => $technician->id]);
+        }
+
+        return back()->with('success', 'Balasan Anda berhasil dikirim ke tiket!');
     }
 }

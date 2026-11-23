@@ -12,6 +12,7 @@ use App\Models\Payment;
 use App\Models\PaymentGateway;
 use App\Models\Promo;
 use App\Models\SupportTicket;
+use App\Models\TicketReply;
 use App\Services\Genieacs\GenieacsApiService;
 use App\Services\Payment\QrisService;
 use Exception;
@@ -554,6 +555,89 @@ class CustomerPortalController extends Controller
             'success' => true,
             'message' => 'Tiket aduan berhasil dibuat. Teknisi kami akan segera memproses.',
             'data' => $ticket,
+        ]);
+    }
+
+    /**
+     * Get ticket detail with full conversation replies.
+     */
+    public function ticketDetail(Request $request, int|string $id): JsonResponse
+    {
+        $user = $request->user();
+        $customer = $user->customer;
+
+        $ticket = SupportTicket::where('customer_id', $customer->id)
+            ->where('id', $id)
+            ->with([
+                'technician:id,name,phone',
+                'replies' => function ($query) {
+                    $query->where('is_internal', false)
+                        ->with('user:id,name,role')
+                        ->orderBy('created_at', 'asc');
+                },
+            ])
+            ->first();
+
+        if (! $ticket) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tiket tidak ditemukan.',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $ticket,
+        ]);
+    }
+
+    /**
+     * Send reply message to a support ticket.
+     */
+    public function replyTicket(Request $request, int|string $id): JsonResponse
+    {
+        $request->validate([
+            'message' => 'required|string|max:5000',
+            'attachment' => 'nullable|image|max:5120',
+        ]);
+
+        $user = $request->user();
+        $customer = $user->customer;
+
+        $ticket = SupportTicket::where('customer_id', $customer->id)
+            ->where('id', $id)
+            ->first();
+
+        if (! $ticket) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tiket tidak ditemukan.',
+            ], 404);
+        }
+
+        $attachmentPath = null;
+        if ($request->hasFile('attachment')) {
+            $attachmentPath = $request->file('attachment')->store('tickets', 'public');
+        }
+
+        $reply = TicketReply::create([
+            'support_ticket_id' => $ticket->id,
+            'user_id' => $user->id,
+            'sender_type' => 'customer',
+            'message' => $request->input('message'),
+            'attachment' => $attachmentPath,
+            'is_internal' => false,
+        ]);
+
+        // Re-open ticket if it was resolved or closed
+        if (in_array($ticket->status, ['resolved', 'closed'])) {
+            $ticket->update(['status' => 'open']);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Balasan Anda berhasil dikirimkan.',
+            'data' => $reply->load('user:id,name,role'),
         ]);
     }
 

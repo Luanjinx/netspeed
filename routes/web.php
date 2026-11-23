@@ -84,6 +84,9 @@ Route::middleware(['auth', EnsureTechnicianUser::class])->prefix('teknisi')->nam
     Route::post('/ont/wifi', [TechnicianPortalController::class, 'updateOntWifi'])->name('ont.wifi');
     Route::post('/ont/reboot', [TechnicianPortalController::class, 'rebootOnt'])->name('ont.reboot');
 
+    // Balasan Tiket Gangguan
+    Route::post('/tiket/{id}/reply', [TechnicianPortalController::class, 'replyTicket'])->name('ticket.reply');
+
     Route::get('/profil', [TechnicianPortalController::class, 'profile'])->name('profile');
     Route::post('/profil/password', [TechnicianPortalController::class, 'updatePassword'])->name('profile.password');
 });

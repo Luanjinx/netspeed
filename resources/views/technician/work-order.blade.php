@@ -306,6 +306,80 @@
         @endif
     </div>
 
+    @if($workOrder->ticket)
+        <!-- Ticket Conversation Thread -->
+        <div class="rounded-2xl bg-surface border border-border p-5 space-y-4">
+            <div class="flex items-center justify-between">
+                <h2 class="text-sm font-bold text-white flex items-center gap-2">
+                    <span class="material-symbols-rounded text-accent text-lg">forum</span>
+                    <span>Percakapan Tiket #{{ $workOrder->ticket->ticket_number }}</span>
+                </h2>
+                <span class="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-accent/10 text-accent border border-accent/20">
+                    {{ ucfirst($workOrder->ticket->status) }}
+                </span>
+            </div>
+
+            <!-- Detail Keluhan Awal Pelanggan -->
+            <div class="p-3.5 rounded-xl bg-bg border border-border space-y-1.5">
+                <div class="flex items-center justify-between text-[11px]">
+                    <span class="font-bold text-warn">Laporan Keluhan Pelanggan:</span>
+                    <span class="text-muted">{{ $workOrder->ticket->created_at->format('d M Y, H:i') }}</span>
+                </div>
+                <p class="text-xs text-white leading-relaxed">{{ $workOrder->ticket->description }}</p>
+            </div>
+
+            <!-- Balasan Percakapan Sebelumnya -->
+            <div class="space-y-3 pt-2">
+                @forelse($workOrder->ticket->replies as $reply)
+                    <div class="p-3.5 rounded-xl border {{ $reply->sender_type === 'technician' ? 'bg-accent/5 border-accent/30 ml-4' : ($reply->sender_type === 'admin' ? 'bg-info/5 border-info/30 ml-4' : 'bg-surface2 border-border mr-4') }}">
+                        <div class="flex items-center justify-between text-[11px] mb-1">
+                            <span class="font-bold {{ $reply->sender_type === 'technician' ? 'text-accent' : ($reply->sender_type === 'admin' ? 'text-info' : 'text-white') }}">
+                                {{ $reply->sender_name }} ({{ $reply->sender_role_label }})
+                                @if($reply->is_internal)
+                                    <span class="ml-1 text-[10px] px-1.5 py-0.2 rounded bg-danger/20 text-danger border border-danger/30">Internal</span>
+                                @endif
+                            </span>
+                            <span class="text-[10px] text-muted">{{ $reply->created_at->format('d M, H:i') }}</span>
+                        </div>
+                        <p class="text-xs text-white leading-relaxed whitespace-pre-wrap">{{ $reply->message }}</p>
+                        @if($reply->attachment)
+                            <div class="mt-2">
+                                <a href="{{ $reply->attachment_url }}" target="_blank" class="inline-flex items-center gap-1.5 text-xs text-accent hover:underline">
+                                    <span class="material-symbols-rounded text-sm">attachment</span>
+                                    <span>Lihat Foto Lampiran</span>
+                                </a>
+                            </div>
+                        @endif
+                    </div>
+                @empty
+                    <p class="text-xs text-muted text-center py-2">Belum ada balasan percakapan pada tiket ini.</p>
+                @endforelse
+            </div>
+
+            <!-- Form Balasan Teknisi -->
+            <form action="{{ route('technician.ticket.reply', $workOrder->ticket->id) }}" method="POST" enctype="multipart/form-data" class="pt-3 border-t border-border space-y-3">
+                @csrf
+                <div>
+                    <label class="block text-xs font-semibold text-white mb-1.5">Tulis Balasan / Update Penanganan Lapangan</label>
+                    <textarea name="message" rows="2" placeholder="Tuliskan respon untuk pelanggan atau catatan teknisi..." required class="w-full bg-bg border border-border rounded-xl p-3 text-xs text-white placeholder-muted focus:outline-none focus:border-accent transition"></textarea>
+                </div>
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <input type="file" name="attachment" accept="image/*" class="text-xs text-muted file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[11px] file:font-semibold file:bg-surface2 file:text-white hover:file:bg-border">
+                        <label class="inline-flex items-center gap-1.5 text-xs text-muted cursor-pointer">
+                            <input type="checkbox" name="is_internal" value="1" class="accent-accent">
+                            <span>Catatan internal tim</span>
+                        </label>
+                    </div>
+                    <button type="submit" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-accent hover:bg-accent/90 text-ink font-bold text-xs transition">
+                        <span class="material-symbols-rounded text-sm">send</span>
+                        <span>Kirim Balasan</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    @endif
+
     <!-- Complete Task Form -->
     <div class="rounded-2xl bg-surface border border-border p-5 space-y-4">
         <h2 class="text-sm font-bold text-white flex items-center gap-2">

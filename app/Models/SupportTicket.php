@@ -45,6 +45,11 @@ class SupportTicket extends Model
         return $this->hasMany(WorkOrder::class, 'support_ticket_id');
     }
 
+    public function replies(): HasMany
+    {
+        return $this->hasMany(TicketReply::class, 'support_ticket_id')->orderBy('created_at', 'asc');
+    }
+
     protected static function booted(): void
     {
         static::created(function (SupportTicket $ticket) {
