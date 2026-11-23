@@ -17,6 +17,18 @@ class EditPromo extends EditRecord
         ];
     }
 
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+        if (($data['image_type'] ?? 'upload') === 'url') {
+            $data['image'] = trim($data['image_url'] ?? '');
+        } else {
+            $data['image'] = $data['image_upload'] ?? $this->record->image;
+        }
+        unset($data['image_type'], $data['image_url'], $data['image_upload']);
+
+        return $data;
+    }
+
     protected function getRedirectUrl(): string
     {
         return $this->getResource()::getUrl('index');

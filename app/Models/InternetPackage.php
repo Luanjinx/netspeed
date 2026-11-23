@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class InternetPackage extends Model
 {
@@ -45,6 +46,10 @@ class InternetPackage extends Model
         'is_active' => 'boolean',
     ];
 
+    protected $appends = [
+        'image_url',
+    ];
+
     protected static function booted(): void
     {
         static::updating(function (InternetPackage $package) {
@@ -79,6 +84,19 @@ class InternetPackage extends Model
                 }
             }
         });
+    }
+
+    public function getImageUrlAttribute(): string
+    {
+        if (empty($this->image)) {
+            return '';
+        }
+
+        if (str_starts_with($this->image, 'http://') || str_starts_with($this->image, 'https://')) {
+            return $this->image;
+        }
+
+        return url(Storage::disk('public')->url($this->image));
     }
 
     public function customers(): HasMany

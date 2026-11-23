@@ -15,19 +15,19 @@
         }
 
         .pg-card {
-            background: #131615;
-            border: 1px solid #232826;
+            background: var(--surface);
+            border: 1px solid var(--border);
             border-radius: 0.875rem;
             padding: 1.15rem 1.25rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            box-shadow: var(--shadow);
             transition: border-color 0.2s ease;
         }
 
         .pg-card:hover {
-            border-color: #38423e;
+            border-color: #00e07e;
         }
 
         .pg-card-label {
@@ -35,7 +35,7 @@
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.06em;
-            color: #9aa49f;
+            color: var(--muted);
         }
 
         .pg-card-val {
@@ -46,6 +46,7 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            color: var(--text);
         }
 
         .pg-card-icon {
@@ -59,8 +60,8 @@
         }
 
         .pg-toolbar {
-            background: #131615;
-            border: 1px solid #232826;
+            background: var(--surface);
+            border: 1px solid var(--border);
             border-radius: 0.875rem;
             padding: 0.85rem 1.25rem;
             display: flex;
@@ -68,29 +69,32 @@
             align-items: center;
             justify-content: space-between;
             gap: 1rem;
+            box-shadow: var(--shadow);
         }
 
         .pg-input {
             padding: 0.5rem 0.85rem;
-            background: #1a1e1c;
-            border: 1px solid #232826;
+            background: var(--surface2);
+            border: 1px solid var(--border);
             border-radius: 0.5rem;
             font-size: 0.8125rem;
-            color: #eef1f0;
+            color: var(--text);
             outline: none;
             transition: border-color 0.2s ease;
         }
 
         .pg-input:focus {
             border-color: #00e07e;
+            background: var(--surface);
         }
 
         .pg-table-card {
-            background: #131615;
-            border: 1px solid #232826;
+            background: var(--surface);
+            border: 1px solid var(--border);
             border-radius: 0.875rem;
             overflow: hidden;
             width: 100%;
+            box-shadow: var(--shadow);
         }
 
         .pg-table {
@@ -107,21 +111,21 @@
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            color: #9aa49f;
-            background: #171b19;
-            border-bottom: 1px solid #232826;
+            color: var(--muted);
+            background: var(--surface2);
+            border-bottom: 1px solid var(--border);
             white-space: nowrap;
         }
 
         .pg-td {
             padding: 0.95rem 1rem;
-            border-bottom: 1px solid #232826;
+            border-bottom: 1px solid var(--border);
             vertical-align: middle;
-            color: #cbd5e1;
+            color: var(--text);
         }
 
         .pg-tr:hover {
-            background: rgba(26, 30, 28, 0.6);
+            background: var(--surface2);
         }
 
         .pg-badge-active {
@@ -438,7 +442,7 @@
 
                 <button type="button" wire:click="saveGlobalAutomation"
                     class="pg-input" style="background: #00e07e; color: #06261a; font-weight: 800; border: none; cursor: pointer; padding: 0.45rem 1rem;">
-                    Simpan Otomasi
+                    Simpan
                 </button>
             </div>
         </div>

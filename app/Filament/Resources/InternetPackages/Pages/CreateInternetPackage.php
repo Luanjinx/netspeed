@@ -11,6 +11,18 @@ class CreateInternetPackage extends CreateRecord
 {
     protected static string $resource = InternetPackageResource::class;
 
+    protected function mutateFormDataBeforeCreate(array $data): array
+    {
+        if (($data['image_type'] ?? 'upload') === 'url') {
+            $data['image'] = trim($data['image_url'] ?? '');
+        } else {
+            $data['image'] = $data['image_upload'] ?? null;
+        }
+        unset($data['image_type'], $data['image_url'], $data['image_upload']);
+
+        return $data;
+    }
+
     protected function afterCreate(): void
     {
         $package = $this->record;

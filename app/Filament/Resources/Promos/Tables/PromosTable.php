@@ -21,7 +21,7 @@ class PromosTable
             ->columns([
                 ImageColumn::make('image')
                     ->label('Banner')
-                    ->disk('public')
+                    ->state(fn ($record) => $record->image_url)
                     ->width(110)
                     ->height(55)
                     ->extraImgAttributes(['style' => 'object-fit: cover; border-radius: 8px;']),

@@ -106,7 +106,7 @@
 
             <div class="flex items-center justify-end pt-4">
                 <x-filament::button type="submit" size="lg" icon="heroicon-o-check" color="primary">
-                    Simpan Pengaturan Bot Telegram
+                    Simpan
                 </x-filament::button>
             </div>
         </form>

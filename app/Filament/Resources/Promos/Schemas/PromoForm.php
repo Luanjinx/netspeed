@@ -5,6 +5,8 @@ namespace App\Filament\Resources\Promos\Schemas;
 use App\Models\InternetPackage;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -13,6 +15,7 @@ use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Illuminate\Support\HtmlString;
 
 class PromoForm
 {
@@ -25,10 +28,29 @@ class PromoForm
                         // Kolom Kiri / Utama (2 Kolom): Banner, Judul, Artikel & Penawaran
                         Group::make([
                             Section::make('Visual Banner & Artikel Promo')
-                                ->description('Upload banner landscape murni dan isi artikel penjelasan lengkap promo (seperti blog)')
+                                ->description('Pilih metode input banner (upload file langsung atau direct URL gambar) dan isi artikel penjelasan promo')
                                 ->icon('heroicon-o-photo')
                                 ->schema([
-                                    FileUpload::make('image')
+                                    Radio::make('image_type')
+                                        ->label('Pilihan Metode Input Banner')
+                                        ->options([
+                                            'upload' => 'Upload Langsung (File dari Perangkat)',
+                                            'url' => 'Direct URL (Tautan / Link Gambar Langsung)',
+                                        ])
+                                        ->default('upload')
+                                        ->inline()
+                                        ->live()
+                                        ->dehydrated(false)
+                                        ->afterStateHydrated(function ($component, $record) {
+                                            if ($record && ! empty($record->image) && (str_starts_with($record->image, 'http://') || str_starts_with($record->image, 'https://'))) {
+                                                $component->state('url');
+                                            } else {
+                                                $component->state('upload');
+                                            }
+                                        })
+                                        ->columnSpanFull(),
+
+                                    FileUpload::make('image_upload')
                                         ->label('Upload Banner Iklan Landscape')
                                         ->image()
                                         ->imageEditor()
@@ -36,9 +58,46 @@ class PromoForm
                                         ->disk('public')
                                         ->visibility('public')
                                         ->maxSize(5120)
-                                        ->required()
                                         ->columnSpanFull()
+                                        ->visible(fn ($get) => $get('image_type') !== 'url')
+                                        ->required(fn ($get, $operation, $record) => $get('image_type') !== 'url' && ($operation === 'create' || empty($record?->image)))
+                                        ->dehydrated(false)
+                                        ->afterStateHydrated(function ($component, $record) {
+                                            if ($record && ! empty($record->image) && ! (str_starts_with($record->image, 'http://') || str_starts_with($record->image, 'https://'))) {
+                                                $component->state($record->image);
+                                            }
+                                        })
                                         ->helperText('Format: JPG, PNG, WEBP. Rekomendasi rasio landscape 16:9 atau 2:1 (cth: 1200 x 600 px), maks. 5 MB.'),
+
+                                    TextInput::make('image_url')
+                                        ->label('Direct URL Banner Iklan Landscape')
+                                        ->placeholder('https://example.com/banner-promo.jpg')
+                                        ->url()
+                                        ->columnSpanFull()
+                                        ->visible(fn ($get) => $get('image_type') === 'url')
+                                        ->required(fn ($get) => $get('image_type') === 'url')
+                                        ->dehydrated(false)
+                                        ->afterStateHydrated(function ($component, $record) {
+                                            if ($record && ! empty($record->image) && (str_starts_with($record->image, 'http://') || str_starts_with($record->image, 'https://'))) {
+                                                $component->state($record->image);
+                                            }
+                                        })
+                                        ->live(debounce: 500)
+                                        ->helperText('Masukkan tautan langsung gambar banner (diawali http:// atau https://).'),
+
+                                    Placeholder::make('url_preview')
+                                        ->label('Preview Gambar Banner')
+                                        ->columnSpanFull()
+                                        ->visible(fn ($get) => $get('image_type') === 'url' && filled($get('image_url')))
+                                        ->content(function ($get) {
+                                            $url = e($get('image_url'));
+
+                                            return new HtmlString(
+                                                "<div style='max-width: 440px; border-radius: 8px; overflow: hidden; border: 1px solid #232826; background: #1a1e1c; padding: 4px;'>
+                                                    <img src='{$url}' alt='Banner Preview' style='width: 100%; height: auto; max-height: 180px; object-fit: cover; border-radius: 6px;' onerror=\"this.style.display='none'\" />
+                                                </div>"
+                                            );
+                                        }),
 
                                     TextInput::make('title')
                                         ->label('Judul Promo / Judul Artikel Blog')

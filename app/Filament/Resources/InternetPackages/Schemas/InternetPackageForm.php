@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\InternetPackages\Schemas;
 
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -10,6 +12,7 @@ use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Illuminate\Support\HtmlString;
 
 class InternetPackageForm
 {
@@ -74,8 +77,27 @@ class InternetPackageForm
                         Textarea::make('description')
                             ->label('Deskripsi / Benefit Paket')
                             ->columnSpanFull(),
-                        FileUpload::make('image')
-                            ->label('Gambar / Brosur Paket')
+                        Radio::make('image_type')
+                            ->label('Pilihan Metode Input Gambar / Brosur')
+                            ->options([
+                                'upload' => 'Upload Langsung (File dari Perangkat)',
+                                'url' => 'Direct URL (Tautan / Link Gambar Langsung)',
+                            ])
+                            ->default('upload')
+                            ->inline()
+                            ->live()
+                            ->dehydrated(false)
+                            ->afterStateHydrated(function ($component, $record) {
+                                if ($record && ! empty($record->image) && (str_starts_with($record->image, 'http://') || str_starts_with($record->image, 'https://'))) {
+                                    $component->state('url');
+                                } else {
+                                    $component->state('upload');
+                                }
+                            })
+                            ->columnSpanFull(),
+
+                        FileUpload::make('image_upload')
+                            ->label('Upload Gambar / Brosur Paket')
                             ->image()
                             ->imageEditor()
                             ->directory('packages')
@@ -83,7 +105,43 @@ class InternetPackageForm
                             ->visibility('public')
                             ->maxSize(5120)
                             ->columnSpanFull()
-                            ->helperText('Upload gambar ilustrasi / brosur paket internet (Format: JPG, PNG, WEBP, maks 5 MB).'),
+                            ->visible(fn ($get) => $get('image_type') !== 'url')
+                            ->dehydrated(false)
+                            ->afterStateHydrated(function ($component, $record) {
+                                if ($record && ! empty($record->image) && ! (str_starts_with($record->image, 'http://') || str_starts_with($record->image, 'https://'))) {
+                                    $component->state($record->image);
+                                }
+                            })
+                            ->helperText('Format: JPG, PNG, WEBP, maks 5 MB.'),
+
+                        TextInput::make('image_url')
+                            ->label('Direct URL Gambar / Brosur Paket')
+                            ->placeholder('https://example.com/brosur-paket.jpg')
+                            ->url()
+                            ->columnSpanFull()
+                            ->visible(fn ($get) => $get('image_type') === 'url')
+                            ->dehydrated(false)
+                            ->afterStateHydrated(function ($component, $record) {
+                                if ($record && ! empty($record->image) && (str_starts_with($record->image, 'http://') || str_starts_with($record->image, 'https://'))) {
+                                    $component->state($record->image);
+                                }
+                            })
+                            ->live(debounce: 500)
+                            ->helperText('Masukkan tautan langsung gambar brosur (diawali http:// atau https://).'),
+
+                        Placeholder::make('url_preview')
+                            ->label('Preview Gambar Paket')
+                            ->columnSpanFull()
+                            ->visible(fn ($get) => $get('image_type') === 'url' && filled($get('image_url')))
+                            ->content(function ($get) {
+                                $url = e($get('image_url'));
+
+                                return new HtmlString(
+                                    "<div style='max-width: 320px; border-radius: 8px; overflow: hidden; border: 1px solid #232826; background: #1a1e1c; padding: 4px;'>
+                                        <img src='{$url}' alt='Package Preview' style='width: 100%; height: auto; max-height: 160px; object-fit: cover; border-radius: 6px;' onerror=\"this.style.display='none'\" />
+                                    </div>"
+                                );
+                            }),
                         Toggle::make('is_active')
                             ->label('Paket Ditampilkan & Aktif')
                             ->default(true),

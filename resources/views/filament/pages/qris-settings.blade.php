@@ -16,7 +16,7 @@
                 size="lg"
                 icon="heroicon-o-check"
                 color="primary">
-                Simpan Pengaturan Billing &amp; QRIS
+                Simpan
             </x-filament::button>
         </div>
     </form>

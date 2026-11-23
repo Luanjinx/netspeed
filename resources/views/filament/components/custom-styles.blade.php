@@ -28,6 +28,27 @@
        ========================================================================== */
 
     :root {
+        /* Light Mode Tokens */
+        --bg: #f8fafc;
+        --surface: #ffffff;
+        --surface2: #f1f5f9;
+        --border: #e2e8f0;
+        --text: #0f172a;
+        --muted: #64748b;
+        --accent: #00e07e;
+        --accent2: #4deda4;
+        --ink: #06261a;
+        --soft: #ecfdf5;
+        --danger: #ef4444;
+        --warn: #f59e0b;
+        --chk: #ffffff;
+        --shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
+        --btn: #00e07e;
+        --btnText: #06261a;
+    }
+
+    .dark, html.dark {
+        /* Dark Mode Tokens */
         --bg: #0c0e0d;
         --surface: #131615;
         --surface2: #1a1e1c;
@@ -89,10 +110,13 @@
     }
 
     /* 1. GLOBAL BACKGROUNDS & LAYOUT CANVAS */
-    .dark,
+    body,
     .dark body,
+    .fi-layout,
     .dark .fi-layout,
+    .fi-main,
     .dark .fi-main,
+    .fi-topbar-ctn,
     .dark .fi-topbar-ctn {
         background-color: var(--bg) !important;
         color: var(--text);
@@ -114,37 +138,48 @@
     }
 
     /* 2. SIDEBAR STYLING */
+    .fi-sidebar,
     .dark .fi-sidebar {
-        background-color: var(--bg) !important;
+        background-color: var(--surface) !important;
         border-right: 1px solid var(--border) !important;
     }
 
+    .fi-sidebar-header,
     .dark .fi-sidebar-header {
         border-bottom: 1px solid var(--border) !important;
-        background-color: var(--bg) !important;
+        background-color: var(--surface) !important;
     }
 
     /* Sidebar Navigation Active State */
+    .fi-sidebar-item-active > a,
+    .fi-sidebar-item-active > button,
     .dark .fi-sidebar-item-active > a,
     .dark .fi-sidebar-item-active > button {
         background-color: rgba(0, 224, 126, 0.12) !important;
-        color: #ffffff !important;
+        color: var(--text) !important;
         border-left: 3px solid var(--accent) !important;
         border-radius: 0 0.625rem 0.625rem 0 !important;
         font-weight: 700 !important;
     }
 
+    .fi-sidebar-item-active svg,
+    .fi-sidebar-item-active .fi-sidebar-item-icon {
+        color: #059669 !important;
+    }
     .dark .fi-sidebar-item-active svg,
     .dark .fi-sidebar-item-active .fi-sidebar-item-icon {
         color: var(--accent) !important;
     }
 
+    .fi-sidebar-item:not(.fi-sidebar-item-active) > a:hover,
+    .fi-sidebar-item:not(.fi-sidebar-item-active) > button:hover,
     .dark .fi-sidebar-item:not(.fi-sidebar-item-active) > a:hover,
     .dark .fi-sidebar-item:not(.fi-sidebar-item-active) > button:hover {
-        background-color: var(--surface) !important;
-        color: #ffffff !important;
+        background-color: var(--surface2) !important;
+        color: var(--text) !important;
     }
 
+    .fi-sidebar-group-label,
     .dark .fi-sidebar-group-label {
         color: var(--muted) !important;
         font-weight: 800 !important;
@@ -154,14 +189,20 @@
     }
 
     /* 3. TOPBAR GLASSMORPHISM */
+    .fi-topbar,
     .dark .fi-topbar {
         backdrop-filter: blur(20px) !important;
         -webkit-backdrop-filter: blur(20px) !important;
-        background-color: rgba(12, 14, 13, 0.92) !important;
+        background-color: var(--surface) !important;
         border-bottom: 1px solid var(--border) !important;
     }
 
     /* 4. CARDS, SECTIONS, & SURFACES */
+    .fi-section,
+    .fi-wi-widget > div,
+    .fi-ta-ctn,
+    .fi-modal-window,
+    .fi-dropdown-panel,
     .dark .fi-section,
     .dark .fi-wi-widget > div,
     .dark .fi-ta-ctn,
@@ -173,26 +214,32 @@
         box-shadow: var(--shadow) !important;
     }
 
+    .fi-section,
     .dark .fi-section {
         transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
         overflow: hidden !important;
     }
 
+    .fi-section:hover,
     .dark .fi-section:hover {
         border-color: rgba(0, 224, 126, 0.3) !important;
     }
 
+    .fi-section-header,
     .dark .fi-section-header {
-        background-color: rgba(26, 30, 28, 0.55) !important;
+        background-color: var(--surface2) !important;
         padding: 1rem 1.25rem !important;
         border-bottom: 1px solid var(--border) !important;
     }
 
+    .fi-section-content,
     .dark .fi-section-content {
         padding: 1.25rem !important;
     }
 
     /* Modern Tabs Card Bar */
+    .fi-sc-tabs-tablist,
+    .fi-tabs,
     .dark .fi-sc-tabs-tablist,
     .dark .fi-tabs {
         background: var(--surface) !important;
@@ -203,6 +250,8 @@
         margin-bottom: 1.25rem !important;
     }
 
+    .fi-sc-tabs-tab,
+    .fi-tabs-item,
     .dark .fi-sc-tabs-tab,
     .dark .fi-tabs-item {
         border-radius: 0.625rem !important;
@@ -213,22 +262,29 @@
         border: 1px solid transparent !important;
     }
 
+    .fi-sc-tabs-tab[aria-selected="true"],
+    .fi-tabs-item[aria-selected="true"],
+    .fi-tabs-item--active,
     .dark .fi-sc-tabs-tab[aria-selected="true"],
     .dark .fi-tabs-item[aria-selected="true"],
     .dark .fi-tabs-item--active {
         background: var(--btn) !important;
-        color: var(--btnText) !important;
+        color: #06261a !important;
         font-weight: 800 !important;
         box-shadow: 0 4px 14px rgba(0, 224, 126, 0.35) !important;
         border-color: var(--btn) !important;
     }
 
+    .fi-sc-tabs-tab[aria-selected="true"] *,
+    .fi-tabs-item[aria-selected="true"] *,
+    .fi-tabs-item--active *,
     .dark .fi-sc-tabs-tab[aria-selected="true"] *,
     .dark .fi-tabs-item[aria-selected="true"] *,
     .dark .fi-tabs-item--active * {
-        color: var(--btnText) !important;
+        color: #06261a !important;
     }
 
+    .fi-modal-footer,
     .dark .fi-modal-footer {
         border-top: 1px solid var(--border) !important;
         background-color: var(--surface) !important;
@@ -265,27 +321,87 @@
     }
 
     /* 6. PRIMARY BUTTONS & ACTIONS (NEON MINT STYLE) */
+    .fi-btn-primary,
+    .fi-btn-color-primary,
     .dark .fi-btn-primary,
+    .dark .fi-btn-color-primary,
+    button[type="submit"].fi-btn:not(.fi-btn-outlined),
     .dark button[type="submit"].fi-btn:not(.fi-btn-outlined),
+    .fi-ac-btn-action.fi-color-primary,
     .dark .fi-ac-btn-action.fi-color-primary {
         background-color: var(--btn) !important;
-        color: var(--btnText) !important;
+        color: #06261a !important;
         font-weight: 800 !important;
         border: none !important;
         box-shadow: 0 4px 14px rgba(0, 224, 126, 0.25) !important;
         transition: all 0.2s ease-in-out !important;
     }
 
+    .fi-btn-primary *,
+    .fi-btn-color-primary *,
+    .dark .fi-btn-primary *,
+    .dark .fi-btn-color-primary *,
+    button[type="submit"].fi-btn:not(.fi-btn-outlined) *,
+    .dark button[type="submit"].fi-btn:not(.fi-btn-outlined) *,
+    .fi-ac-btn-action.fi-color-primary *,
+    .dark .fi-ac-btn-action.fi-color-primary * {
+        color: #06261a !important;
+    }
+
+    .fi-btn-primary:hover,
+    .fi-btn-color-primary:hover,
     .dark .fi-btn-primary:hover,
+    .dark .fi-btn-color-primary:hover,
+    button[type="submit"].fi-btn:not(.fi-btn-outlined):hover,
     .dark button[type="submit"].fi-btn:not(.fi-btn-outlined):hover,
+    .fi-ac-btn-action.fi-color-primary:hover,
     .dark .fi-ac-btn-action.fi-color-primary:hover {
         background-color: var(--accent2) !important;
-        color: var(--btnText) !important;
+        color: #06261a !important;
         transform: translateY(-1px) !important;
         box-shadow: 0 6px 20px rgba(0, 224, 126, 0.45) !important;
     }
 
+    .fi-btn-primary:hover *,
+    .fi-btn-color-primary:hover *,
+    .dark .fi-btn-primary:hover *,
+    .dark .fi-btn-color-primary:hover *,
+    button[type="submit"].fi-btn:not(.fi-btn-outlined):hover *,
+    .dark button[type="submit"].fi-btn:not(.fi-btn-outlined):hover *,
+    .fi-ac-btn-action.fi-color-primary:hover *,
+    .dark .fi-ac-btn-action.fi-color-primary:hover * {
+        color: #06261a !important;
+    }
+
+    /* RIGHT-ALIGNED FORM & MODAL ACTION BUTTONS */
+    .fi-form-actions,
+    .fi-fo-actions,
+    .fi-page-content form > div.fi-ac:last-child,
+    .fi-page-content form > .fi-ac.fi-align-start,
+    .fi-ac.fi-align-start:not(.fi-ta-actions):not(.fi-ta-cell *),
+    .fi-page-sub-navigation-actions,
+    .fi-modal-footer,
+    .fi-modal-footer-actions,
+    .fi-modal-footer .fi-ac {
+        display: flex !important;
+        justify-content: flex-end !important;
+        align-items: center !important;
+        width: 100% !important;
+        gap: 0.75rem !important;
+    }
+
+    .fi-form-actions > .fi-ac,
+    .fi-fo-actions > .fi-ac {
+        display: flex !important;
+        justify-content: flex-end !important;
+        align-items: center !important;
+        width: 100% !important;
+        gap: 0.75rem !important;
+    }
+
     /* Secondary / Gray Buttons */
+    .fi-btn-outlined,
+    .fi-btn-color-gray,
     .dark .fi-btn-outlined,
     .dark .fi-btn-color-gray {
         background-color: var(--surface2) !important;
@@ -293,10 +409,12 @@
         color: var(--text) !important;
     }
 
+    .fi-btn-outlined:hover,
+    .fi-btn-color-gray:hover,
     .dark .fi-btn-outlined:hover,
     .dark .fi-btn-color-gray:hover {
         background-color: var(--border) !important;
-        color: #ffffff !important;
+        color: var(--text) !important;
     }
 
     /* Danger Buttons */
@@ -308,21 +426,24 @@
 
     .dark .fi-btn-color-danger:hover {
         background-color: var(--danger) !important;
-        color: var(--ink) !important;
+        color: #ffffff !important;
     }
 
     /* 7. TABLES STYLING */
+    .fi-ta-ctn,
     .dark .fi-ta-ctn {
         background-color: var(--surface) !important;
         border: 1px solid var(--border) !important;
     }
 
+    .fi-ta-header,
     .dark .fi-ta-header {
         border-bottom: 1px solid var(--border) !important;
     }
 
+    .fi-ta-table th,
     .dark .fi-ta-table th {
-        background-color: var(--surface) !important;
+        background-color: var(--surface2) !important;
         border-bottom: 1px solid var(--border) !important;
         color: var(--muted) !important;
         font-weight: 700 !important;
@@ -333,22 +454,26 @@
         padding-bottom: 0.875rem !important;
     }
 
+    .fi-ta-table td,
     .dark .fi-ta-table td {
         border-bottom: 1px solid var(--border) !important;
         color: var(--text) !important;
         font-size: 0.8125rem !important;
     }
 
+    .fi-ta-row:hover,
     .dark .fi-ta-row:hover {
         background-color: var(--surface2) !important;
     }
 
+    .fi-ta-pagination,
     .dark .fi-ta-pagination {
         border-top: 1px solid var(--border) !important;
         background-color: var(--surface) !important;
     }
 
     /* 8. FORM CONTROLS (INPUTS, SELECTS, TEXTAREAS) */
+    .fi-input-wrp,
     .dark .fi-input-wrp {
         background-color: var(--surface2) !important;
         border: 1px solid var(--border) !important;
@@ -356,20 +481,27 @@
         box-shadow: none !important;
     }
 
+    .fi-input-wrp:focus-within,
     .dark .fi-input-wrp:focus-within {
         border-color: var(--accent) !important;
         box-shadow: 0 0 0 1px var(--accent) !important;
     }
 
+    .fi-input-wrp input,
+    .fi-input-wrp textarea,
+    .fi-select-input,
     .dark .fi-input-wrp input,
     .dark .fi-input-wrp textarea,
     .dark .fi-select-input {
         color: var(--text) !important;
     }
 
+    .fi-input-wrp input::placeholder,
+    .fi-input-wrp textarea::placeholder,
     .dark .fi-input-wrp input::placeholder,
     .dark .fi-input-wrp textarea::placeholder {
-        color: rgba(154, 164, 159, 0.5) !important;
+        color: var(--muted) !important;
+        opacity: 0.7 !important;
     }
 
     /* 9. BADGES & PILLS */
@@ -809,7 +941,7 @@
     }
     .settings-hub-card:hover .settings-hub-icon-box {
         background: #00e07e !important;
-        color: #06261a !important;
+        color: #ffffff !important;
         border-color: #00e07e !important;
     }
     .settings-hub-badge {
@@ -1277,7 +1409,7 @@
 
     .fi-login-customer-btn:hover {
         background: #00e07e !important;
-        color: #06261a !important;
+        color: #ffffff !important;
         border-color: #00e07e !important;
         box-shadow: 0 4px 14px rgba(0, 224, 126, 0.35) !important;
         transform: translateY(-1px) !important;

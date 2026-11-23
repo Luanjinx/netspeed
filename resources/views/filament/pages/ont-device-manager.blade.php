@@ -119,7 +119,7 @@
 
         .ont-tab-active {
             background: #00e07e;
-            color: #06261a;
+            color: #ffffff;
             box-shadow: 0 2px 6px rgba(0, 224, 126, 0.25);
         }
 
@@ -596,7 +596,7 @@
                             <button type="button" wire:click="closeServerConfigModal()" class="ont-btn-action" style="padding: 0.5rem 1rem; color: #9aa49f;">Batal</button>
                             <button type="button" wire:click="saveServerConfig()"
                                 class="ont-btn-action" style="background: #00e07e; color: #06261a; border: none; padding: 0.5rem 1.2rem; font-weight: 800;">
-                                Simpan &amp; Hubungkan
+                                Simpan
                             </button>
                         </div>
                     </div>

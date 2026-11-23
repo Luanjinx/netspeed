@@ -25,7 +25,7 @@ class InternetPackagesTable
             ->columns([
                 ImageColumn::make('image')
                     ->label('Gambar')
-                    ->disk('public')
+                    ->state(fn ($record) => $record->image_url)
                     ->height(42)
                     ->width(75)
                     ->extraImgAttributes(['class' => 'rounded-md object-cover border border-gray-700/50 shadow-sm'])
