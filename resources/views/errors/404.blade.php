@@ -79,15 +79,6 @@
                 <a href="/" class="block w-full py-3 px-4 bg-primary hover:bg-primary-dark text-black font-semibold text-sm rounded-xl transition duration-150 shadow-lg shadow-primary/20">
                     Kembali ke Halaman Utama
                 </a>
-
-                <div class="grid grid-cols-2 gap-2">
-                    <a href="/admin/login" class="py-2.5 px-3 bg-zinc-800/80 hover:bg-zinc-700/80 text-zinc-300 hover:text-white font-medium text-xs rounded-xl border border-zinc-700/60 transition text-center">
-                        Login Admin
-                    </a>
-                    <a href="/agen/login" class="py-2.5 px-3 bg-zinc-800/80 hover:bg-zinc-700/80 text-zinc-300 hover:text-white font-medium text-xs rounded-xl border border-zinc-700/60 transition text-center">
-                        Portal Agen
-                    </a>
-                </div>
             @endauth
 
             <button type="button" onclick="window.history.length > 1 ? window.history.back() : window.location.href='/'" class="inline-flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-300 transition pt-2">
@@ -100,3 +91,4 @@
     </div>
 </body>
 </html>
+
