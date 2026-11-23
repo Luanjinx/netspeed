@@ -24,6 +24,9 @@ class CustomerAuthController extends Controller
             if ($user->role === 'technician') {
                 return redirect()->route('technician.dashboard');
             }
+            if ($user->role === 'agent') {
+                return redirect()->route('agent.dashboard');
+            }
             if ($user->customer || $user->role === 'customer') {
                 return redirect()->route('customer.dashboard');
             }
@@ -122,6 +125,11 @@ class CustomerAuthController extends Controller
         if ($user->role === 'technician') {
             return redirect()->route('technician.dashboard')
                 ->with('success', "Selamat bertugas, Teknisi {$user->name}!");
+        }
+
+        if ($user->role === 'agent') {
+            return redirect()->route('agent.dashboard')
+                ->with('success', "Selamat datang di Portal Loket Agen, {$user->name}!");
         }
 
         if ($user->role === 'admin') {

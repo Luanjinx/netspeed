@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Agent\AgentPortalController;
 use App\Http\Controllers\Customer\CustomerAuthController;
 use App\Http\Controllers\Customer\CustomerDashboardController;
 use App\Http\Controllers\InstallController;
@@ -7,6 +8,7 @@ use App\Http\Controllers\LandingPageController;
 use App\Http\Controllers\NetworkMapController;
 use App\Http\Controllers\PrintController;
 use App\Http\Controllers\Technician\TechnicianPortalController;
+use App\Http\Middleware\EnsureAgentUser;
 use App\Http\Middleware\EnsureCustomerUser;
 use App\Http\Middleware\EnsureTechnicianUser;
 use App\Models\HotspotVoucher;
@@ -89,6 +91,17 @@ Route::middleware(['auth', EnsureTechnicianUser::class])->prefix('teknisi')->nam
 
     Route::get('/profil', [TechnicianPortalController::class, 'profile'])->name('profile');
     Route::post('/profil/password', [TechnicianPortalController::class, 'updatePassword'])->name('profile.password');
+});
+
+// Agent Web Portal Routes
+Route::middleware(['auth', EnsureAgentUser::class])->prefix('agen')->name('agent.')->group(function () {
+    Route::get('/dashboard', [AgentPortalController::class, 'dashboard'])->name('dashboard');
+    Route::get('/loket', [AgentPortalController::class, 'paymentPoint'])->name('payment-point');
+    Route::get('/ajax/search-invoices', [AgentPortalController::class, 'searchInvoices'])->name('ajax.search-invoices');
+    Route::post('/ajax/pay-invoice', [AgentPortalController::class, 'processPayment'])->name('ajax.pay-invoice');
+    Route::get('/riwayat', [AgentPortalController::class, 'history'])->name('history');
+    Route::get('/profil', [AgentPortalController::class, 'profile'])->name('profile');
+    Route::post('/profil/password', [AgentPortalController::class, 'updatePassword'])->name('profile.password');
 });
 
 // Network map endpoints for Admin and Tech
