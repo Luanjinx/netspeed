@@ -5,13 +5,13 @@
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem;">
             
             <!-- Card 1: Status Koneksi Gateway -->
-            <div style="background: #1a1e1c; border: 1px solid #232826; border-radius: 0.75rem; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between;">
+            <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 0.75rem; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between; box-shadow: var(--shadow);">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                     <div>
-                        <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #9aa49f;">
+                        <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted);">
                             Status Gateway WhatsApp
                         </div>
-                        <div style="font-size: 1.2rem; font-weight: 800; margin-top: 0.35rem; color: #eef1f0; display: flex; align-items: center; gap: 0.5rem;">
+                        <div style="font-size: 1.2rem; font-weight: 800; margin-top: 0.35rem; color: var(--text); display: flex; align-items: center; gap: 0.5rem;">
                             @if ($isConfigured)
                                 <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #00e07e; box-shadow: 0 0 10px #00e07e;"></span>
                                 <span style="color: #00e07e;">Terkonfigurasi &amp; Siap</span>
@@ -21,12 +21,12 @@
                             @endif
                         </div>
                     </div>
-                    <div style="background: #131615; border: 1px solid #232826; border-radius: 0.5rem; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #00e07e;">
+                    <div style="background: var(--surface2); border: 1px solid var(--border); border-radius: 0.5rem; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #00e07e;">
                         <span class="material-symbols-rounded" style="font-size: 24px;">chat</span>
                     </div>
                 </div>
 
-                <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px dashed #232826; font-size: 0.8125rem; color: #9aa49f;">
+                <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px dashed var(--border); font-size: 0.8125rem; color: var(--muted);">
                     @if ($isConfigured)
                         <span>Kredensial API telah tersimpan dan siap mengirim pesan otomatis</span>
                     @else
@@ -36,44 +36,44 @@
             </div>
 
             <!-- Card 2: Server Host Endpoint -->
-            <div style="background: #1a1e1c; border: 1px solid #232826; border-radius: 0.75rem; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between;">
+            <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 0.75rem; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between; box-shadow: var(--shadow);">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                     <div>
-                        <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #9aa49f;">
+                        <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted);">
                             Server Host Gateway
                         </div>
-                        <div style="font-size: 1.15rem; font-weight: 800; margin-top: 0.35rem; color: #eef1f0;">
-                            <span style="color: #38bdf8;">{{ $endpointHost }}</span>
+                        <div style="font-size: 1.15rem; font-weight: 800; margin-top: 0.35rem; color: var(--text);">
+                            <span style="color: #0284c7;">{{ $endpointHost }}</span>
                         </div>
                     </div>
-                    <div style="background: #131615; border: 1px solid #232826; border-radius: 0.5rem; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #38bdf8;">
+                    <div style="background: var(--surface2); border: 1px solid var(--border); border-radius: 0.5rem; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #0284c7;">
                         <span class="material-symbols-rounded" style="font-size: 24px;">dns</span>
                     </div>
                 </div>
 
-                <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px dashed #232826; font-size: 0.75rem; color: #9aa49f;">
-                    Target API: <code style="color: #a7f3d0;">{{ $data['whatsapp_gateway_url'] ?? 'https://api.fonnte.com/send' }}</code>
+                <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px dashed var(--border); font-size: 0.75rem; color: var(--muted);">
+                    Target API: <code style="color: var(--accent); background: var(--surface2); padding: 2px 6px; border-radius: 4px;">{{ $data['whatsapp_gateway_url'] ?? 'https://api.fonnte.com/send' }}</code>
                 </div>
             </div>
 
             <!-- Card 3: Nomor Pengirim Aktif -->
-            <div style="background: #1a1e1c; border: 1px solid #232826; border-radius: 0.75rem; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between;">
+            <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 0.75rem; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between; box-shadow: var(--shadow);">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                     <div>
-                        <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #9aa49f;">
+                        <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted);">
                             Nomor Pengirim / Device
                         </div>
-                        <div style="font-size: 1.15rem; font-weight: 800; margin-top: 0.35rem; color: #eef1f0;">
+                        <div style="font-size: 1.15rem; font-weight: 800; margin-top: 0.35rem; color: var(--text);">
                             <span style="color: #00e07e;">{{ $activeSender }}</span>
                         </div>
                     </div>
-                    <div style="background: #131615; border: 1px solid #232826; border-radius: 0.5rem; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #00e07e;">
+                    <div style="background: var(--surface2); border: 1px solid var(--border); border-radius: 0.5rem; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #00e07e;">
                         <span class="material-symbols-rounded" style="font-size: 24px;">smartphone</span>
                     </div>
                 </div>
 
-                <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px dashed #232826; font-size: 0.75rem; color: #9aa49f;">
-                    Format Pengiriman: <strong style="color: #eef1f0;">Indonesian E.164 (628xxx)</strong>
+                <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px dashed var(--border); font-size: 0.75rem; color: var(--muted);">
+                    Format Pengiriman: <strong style="color: var(--text);">Indonesian E.164 (628xxx)</strong>
                 </div>
             </div>
         </div>

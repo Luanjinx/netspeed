@@ -5,17 +5,17 @@
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
             
             <!-- CARD 1: VERSI SISTEM SAAT INI -->
-            <div style="background: #131615; border: 1px solid #232826; border-radius: 0.875rem; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between;">
+            <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 0.875rem; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between;">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                     <div>
-                        <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #9aa49f;">
+                        <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted);">
                             Versi Sistem Lokal
                         </div>
                         <div style="font-size: 1.25rem; font-weight: 800; margin-top: 0.35rem; color: #f8fafc; display: flex; align-items: center; gap: 0.5rem;">
                             <span style="font-family: monospace; background: rgba(0, 224, 126, 0.12); color: #00e07e; border: 1px solid rgba(0, 224, 126, 0.3); padding: 2px 8px; border-radius: 6px; font-size: 1.05rem;">
                                 {{ $versionInfo['commit_hash'] ?? '351b5d1' }}
                             </span>
-                            <span style="font-size: 0.75rem; color: #9aa49f; font-weight: 600; padding: 2px 6px; background: #1a1e1c; border-radius: 4px; border: 1px solid #232826;">
+                            <span style="font-size: 0.75rem; color: var(--muted); font-weight: 600; padding: 2px 6px; background: var(--surface2); border-radius: 4px; border: 1px solid var(--border);">
                                 Cabang: {{ $versionInfo['branch'] ?? 'main' }}
                             </span>
                         </div>
@@ -25,8 +25,8 @@
                     </div>
                 </div>
 
-                <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px dashed #232826; font-size: 0.775rem; color: #9aa49f;">
-                    <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #eef1f0; font-weight: 600;" title="{{ $versionInfo['commit_message'] ?? '' }}">
+                <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px dashed var(--border); font-size: 0.775rem; color: var(--muted);">
+                    <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); font-weight: 600;" title="{{ $versionInfo['commit_message'] ?? '' }}">
                         {{ $versionInfo['commit_message'] ?? '-' }}
                     </div>
                     <div style="display: flex; justify-content: space-between; margin-top: 4px; font-size: 0.725rem;">
@@ -41,16 +41,16 @@
             </div>
 
             <!-- CARD 2: REPOSITORY GITHUB -->
-            <div style="background: #131615; border: 1px solid #232826; border-radius: 0.875rem; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between;">
+            <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 0.875rem; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between;">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                     <div>
-                        <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #9aa49f;">
+                        <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted);">
                             Repository GitHub
                         </div>
                         <div style="font-size: 1.15rem; font-weight: 800; margin-top: 0.35rem; color: #f8fafc; display: flex; align-items: center; gap: 0.5rem;">
-                            <a href="https://github.com/{{ $versionInfo['repo_owner'] ?? 'Luanjinx' }}/{{ $versionInfo['repo_name'] ?? 'netspeed' }}" target="_blank" style="color: #eef1f0; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+                            <a href="https://github.com/{{ $versionInfo['repo_owner'] ?? 'Luanjinx' }}/{{ $versionInfo['repo_name'] ?? 'netspeed' }}" target="_blank" style="color: var(--text); text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
                                 <span>{{ $versionInfo['repo_owner'] ?? 'Luanjinx' }}/{{ $versionInfo['repo_name'] ?? 'netspeed' }}</span>
-                                <span class="material-symbols-rounded" style="font-size: 16px; color: #9aa49f;">open_in_new</span>
+                                <span class="material-symbols-rounded" style="font-size: 16px; color: var(--muted);">open_in_new</span>
                             </a>
                         </div>
                     </div>
@@ -59,7 +59,7 @@
                     </div>
                 </div>
 
-                <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px dashed #232826; font-size: 0.75rem; color: #9aa49f;">
+                <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px dashed var(--border); font-size: 0.75rem; color: var(--muted);">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <span>Remote: <code style="color: #38bdf8;">origin/{{ $versionInfo['branch'] ?? 'main' }}</code></span>
                         <span>Cek: <strong style="color: #cbd5e1;">{{ $updateStatus['checked_at'] ?? 'Baru saja' }}</strong></span>
@@ -68,10 +68,10 @@
             </div>
 
             <!-- CARD 3: STATUS PEMBARUAN -->
-            <div style="background: #131615; border: 1px solid #232826; border-radius: 0.875rem; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between;">
+            <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 0.875rem; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between;">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                     <div>
-                        <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #9aa49f;">
+                        <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted);">
                             Status Pembaruan
                         </div>
                         <div style="font-size: 1.15rem; font-weight: 800; margin-top: 0.35rem;">
@@ -86,7 +86,7 @@
                                     Ada {{ $updateStatus['commits_behind'] }} Pembaruan Tersedia!
                                 </span>
                             @else
-                                <span style="color: #9aa49f;">Belum Dicek</span>
+                                <span style="color: var(--muted);">Belum Dicek</span>
                             @endif
                         </div>
                     </div>
@@ -97,7 +97,7 @@
                     </div>
                 </div>
 
-                <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px dashed #232826; font-size: 0.75rem; color: #9aa49f; display: flex; justify-content: space-between; align-items: center;">
+                <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px dashed var(--border); font-size: 0.75rem; color: var(--muted); display: flex; justify-content: space-between; align-items: center;">
                     @if (!empty($updateStatus['is_up_to_date']))
                         <span>Tidak ada antrean commit baru</span>
                         <span style="color: #00e07e; font-weight: 700;">v.{{ $versionInfo['commit_hash'] ?? 'latest' }}</span>
@@ -116,7 +116,7 @@
                 <div style="font-size: 0.8rem; line-height: 1.5;">
                     <div style="font-weight: 700; font-size: 0.875rem; color: #fca5a5;">Perhatian: Izin Folder .git Terbatas (Permission Denied)</div>
                     <div style="color: #cbd5e1; margin-top: 2px;">Web server tidak dapat menulis ke folder <code>.git</code> (biasanya karena folder dimiliki oleh user <code>root</code>). Untuk memperbaikinya secara permanen, jalankan perintah ini di terminal server (SSH):</div>
-                    <code style="display: block; margin-top: 6px; padding: 6px 12px; background: #070908; border: 1px solid #232826; border-radius: 6px; color: #00e07e; font-family: monospace; font-size: 0.75rem;">sudo chown -R www-data:www-data .git &amp;&amp; sudo chmod -R 775 .git storage bootstrap/cache</code>
+                    <code style="display: block; margin-top: 6px; padding: 6px 12px; background: #070908; border: 1px solid var(--border); border-radius: 6px; color: #00e07e; font-family: monospace; font-size: 0.75rem;">sudo chown -R www-data:www-data .git &amp;&amp; sudo chmod -R 775 .git storage bootstrap/cache</code>
                 </div>
             </div>
         @endif
@@ -153,14 +153,14 @@
 
         <!-- CHANGELOG LIST IF COMMITS ARE AVAILABLE -->
         @if (!empty($updateStatus['incoming_commits']))
-            <div style="background: #131615; border: 1px solid #232826; border-radius: 0.875rem; padding: 1.35rem;">
+            <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 0.875rem; padding: 1.35rem;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
                     <div>
                         <h3 style="font-size: 0.95rem; font-weight: 700; color: #f8fafc; margin: 0; display: flex; align-items: center; gap: 8px;">
                             <span class="material-symbols-rounded" style="color: #f2c56b; font-size: 20px;">list_alt</span>
                             Daftar Pembaruan yang Akan Diunduh (Changelog)
                         </h3>
-                        <p style="font-size: 0.775rem; color: #9aa49f; margin: 4px 0 0 0;">
+                        <p style="font-size: 0.775rem; color: var(--muted); margin: 4px 0 0 0;">
                             Commit berikut akan otomatis ditarik dari GitHub saat Anda menekan tombol "Perbarui Sekarang".
                         </p>
                     </div>
@@ -171,18 +171,18 @@
 
                 <div style="display: flex; flex-direction: column; gap: 0.6rem;">
                     @foreach ($updateStatus['incoming_commits'] as $commit)
-                        <div style="background: #1a1e1c; border: 1px solid #232826; border-radius: 0.6rem; padding: 0.85rem 1rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                        <div style="background: var(--surface2); border: 1px solid var(--border); border-radius: 0.6rem; padding: 0.85rem 1rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;">
                             <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
-                                <span style="font-family: monospace; font-size: 0.75rem; font-weight: 700; background: #131615; border: 1px solid #232826; padding: 3px 8px; border-radius: 5px; color: #00e07e; align-self: flex-start;">
+                                <span style="font-family: monospace; font-size: 0.75rem; font-weight: 700; background: var(--surface); border: 1px solid var(--border); padding: 3px 8px; border-radius: 5px; color: #00e07e; align-self: flex-start;">
                                     <a href="{{ $commit['url'] }}" target="_blank" style="color: #00e07e; text-decoration: none;">
                                         {{ $commit['hash'] }}
                                     </a>
                                 </span>
                                 <div>
-                                    <div style="font-size: 0.85rem; font-weight: 700; color: #eef1f0;">
+                                    <div style="font-size: 0.85rem; font-weight: 700; color: var(--text);">
                                         {{ $commit['message'] }}
                                     </div>
-                                    <div style="font-size: 0.725rem; color: #9aa49f; margin-top: 3px; display: flex; gap: 10px;">
+                                    <div style="font-size: 0.725rem; color: var(--muted); margin-top: 3px; display: flex; gap: 10px;">
                                         <span>Penulis: <strong style="color: #cbd5e1;">{{ $commit['author'] }}</strong></span>
                                         <span>•</span>
                                         <span>Waktu: {{ $commit['date'] }}</span>
@@ -190,7 +190,7 @@
                                 </div>
                             </div>
 
-                            <a href="{{ $commit['url'] }}" target="_blank" style="font-size: 0.75rem; color: #38bdf8; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; background: #131615; border: 1px solid #232826; border-radius: 6px;">
+                            <a href="{{ $commit['url'] }}" target="_blank" style="font-size: 0.75rem; color: #38bdf8; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px;">
                                 <span>Lihat di GitHub</span>
                                 <span class="material-symbols-rounded" style="font-size: 14px;">launch</span>
                             </a>
@@ -201,23 +201,23 @@
         @endif
 
         <!-- TERMINAL CONSOLE / LIVE LOG VIEWER -->
-        <div style="background: #0d0f0e; border: 1px solid #232826; border-radius: 0.875rem; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);">
+        <div style="background: var(--bg); border: 1px solid var(--border); border-radius: 0.875rem; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);">
             <!-- Terminal Title Bar -->
-            <div style="background: #171b19; padding: 0.75rem 1rem; border-bottom: 1px solid #232826; display: flex; justify-content: space-between; align-items: center;">
+            <div style="background: var(--surface2); padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <div style="display: flex; gap: 6px;">
                         <span style="width: 11px; height: 11px; border-radius: 50%; background: #ff5f56; display: inline-block;"></span>
                         <span style="width: 11px; height: 11px; border-radius: 50%; background: #ffbd2e; display: inline-block;"></span>
                         <span style="width: 11px; height: 11px; border-radius: 50%; background: #27c93f; display: inline-block;"></span>
                     </div>
-                    <span style="font-family: monospace; font-size: 0.75rem; color: #9aa49f; margin-left: 8px; font-weight: 600;">
+                    <span style="font-family: monospace; font-size: 0.75rem; color: var(--muted); margin-left: 8px; font-weight: 600;">
                         Terminal Eksekusi &amp; Log Pembaruan (Git &amp; Artisan Engine)
                     </span>
                 </div>
 
                 <div style="display: flex; align-items: center; gap: 10px;">
                     @if ($lastHistory)
-                        <span style="font-size: 0.725rem; color: #9aa49f;">
+                        <span style="font-size: 0.725rem; color: var(--muted);">
                             Update Terakhir: <strong style="color: #cbd5e1;">{{ $lastHistory['updated_at'] }}</strong> ({{ $lastHistory['from_hash'] }} &rarr; {{ $lastHistory['to_hash'] }})
                         </span>
                     @endif
@@ -249,7 +249,7 @@
                                     </span>
                                     <code style="color: #64748b; font-size: 0.7rem;">{{ $log['command'] }}</code>
                                 </div>
-                                <pre style="margin: 0; padding: 0.5rem; background: #070908; border-radius: 4px; border: 1px solid #1a1e1c; color: #94a3b8; font-size: 0.725rem; white-space: pre-wrap; word-break: break-all;">{{ $log['output'] }}</pre>
+                                <pre style="margin: 0; padding: 0.5rem; background: #070908; border-radius: 4px; border: 1px solid var(--surface2); color: #94a3b8; font-size: 0.725rem; white-space: pre-wrap; word-break: break-all;">{{ $log['output'] }}</pre>
                             </div>
                         @endforeach
                     </div>
@@ -258,25 +258,25 @@
         </div>
 
         <!-- QUICK GUIDELINE / HOW IT WORKS CARD -->
-        <div style="background: #131615; border: 1px solid #232826; border-radius: 0.875rem; padding: 1.35rem;">
-            <h4 style="font-size: 0.875rem; font-weight: 700; color: #eef1f0; margin: 0 0 0.75rem 0; display: flex; align-items: center; gap: 8px;">
+        <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 0.875rem; padding: 1.35rem;">
+            <h4 style="font-size: 0.875rem; font-weight: 700; color: var(--text); margin: 0 0 0.75rem 0; display: flex; align-items: center; gap: 8px;">
                 <span class="material-symbols-rounded" style="color: #00e07e; font-size: 20px;">info</span>
                 Bagaimana Mekanisme Pembaruan Sistem Ini Bekerja?
             </h4>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; font-size: 0.775rem; color: #9aa49f; line-height: 1.45;">
-                <div style="background: #1a1e1c; padding: 1rem; border-radius: 0.6rem; border: 1px solid #232826;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; font-size: 0.775rem; color: var(--muted); line-height: 1.45;">
+                <div style="background: var(--surface2); padding: 1rem; border-radius: 0.6rem; border: 1px solid var(--border);">
                     <div style="color: #00e07e; font-weight: 700; margin-bottom: 4px;">1. Git Pull dari GitHub</div>
                     Sistem menarik kode terbaru dari cabang <code>main</code> repository <code>Luanjinx/netspeed</code> secara otomatis tanpa perlu login SSH manual.
                 </div>
-                <div style="background: #1a1e1c; padding: 1rem; border-radius: 0.6rem; border: 1px solid #232826;">
+                <div style="background: var(--surface2); padding: 1rem; border-radius: 0.6rem; border: 1px solid var(--border);">
                     <div style="color: #00e07e; font-weight: 700; margin-bottom: 4px;">2. Auto Migrate Database</div>
                     Jika versi terbaru menyertakan tabel atau kolom baru, sistem secara aman mengeksekusi <code>migrate --force</code> agar struktur database langsung sinkron.
                 </div>
-                <div style="background: #1a1e1c; padding: 1rem; border-radius: 0.6rem; border: 1px solid #232826;">
+                <div style="background: var(--surface2); padding: 1rem; border-radius: 0.6rem; border: 1px solid var(--border);">
                     <div style="color: #00e07e; font-weight: 700; margin-bottom: 4px;">3. Optimasi Cache &amp; Aset</div>
                     Cache konfigurasi, rute, dan Blade dibersihkan lalu dikompilasi ulang dengan <code>optimize</code> sehingga performa tetap maksimal dan bebas lag.
                 </div>
-                <div style="background: #1a1e1c; padding: 1rem; border-radius: 0.6rem; border: 1px solid #232826;">
+                <div style="background: var(--surface2); padding: 1rem; border-radius: 0.6rem; border: 1px solid var(--border);">
                     <div style="color: #00e07e; font-weight: 700; margin-bottom: 4px;">4. Zero-Downtime Safe</div>
                     Mode pemeliharaan sementara diaktifkan selama proses penarikan file dan langsung dipulihkan kembali saat proses selesai.
                 </div>

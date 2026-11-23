@@ -10,13 +10,13 @@
             box-shadow: 0 4px 20px rgba(0,0,0,0.3);
             position: relative;
             z-index: 1;
-            background: #131615;
-            border: 1px solid #232826;
+            background: var(--surface);
+            border: 1px solid var(--border);
             overflow: hidden;
         }
         .map-legend-bar {
-            background: #131615;
-            border: 1px solid #232826;
+            background: var(--surface);
+            border: 1px solid var(--border);
             border-radius: 12px;
             padding: 10px 16px;
             display: flex;
@@ -31,7 +31,7 @@
             gap: 6px;
             font-size: 12px;
             font-weight: 600;
-            color: #eef1f0;
+            color: var(--text);
         }
         .legend-dot {
             display: inline-block;
@@ -45,22 +45,22 @@
             justify-content: center;
         }
         .custom-popup .leaflet-popup-content-wrapper {
-            background: #131615 !important;
-            color: #eef1f0 !important;
+            background: var(--surface) !important;
+            color: var(--text) !important;
             border-radius: 12px;
             padding: 6px;
-            border: 1px solid #232826;
+            border: 1px solid var(--border);
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
         .custom-popup .leaflet-popup-tip {
-            background: #131615 !important;
+            background: var(--surface) !important;
         }
         .cable-edit-box {
             position: absolute;
             top: 15px;
             left: 50%;
             transform: translateX(-50%);
-            background: #131615;
+            background: var(--surface);
             border: 1px solid #00e07e;
             color: #fff;
             padding: 10px 20px;
@@ -109,7 +109,7 @@
         <div class="relative">
             <div id="network-map-container">
                 <!-- Loading State Overlay -->
-                <div x-show="loading" class="absolute inset-0 z-[500] flex flex-col items-center justify-center bg-[#131615] text-[#9aa49f] gap-3">
+                <div x-show="loading" class="absolute inset-0 z-[500] flex flex-col items-center justify-center bg-[var(--surface)] text-[var(--muted)] gap-3">
                     <svg class="animate-spin h-8 w-8 text-[#00e07e]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>

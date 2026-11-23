@@ -44,7 +44,7 @@
         --chk: #ffffff;
         --shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
         --btn: #00e07e;
-        --btnText: #06261a;
+        --btnText: #ffffff;
     }
 
     .dark, html.dark {
@@ -64,7 +64,7 @@
         --chk: #191d1b;
         --shadow: 0 1px 0 #ffffff08 inset, 0 10px 30px -10px rgba(0, 0, 0, 0.5);
         --btn: #00e07e;
-        --btnText: #06261a;
+        --btnText: #ffffff;
     }
 
     body,
@@ -260,6 +260,7 @@
         font-weight: 700 !important;
         transition: all 0.2s ease !important;
         border: 1px solid transparent !important;
+        color: var(--muted) !important;
     }
 
     .fi-sc-tabs-tab[aria-selected="true"],
@@ -269,7 +270,7 @@
     .dark .fi-tabs-item[aria-selected="true"],
     .dark .fi-tabs-item--active {
         background: var(--btn) !important;
-        color: #06261a !important;
+        color: #ffffff !important;
         font-weight: 800 !important;
         box-shadow: 0 4px 14px rgba(0, 224, 126, 0.35) !important;
         border-color: var(--btn) !important;
@@ -281,7 +282,7 @@
     .dark .fi-sc-tabs-tab[aria-selected="true"] *,
     .dark .fi-tabs-item[aria-selected="true"] *,
     .dark .fi-tabs-item--active * {
-        color: #06261a !important;
+        color: #ffffff !important;
     }
 
     .fi-modal-footer,
@@ -330,7 +331,7 @@
     .fi-ac-btn-action.fi-color-primary,
     .dark .fi-ac-btn-action.fi-color-primary {
         background-color: var(--btn) !important;
-        color: #06261a !important;
+        color: #ffffff !important;
         font-weight: 800 !important;
         border: none !important;
         box-shadow: 0 4px 14px rgba(0, 224, 126, 0.25) !important;
@@ -345,7 +346,7 @@
     .dark button[type="submit"].fi-btn:not(.fi-btn-outlined) *,
     .fi-ac-btn-action.fi-color-primary *,
     .dark .fi-ac-btn-action.fi-color-primary * {
-        color: #06261a !important;
+        color: #ffffff !important;
     }
 
     .fi-btn-primary:hover,
@@ -357,7 +358,7 @@
     .fi-ac-btn-action.fi-color-primary:hover,
     .dark .fi-ac-btn-action.fi-color-primary:hover {
         background-color: var(--accent2) !important;
-        color: #06261a !important;
+        color: #ffffff !important;
         transform: translateY(-1px) !important;
         box-shadow: 0 6px 20px rgba(0, 224, 126, 0.45) !important;
     }
@@ -370,7 +371,7 @@
     .dark button[type="submit"].fi-btn:not(.fi-btn-outlined):hover *,
     .fi-ac-btn-action.fi-color-primary:hover *,
     .dark .fi-ac-btn-action.fi-color-primary:hover * {
-        color: #06261a !important;
+        color: #ffffff !important;
     }
 
     /* RIGHT-ALIGNED FORM & MODAL ACTION BUTTONS */
@@ -581,7 +582,7 @@
     .noc-title {
         font-size: 0.95rem;
         font-weight: 800;
-        color: #ffffff;
+        color: var(--text);
         margin: 0;
         line-height: 1.25;
     }
@@ -885,8 +886,8 @@
     .settings-hub-wrapper {
         margin-bottom: 1.5rem !important;
         padding: 1.1rem 1.25rem !important;
-        background: #131615 !important;
-        border: 1px solid #232826 !important;
+        background: var(--surface) !important;
+        border: 1px solid var(--border) !important;
         border-radius: 1rem !important;
     }
     .settings-hub-header {
@@ -915,15 +916,15 @@
         flex-direction: column !important;
         justify-content: space-between !important;
         padding: 1rem !important;
-        background: #1a1e1c !important;
-        border: 1px solid #232826 !important;
+        background: var(--surface2) !important;
+        border: 1px solid var(--border) !important;
         border-radius: 0.75rem !important;
         text-decoration: none !important;
         transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
     }
     .settings-hub-card:hover {
         border-color: rgba(0, 224, 126, 0.5) !important;
-        background: #1f2522 !important;
+        background: var(--surface) !important;
         transform: translateY(-2px) !important;
         box-shadow: 0 8px 20px -4px rgba(0, 224, 126, 0.12) !important;
     }
@@ -931,12 +932,12 @@
         width: 2.5rem !important;
         height: 2.5rem !important;
         border-radius: 0.5rem !important;
-        background: #131615 !important;
-        border: 1px solid #232826 !important;
+        background: var(--surface) !important;
+        border: 1px solid var(--border) !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        color: #00e07e !important;
+        color: var(--accent) !important;
         transition: all 0.2s ease !important;
     }
     .settings-hub-card:hover .settings-hub-icon-box {
@@ -949,9 +950,9 @@
         font-weight: 600 !important;
         padding: 0.2rem 0.5rem !important;
         border-radius: 0.375rem !important;
-        background: #131615 !important;
-        color: #9aa49f !important;
-        border: 1px solid #232826 !important;
+        background: var(--surface) !important;
+        color: var(--muted) !important;
+        border: 1px solid var(--border) !important;
         transition: color 0.2s ease !important;
     }
     .settings-hub-card:hover .settings-hub-badge {
@@ -961,7 +962,7 @@
     .settings-hub-title {
         font-size: 0.875rem !important;
         font-weight: 700 !important;
-        color: #eef1f0 !important;
+        color: var(--text) !important;
         margin-top: 0.75rem !important;
         margin-bottom: 0.25rem !important;
         transition: color 0.2s ease !important;
@@ -971,7 +972,7 @@
     }
     .settings-hub-desc {
         font-size: 0.75rem !important;
-        color: #9aa49f !important;
+        color: var(--muted) !important;
         line-height: 1.35 !important;
         margin: 0 !important;
     }
@@ -998,8 +999,8 @@
     }
 
     .isp-metric-card {
-        background: #131615 !important;
-        border: 1px solid #232826 !important;
+        background: var(--surface) !important;
+        border: 1px solid var(--border) !important;
         border-radius: 1rem !important;
         padding: 1.15rem 1.25rem !important;
         display: flex !important;
@@ -1014,7 +1015,7 @@
     .isp-metric-card:hover {
         transform: translateY(-2px) !important;
         border-color: rgba(0, 224, 126, 0.45) !important;
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 224, 126, 0.1) !important;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 0 20px rgba(0, 224, 126, 0.1) !important;
     }
 
     .noc-card-header {
@@ -1039,18 +1040,18 @@
         font-weight: 700 !important;
         text-transform: uppercase !important;
         letter-spacing: 0.06em !important;
-        color: #9aa49f !important;
+        color: var(--muted) !important;
     }
     .noc-metric-icon {
         width: 30px !important;
         height: 30px !important;
         border-radius: 8px !important;
-        background: #1a1e1c !important;
-        border: 1px solid #232826 !important;
+        background: var(--surface2) !important;
+        border: 1px solid var(--border) !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        color: #00e07e !important;
+        color: var(--accent) !important;
         flex-shrink: 0 !important;
     }
     .noc-card-body {
@@ -1063,14 +1064,15 @@
         font-weight: 800 !important;
         letter-spacing: -0.02em !important;
         line-height: 1.15 !important;
+        color: var(--text) !important;
         font-family: 'Plus Jakarta Sans', ui-monospace, monospace !important;
     }
     .noc-track {
         width: 100% !important;
         height: 6px !important;
         border-radius: 9999px !important;
-        background: #1a1e1c !important;
-        border: 1px solid #232826 !important;
+        background: var(--surface2) !important;
+        border: 1px solid var(--border) !important;
         overflow: hidden !important;
         margin-top: 0.25rem !important;
     }
@@ -1084,8 +1086,8 @@
         align-items: center !important;
         justify-content: space-between !important;
         font-size: 0.725rem !important;
-        color: #9aa49f !important;
-        border-top: 1px solid #232826 !important;
+        color: var(--muted) !important;
+        border-top: 1px solid var(--border) !important;
         padding-top: 0.55rem !important;
         margin-top: 0.2rem !important;
     }
@@ -1099,9 +1101,9 @@
         font-weight: 700 !important;
         padding: 0.15rem 0.5rem !important;
         border-radius: 0.375rem !important;
-        background: #1a1e1c !important;
-        border: 1px solid #232826 !important;
-        color: #9aa49f !important;
+        background: var(--surface2) !important;
+        border: 1px solid var(--border) !important;
+        color: var(--muted) !important;
     }
 
     /* ==========================================================================
@@ -1115,7 +1117,7 @@
         text-align: left !important;
     }
     .isp-table-clean thead {
-        background: #181d1a !important;
+        background: var(--surface2) !important;
     }
     .isp-table-clean th {
         padding: 0.85rem 1rem !important;
@@ -1123,25 +1125,25 @@
         font-weight: 700 !important;
         text-transform: uppercase !important;
         letter-spacing: 0.05em !important;
-        color: #9aa49f !important;
-        border-bottom: 1px solid #232826 !important;
-        border-top: 1px solid #232826 !important;
+        color: var(--muted) !important;
+        border-bottom: 1px solid var(--border) !important;
+        border-top: 1px solid var(--border) !important;
         white-space: nowrap !important;
         line-height: 1.3 !important;
     }
     .isp-table-clean td {
         padding: 0.85rem 1rem !important;
         vertical-align: middle !important;
-        border-bottom: 1px solid #232826 !important;
-        color: #eef1f0 !important;
+        border-bottom: 1px solid var(--border) !important;
+        color: var(--text) !important;
         line-height: 1.4 !important;
     }
     .isp-table-clean tbody tr {
-        background-color: #131615 !important;
+        background-color: var(--surface) !important;
         transition: background-color 0.15s ease !important;
     }
     .isp-table-clean tbody tr:hover td {
-        background-color: rgba(0, 224, 126, 0.04) !important;
+        background-color: var(--surface2) !important;
     }
     .isp-table-clean tbody tr:last-child td {
         border-bottom: none !important;

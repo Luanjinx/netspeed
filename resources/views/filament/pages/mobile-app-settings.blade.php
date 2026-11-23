@@ -5,61 +5,61 @@
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem;">
             
             <!-- Card 1: Base URL API Backend -->
-            <div style="background: #1a1e1c; border: 1px solid #232826; border-radius: 0.75rem; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between;">
+            <div style="background: var(--surface2); border: 1px solid var(--border); border-radius: 0.75rem; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between;">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                     <div>
-                        <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #9aa49f;">
+                        <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted);">
                             Base URL API Backend
                         </div>
-                        <div style="font-size: 1.15rem; font-weight: 800; margin-top: 0.35rem; color: #eef1f0; word-break: break-all;">
+                        <div style="font-size: 1.15rem; font-weight: 800; margin-top: 0.35rem; color: var(--text); word-break: break-all;">
                             <span style="color: #38bdf8;">{{ $data['app_api_base_url'] ?? url('/api') }}</span>
                         </div>
                     </div>
-                    <div style="background: #131615; border: 1px solid #232826; border-radius: 0.5rem; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #38bdf8; flex-shrink: 0;">
+                    <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 0.5rem; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #38bdf8; flex-shrink: 0;">
                         <span class="material-symbols-rounded" style="font-size: 24px;">lan</span>
                     </div>
                 </div>
 
-                <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px dashed #232826; font-size: 0.8125rem; color: #9aa49f;">
+                <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px dashed var(--border); font-size: 0.8125rem; color: var(--muted);">
                     Gunakan URL ini di variabel <code style="color: #a7f3d0;">baseUrl</code> Flutter &amp; STB
                 </div>
             </div>
 
             <!-- Card 2: App API Secret Key -->
-            <div style="background: #1a1e1c; border: 1px solid #232826; border-radius: 0.75rem; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between;">
+            <div style="background: var(--surface2); border: 1px solid var(--border); border-radius: 0.75rem; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between;">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                     <div>
-                        <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #9aa49f;">
+                        <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted);">
                             Header Otorisasi API
                         </div>
-                        <div style="font-size: 1.15rem; font-weight: 800; margin-top: 0.35rem; color: #eef1f0; display: flex; align-items: center; gap: 0.5rem;">
+                        <div style="font-size: 1.15rem; font-weight: 800; margin-top: 0.35rem; color: var(--text); display: flex; align-items: center; gap: 0.5rem;">
                             <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #00e07e; box-shadow: 0 0 10px #00e07e;"></span>
                             <span style="color: #00e07e;">Kunci Aktif</span>
                         </div>
                     </div>
-                    <div style="background: #131615; border: 1px solid #232826; border-radius: 0.5rem; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #00e07e; flex-shrink: 0;">
+                    <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 0.5rem; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #00e07e; flex-shrink: 0;">
                         <span class="material-symbols-rounded" style="font-size: 24px;">key</span>
                     </div>
                 </div>
 
-                <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px dashed #232826; font-size: 0.75rem; color: #9aa49f; word-break: break-all;">
+                <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px dashed var(--border); font-size: 0.75rem; color: var(--muted); word-break: break-all;">
                     Header: <code style="color: #00e07e;">x-api-key: {{ Str::limit($currentApiKey, 20) }}</code>
                 </div>
             </div>
 
             <!-- Card 3: OneSignal Push Engine -->
-            <div style="background: #1a1e1c; border: 1px solid #232826; border-radius: 0.75rem; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between;">
+            <div style="background: var(--surface2); border: 1px solid var(--border); border-radius: 0.75rem; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between;">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                     <div>
-                        <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #9aa49f;">
+                        <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted);">
                             OneSignal Push Engine
                         </div>
-                        <div style="font-size: 1.15rem; font-weight: 800; margin-top: 0.35rem; color: #eef1f0; display: flex; align-items: center; gap: 0.5rem;">
+                        <div style="font-size: 1.15rem; font-weight: 800; margin-top: 0.35rem; color: var(--text); display: flex; align-items: center; gap: 0.5rem;">
                             @if ($isOneSignalActive)
                                 <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #00e07e; box-shadow: 0 0 10px #00e07e;"></span>
                                 <span style="color: #00e07e;">Terkoneksi</span>
                                 @if ($oneSignalAppName)
-                                    <span style="font-size: 0.75rem; font-weight: 600; color: #9aa49f;">({{ $oneSignalAppName }})</span>
+                                    <span style="font-size: 0.75rem; font-weight: 600; color: var(--muted);">({{ $oneSignalAppName }})</span>
                                 @endif
                             @else
                                 <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #eab308; box-shadow: 0 0 10px #eab308;"></span>
@@ -67,12 +67,12 @@
                             @endif
                         </div>
                     </div>
-                    <div style="background: #131615; border: 1px solid #232826; border-radius: 0.5rem; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #eab308; flex-shrink: 0;">
+                    <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 0.5rem; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #eab308; flex-shrink: 0;">
                         <span class="material-symbols-rounded" style="font-size: 24px;">notifications_active</span>
                     </div>
                 </div>
 
-                <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px dashed #232826; font-size: 0.75rem; color: #9aa49f;">
+                <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px dashed var(--border); font-size: 0.75rem; color: var(--muted);">
                     <a href="{{ url('/admin/notifications') }}" style="color: #00e07e; text-decoration: underline;">Buka Hub Broadcast Pesan Massal &rarr;</a>
                 </div>
             </div>

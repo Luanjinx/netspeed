@@ -1,17 +1,17 @@
 <div class="settings-api-hub-container" style="padding-top: 0.5rem; padding-bottom: 0.5rem;">
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
         <div>
-            <h4 style="font-size: 0.95rem; font-weight: 700; color: #eef1f0; margin: 0; display: flex; align-items: center; gap: 8px;">
+            <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--text); margin: 0; display: flex; align-items: center; gap: 8px;">
                 <span style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 7px; background: rgba(0, 224, 126, 0.12); color: #00e07e; border: 1px solid rgba(0, 224, 126, 0.25);">
                     <span class="material-symbols-rounded" style="font-size: 17px;">hub</span>
                 </span>
                 Pusat Integrasi API &amp; Layanan Eksternal
             </h4>
-            <p style="font-size: 0.775rem; color: #9aa49f; margin: 4px 0 0 0;">
+            <p style="font-size: 0.775rem; color: var(--muted); margin: 4px 0 0 0;">
                 Klik kartu integrasi untuk membuka popup dialog konfigurasi API secara cepat dan praktis
             </p>
         </div>
-        <span style="font-size: 0.7rem; font-weight: 700; padding: 4px 10px; border-radius: 6px; background: #1a1e1c; color: #00e07e; border: 1px solid #232826; display: inline-flex; align-items: center; gap: 5px;">
+        <span style="font-size: 0.7rem; font-weight: 700; padding: 4px 10px; border-radius: 6px; background: var(--surface2); color: #00e07e; border: 1px solid var(--border); display: inline-flex; align-items: center; gap: 5px;">
             <span class="material-symbols-rounded" style="font-size: 14px;">bolt</span>
             5 API Terpadu
         </span>
@@ -21,82 +21,81 @@
         <!-- 1. API WhatsApp Gateway -->
         <a href="{{ url('/admin/whatsapp-gateway') }}"
            class="settings-hub-card"
-           style="display: flex; flex-direction: column; justify-content: space-between; padding: 1.15rem; background: #1a1e1c; border: 1px solid #232826; border-radius: 0.75rem; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); text-decoration: none;">
+           style="display: flex; flex-direction: column; justify-content: space-between; padding: 1.15rem; background: var(--surface2); border: 1px solid var(--border); border-radius: 0.75rem; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); text-decoration: none;">
             <div style="display: flex; align-items: flex-start; justify-content: space-between;">
-                <div style="width: 2.6rem; height: 2.6rem; border-radius: 0.6rem; background: #131615; border: 1px solid #232826; display: flex; align-items: center; justify-content: center; color: #00e07e;">
+                <div style="width: 2.6rem; height: 2.6rem; border-radius: 0.6rem; background: var(--surface); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: #00e07e;">
                     <span class="material-symbols-rounded" style="font-size: 22px;">chat</span>
                 </div>
-                <span style="font-size: 0.7rem; font-weight: 600; padding: 3px 8px; border-radius: 6px; background: #131615; color: #00e07e; border: 1px solid #232826; white-space: nowrap;">Atur API &rarr;</span>
+                <span style="font-size: 0.7rem; font-weight: 600; padding: 3px 8px; border-radius: 6px; background: var(--surface); color: #00e07e; border: 1px solid var(--border); white-space: nowrap;">Atur API &rarr;</span>
             </div>
             <div>
-                <h4 style="font-size: 0.875rem; font-weight: 700; color: #eef1f0; margin: 0.75rem 0 0.25rem 0;">API WhatsApp Gateway</h4>
-                <p style="font-size: 0.75rem; color: #9aa49f; margin: 0; line-height: 1.35;">Notifikasi tagihan, invoice PDF &amp; voucher via WhatsApp Fonnte/Wablas</p>
+                <h4 style="font-size: 0.875rem; font-weight: 700; color: var(--text); margin: 0.75rem 0 0.25rem 0;">API WhatsApp Gateway</h4>
+                <p style="font-size: 0.75rem; color: var(--muted); margin: 0; line-height: 1.35;">Notifikasi tagihan, invoice PDF &amp; voucher via WhatsApp Fonnte/Wablas</p>
             </div>
         </a>
 
         <!-- 2. API Bot Telegram NOC -->
         <div wire:click="mountAction('configureTelegram')"
              class="settings-hub-card cursor-pointer"
-             style="display: flex; flex-direction: column; justify-content: space-between; padding: 1.15rem; background: #1a1e1c; border: 1px solid #232826; border-radius: 0.75rem; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); user-select: none;">
+             style="display: flex; flex-direction: column; justify-content: space-between; padding: 1.15rem; background: var(--surface2); border: 1px solid var(--border); border-radius: 0.75rem; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); user-select: none;">
             <div style="display: flex; align-items: flex-start; justify-content: space-between;">
-                <div style="width: 2.6rem; height: 2.6rem; border-radius: 0.6rem; background: #131615; border: 1px solid #232826; display: flex; align-items: center; justify-content: center; color: #00e07e;">
+                <div style="width: 2.6rem; height: 2.6rem; border-radius: 0.6rem; background: var(--surface); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: #00e07e;">
                     <span class="material-symbols-rounded" style="font-size: 22px;">smart_toy</span>
                 </div>
-                <span style="font-size: 0.7rem; font-weight: 600; padding: 3px 8px; border-radius: 6px; background: #131615; color: #00e07e; border: 1px solid #232826; white-space: nowrap;">Atur API &rarr;</span>
+                <span style="font-size: 0.7rem; font-weight: 600; padding: 3px 8px; border-radius: 6px; background: var(--surface); color: #00e07e; border: 1px solid var(--border); white-space: nowrap;">Atur API &rarr;</span>
             </div>
             <div>
-                <h4 style="font-size: 0.875rem; font-weight: 700; color: #eef1f0; margin: 0.75rem 0 0.25rem 0;">API Bot Telegram NOC</h4>
-                <p style="font-size: 0.75rem; color: #9aa49f; margin: 0; line-height: 1.35;">Token bot HTTP API &amp; Chat ID alert router offline, tiket &amp; broadcast NOC</p>
+                <h4 style="font-size: 0.875rem; font-weight: 700; color: var(--text); margin: 0.75rem 0 0.25rem 0;">API Bot Telegram NOC</h4>
+                <p style="font-size: 0.75rem; color: var(--muted); margin: 0; line-height: 1.35;">Token bot HTTP API &amp; Chat ID alert router offline, tiket &amp; broadcast NOC</p>
             </div>
         </div>
 
         <!-- 3. API Payment Gateway & QRIS Dinamis -->
         <a href="{{ url('/admin/payment-gateway') }}"
            class="settings-hub-card"
-           style="display: flex; flex-direction: column; justify-content: space-between; padding: 1.15rem; background: #1a1e1c; border: 1px solid #232826; border-radius: 0.75rem; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); text-decoration: none;">
+           style="display: flex; flex-direction: column; justify-content: space-between; padding: 1.15rem; background: var(--surface2); border: 1px solid var(--border); border-radius: 0.75rem; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); text-decoration: none;">
             <div style="display: flex; align-items: flex-start; justify-content: space-between;">
-                <div style="width: 2.6rem; height: 2.6rem; border-radius: 0.6rem; background: #131615; border: 1px solid #232826; display: flex; align-items: center; justify-content: center; color: #00e07e;">
+                <div style="width: 2.6rem; height: 2.6rem; border-radius: 0.6rem; background: var(--surface); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: #00e07e;">
                     <span class="material-symbols-rounded" style="font-size: 22px;">credit_card</span>
                 </div>
-                <span style="font-size: 0.7rem; font-weight: 600; padding: 3px 8px; border-radius: 6px; background: #131615; color: #00e07e; border: 1px solid #232826; white-space: nowrap;">Atur API &rarr;</span>
+                <span style="font-size: 0.7rem; font-weight: 600; padding: 3px 8px; border-radius: 6px; background: var(--surface); color: #00e07e; border: 1px solid var(--border); white-space: nowrap;">Atur API &rarr;</span>
             </div>
             <div>
-                <h4 style="font-size: 0.875rem; font-weight: 700; color: #eef1f0; margin: 0.75rem 0 0.25rem 0;">API Payment Gateway &amp; QRIS</h4>
-                <p style="font-size: 0.75rem; color: #9aa49f; margin: 0; line-height: 1.35;">QRIS Dinamis 0% MDR, auto-scanner, Tripay, Midtrans, CekMutasi &amp; webhook</p>
+                <h4 style="font-size: 0.875rem; font-weight: 700; color: var(--text); margin: 0.75rem 0 0.25rem 0;">API Payment Gateway &amp; QRIS</h4>
+                <p style="font-size: 0.75rem; color: var(--muted); margin: 0; line-height: 1.35;">QRIS Dinamis 0% MDR, auto-scanner, Tripay, Midtrans, CekMutasi &amp; webhook</p>
             </div>
         </a>
 
         <!-- 4. API Mobile Flutter & STB -->
         <a href="{{ url('/admin/mobile-api') }}"
            class="settings-hub-card"
-           style="display: flex; flex-direction: column; justify-content: space-between; padding: 1.15rem; background: #1a1e1c; border: 1px solid #232826; border-radius: 0.75rem; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); text-decoration: none;">
+           style="display: flex; flex-direction: column; justify-content: space-between; padding: 1.15rem; background: var(--surface2); border: 1px solid var(--border); border-radius: 0.75rem; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); text-decoration: none;">
             <div style="display: flex; align-items: flex-start; justify-content: space-between;">
-                <div style="width: 2.6rem; height: 2.6rem; border-radius: 0.6rem; background: #131615; border: 1px solid #232826; display: flex; align-items: center; justify-content: center; color: #00e07e;">
+                <div style="width: 2.6rem; height: 2.6rem; border-radius: 0.6rem; background: var(--surface); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: #00e07e;">
                     <span class="material-symbols-rounded" style="font-size: 22px;">phone_android</span>
                 </div>
-                <span style="font-size: 0.7rem; font-weight: 600; padding: 3px 8px; border-radius: 6px; background: #131615; color: #00e07e; border: 1px solid #232826; white-space: nowrap;">Atur API &rarr;</span>
+                <span style="font-size: 0.7rem; font-weight: 600; padding: 3px 8px; border-radius: 6px; background: var(--surface); color: #00e07e; border: 1px solid var(--border); white-space: nowrap;">Atur API &rarr;</span>
             </div>
             <div>
-                <h4 style="font-size: 0.875rem; font-weight: 700; color: #eef1f0; margin: 0.75rem 0 0.25rem 0;">API Mobile Flutter &amp; STB</h4>
-                <p style="font-size: 0.75rem; color: #9aa49f; margin: 0; line-height: 1.35;">Endpoint backend, API key rahasia, Firebase FCM &amp; OneSignal broadcast</p>
+                <h4 style="font-size: 0.875rem; font-weight: 700; color: var(--text); margin: 0.75rem 0 0.25rem 0;">API Mobile Flutter &amp; STB</h4>
+                <p style="font-size: 0.75rem; color: var(--muted); margin: 0; line-height: 1.35;">Endpoint backend, API key rahasia, Firebase FCM &amp; OneSignal broadcast</p>
             </div>
         </a>
 
         <!-- 5. API Peta & Geocoding -->
         <a href="{{ url('/admin/map-settings') }}"
            class="settings-hub-card"
-           style="display: flex; flex-direction: column; justify-content: space-between; padding: 1.15rem; background: #1a1e1c; border: 1px solid #232826; border-radius: 0.75rem; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); text-decoration: none;">
+           style="display: flex; flex-direction: column; justify-content: space-between; padding: 1.15rem; background: var(--surface2); border: 1px solid var(--border); border-radius: 0.75rem; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); text-decoration: none;">
             <div style="display: flex; align-items: flex-start; justify-content: space-between;">
-                <div style="width: 2.6rem; height: 2.6rem; border-radius: 0.6rem; background: #131615; border: 1px solid #232826; display: flex; align-items: center; justify-content: center; color: #00e07e;">
+                <div style="width: 2.6rem; height: 2.6rem; border-radius: 0.6rem; background: var(--surface); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: #00e07e;">
                     <span class="material-symbols-rounded" style="font-size: 22px;">map</span>
                 </div>
-                <span style="font-size: 0.7rem; font-weight: 600; padding: 3px 8px; border-radius: 6px; background: #131615; color: #00e07e; border: 1px solid #232826; white-space: nowrap;">Atur API &rarr;</span>
+                <span style="font-size: 0.7rem; font-weight: 600; padding: 3px 8px; border-radius: 6px; background: var(--surface); color: #00e07e; border: 1px solid var(--border); white-space: nowrap;">Atur API &rarr;</span>
             </div>
             <div>
-                <h4 style="font-size: 0.875rem; font-weight: 700; color: #eef1f0; margin: 0.75rem 0 0.25rem 0;">API Peta &amp; Geocoding</h4>
-                <p style="font-size: 0.75rem; color: #9aa49f; margin: 0; line-height: 1.35;">Google Maps JS API key &amp; koordinat kantor untuk routing teknisi di peta</p>
+                <h4 style="font-size: 0.875rem; font-weight: 700; color: var(--text); margin: 0.75rem 0 0.25rem 0;">API Peta &amp; Geocoding</h4>
+                <p style="font-size: 0.75rem; color: var(--muted); margin: 0; line-height: 1.35;">Google Maps JS API key &amp; koordinat kantor untuk routing teknisi di peta</p>
             </div>
         </a>
     </div>
 </div>
-

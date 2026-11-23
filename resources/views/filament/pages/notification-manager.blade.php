@@ -26,9 +26,9 @@
                     </div>
                 </div>
 
-                <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px dashed rgba(255, 255, 255, 0.08); font-size: 0.75rem; color: #a1a1aa;">
+                <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px dashed var(--border); font-size: 0.75rem; color: var(--muted);">
                     @if ($isConnected)
-                        App: <strong style="color: #ffffff;">{{ $connectionInfo['app_name'] ?? 'OneSignal App' }}</strong>
+                        App: <strong style="color: var(--text);">{{ $connectionInfo['app_name'] ?? 'OneSignal App' }}</strong>
                     @else
                         <span style="color: #f87171;">{{ $connectionInfo['error'] ?? 'Kredensial belum lengkap' }}</span>
                     @endif
@@ -175,7 +175,7 @@
                                         </span>
                                     @endif
                                 </td>
-                                <td style="font-size: 0.75rem; color: #9aa49f; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                <td style="font-size: 0.75rem; color: var(--muted); max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                                     {{ $notif->response_summary ?: ($notif->onesignal_id ?: '-') }}
                                 </td>
                                 <td style="font-size: 0.75rem; color: #71717a; white-space: nowrap;">

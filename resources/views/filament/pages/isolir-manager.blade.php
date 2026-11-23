@@ -18,7 +18,7 @@
                 <label style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: #a1a1aa;">Router:</label>
                 <select wire:model.live="selectedRouterId" style="font-size: 0.875rem; font-weight: 600; border-radius: 0.5rem; padding: 0.4rem 0.85rem; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.12); color: currentColor;">
                     @foreach (\App\Models\Router::where('is_active', true)->get() as $r)
-                        <option value="{{ $r->id }}" style="background: #18181c; color: #ffffff;">{{ $r->name }} ({{ $r->host }})</option>
+                        <option value="{{ $r->id }}" style="background: var(--surface2); color: var(--text);">{{ $r->name }} ({{ $r->host }})</option>
                     @endforeach
                 </select>
             </div>

@@ -1,18 +1,18 @@
 <x-filament-panels::page>
     <div style="display: flex; flex-direction: column; gap: 1.5rem;" @if ($autoRefresh) wire:poll.5s="loadData" @endif>
         <!-- Top Router Selector & Actions Bar -->
-        <div class="fi-section noc-router-bar" style="padding: 1rem 1.25rem; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; background: #131615; border: 1px solid #232826; border-radius: 1rem;">
+        <div class="fi-section noc-router-bar" style="padding: 1rem 1.25rem; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: 1rem;">
             <div style="display: flex; align-items: center; gap: 0.875rem; flex-wrap: wrap;">
-                <div class="noc-icon-box" style="width: 38px; height: 38px; border-radius: 0.5rem; background: #1a1e1c; border: 1px solid #232826; display: flex; align-items: center; justify-content: center; color: #00e07e; flex-shrink: 0;">
+                <div class="noc-icon-box" style="width: 38px; height: 38px; border-radius: 0.5rem; background: var(--surface2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: #00e07e; flex-shrink: 0;">
                     <span class="material-symbols-rounded" style="font-size: 20px;">router</span>
                 </div>
                 <div>
-                    <label style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #9aa49f; display: block; margin-bottom: 2px;">
+                    <label style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); display: block; margin-bottom: 2px;">
                         Pilih Router MikroTik Core
                     </label>
-                    <select wire:model.live="selectedRouterId" style="font-size: 0.875rem; font-weight: 600; border-radius: 0.5rem; padding: 0.4rem 0.85rem; background: #1a1e1c; border: 1px solid #232826; color: #eef1f0; outline: none; cursor: pointer;">
+                    <select wire:model.live="selectedRouterId" style="font-size: 0.875rem; font-weight: 600; border-radius: 0.5rem; padding: 0.4rem 0.85rem; background: var(--surface2); border: 1px solid var(--border); color: var(--text); outline: none; cursor: pointer;">
                         @foreach (\App\Models\Router::where('is_active', true)->get() as $r)
-                            <option value="{{ $r->id }}" style="background: #18181c; color: #ffffff;">{{ $r->name }} ({{ $r->host }}:{{ $r->port }})</option>
+                            <option value="{{ $r->id }}" style="background: var(--surface2); color: var(--text);">{{ $r->name }} ({{ $r->host }}:{{ $r->port }})</option>
                         @endforeach
                     </select>
                 </div>
@@ -23,7 +23,7 @@
                         Terhubung ke RouterOS
                     </span>
                     @if ($isSimulated)
-                        <span class="noc-pill noc-pill-neutral" style="font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 0.35rem 0.65rem; border-radius: 9999px; background: #1a1e1c; border: 1px solid #232826; color: #9aa49f; white-space: nowrap;">
+                        <span class="noc-pill noc-pill-neutral" style="font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 0.35rem 0.65rem; border-radius: 9999px; background: var(--surface2); border: 1px solid var(--border); color: var(--muted); white-space: nowrap;">
                             Preview Data
                         </span>
                     @endif
@@ -40,8 +40,8 @@
                 <!-- Auto-Refresh Toggle Button -->
                 <button type="button"
                         wire:click="toggleAutoRefresh"
-                        style="height: 38px; padding: 0 0.95rem; border-radius: 0.5rem; font-size: 0.8125rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s ease; @if ($autoRefresh) background: rgba(0, 224, 126, 0.15); color: #00e07e; border: 1px solid rgba(0, 224, 126, 0.4); @else background: #1a1e1c; color: #eef1f0; border: 1px solid #232826; @endif">
-                    <span class="material-symbols-rounded" style="font-size: 17px; @if ($autoRefresh) color: #00e07e; @else color: #9aa49f; @endif">bolt</span>
+                        style="height: 38px; padding: 0 0.95rem; border-radius: 0.5rem; font-size: 0.8125rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s ease; @if ($autoRefresh) background: rgba(0, 224, 126, 0.15); color: #00e07e; border: 1px solid rgba(0, 224, 126, 0.4); @else background: var(--surface2); color: var(--text); border: 1px solid var(--border); @endif">
+                    <span class="material-symbols-rounded" style="font-size: 17px; @if ($autoRefresh) color: #00e07e; @else color: var(--muted); @endif">bolt</span>
                     <span>{{ $autoRefresh ? 'Auto-Refresh Aktif (5s)' : 'Aktifkan Auto-Refresh' }}</span>
                     @if ($autoRefresh)
                         <span style="width: 6px; height: 6px; border-radius: 9999px; background: #00e07e; display: inline-block;"></span>
@@ -71,7 +71,7 @@
                     <button type="button"
                             wire:click="importAllPppoeSecrets"
                             wire:loading.attr="disabled"
-                            style="height: 38px; padding: 0 0.95rem; border-radius: 0.5rem; font-size: 0.8125rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s ease; background: #1a1e1c; color: #eef1f0; border: 1px solid #232826;">
+                            style="height: 38px; padding: 0 0.95rem; border-radius: 0.5rem; font-size: 0.8125rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s ease; background: var(--surface2); color: var(--text); border: 1px solid var(--border);">
                         <span class="material-symbols-rounded" style="font-size: 17px; color: #38bdf8;">cloud_download</span>
                         <span>Tarik PPPoE ke Pelanggan</span>
                     </button>
@@ -86,7 +86,7 @@
                     <button type="button"
                             wire:click="pullHotspotProfiles"
                             wire:loading.attr="disabled"
-                            style="height: 38px; padding: 0 0.95rem; border-radius: 0.5rem; font-size: 0.8125rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s ease; background: #1a1e1c; color: #eef1f0; border: 1px solid #232826;">
+                            style="height: 38px; padding: 0 0.95rem; border-radius: 0.5rem; font-size: 0.8125rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s ease; background: var(--surface2); color: var(--text); border: 1px solid var(--border);">
                         <span class="material-symbols-rounded" style="font-size: 17px; color: #38bdf8;">cloud_download</span>
                         <span>Tarik Profil ke Database</span>
                     </button>
@@ -155,13 +155,13 @@
                 <!-- Overview Stat Cards -->
                 <div class="isp-grid-4" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 1rem; margin-bottom: 1.25rem;">
                     {{-- 1. CPU Load --}}
-                    <div class="isp-metric-card" style="background: #131615; border: 1px solid #232826; border-radius: 1rem; padding: 1.15rem 1.25rem; display: flex; flex-direction: column; justify-content: space-between; gap: 0.75rem;">
+                    <div class="isp-metric-card" style="background: var(--surface); border: 1px solid var(--border); border-radius: 1rem; padding: 1.15rem 1.25rem; display: flex; flex-direction: column; justify-content: space-between; gap: 0.75rem;">
                         <div class="noc-card-header" style="display: flex; align-items: center; justify-content: space-between;">
                             <div class="noc-card-label-wrap" style="display: flex; align-items: center; gap: 0.45rem;">
                                 <span class="noc-pulse-dot" style="width: 7px; height: 7px; border-radius: 9999px; display: inline-block; @if (($systemResources['cpu_load'] ?? 0) > 80) background: #f27b7b; @elseif (($systemResources['cpu_load'] ?? 0) > 50) background: #f2c56b; @else background: #00e07e; @endif"></span>
-                                <span class="noc-card-label" style="font-size: 0.725rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #9aa49f;">Beban CPU (Load)</span>
+                                <span class="noc-card-label" style="font-size: 0.725rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted);">Beban CPU (Load)</span>
                             </div>
-                            <div class="noc-metric-icon" style="width: 30px; height: 30px; border-radius: 8px; background: #1a1e1c; border: 1px solid #232826; display: flex; align-items: center; justify-content: center; color: #00e07e;">
+                            <div class="noc-metric-icon" style="width: 30px; height: 30px; border-radius: 8px; background: var(--surface2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: #00e07e;">
                                 <svg style="width: 17px; height: 17px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>
                             </div>
                         </div>
@@ -170,29 +170,29 @@
                             <div class="noc-metric-val" style="font-size: 1.75rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; font-family: 'Plus Jakarta Sans', ui-monospace, monospace; @if (($systemResources['cpu_load'] ?? 0) > 80) color: #f27b7b; @elseif (($systemResources['cpu_load'] ?? 0) > 50) color: #f2c56b; @else color: #00e07e; @endif">
                                 {{ $systemResources['cpu_load'] ?? 0 }}<span style="font-size: 1rem; font-weight: 700; margin-left: 2px;">%</span>
                             </div>
-                            <div class="noc-track" style="width: 100%; height: 6px; border-radius: 9999px; background: #1a1e1c; border: 1px solid #232826; overflow: hidden; margin-top: 0.25rem;">
+                            <div class="noc-track" style="width: 100%; height: 6px; border-radius: 9999px; background: var(--surface2); border: 1px solid var(--border); overflow: hidden; margin-top: 0.25rem;">
                                 <div class="noc-bar" style="height: 100%; border-radius: 9999px; width: {{ min(100, max(5, $systemResources['cpu_load'] ?? 0)) }}%; @if (($systemResources['cpu_load'] ?? 0) > 80) background: linear-gradient(90deg, #f27b7b, #ef4444); @elseif (($systemResources['cpu_load'] ?? 0) > 50) background: linear-gradient(90deg, #f2c56b, #eab308); @else background: linear-gradient(90deg, #00e07e, #4deda4); @endif"></div>
                             </div>
                         </div>
 
-                        <div class="noc-card-footer" style="display: flex; align-items: center; justify-content: space-between; font-size: 0.725rem; color: #9aa49f; border-top: 1px solid #232826; padding-top: 0.55rem; margin-top: 0.2rem;">
+                        <div class="noc-card-footer" style="display: flex; align-items: center; justify-content: space-between; font-size: 0.725rem; color: var(--muted); border-top: 1px solid var(--border); padding-top: 0.55rem; margin-top: 0.2rem;">
                             <span class="noc-footer-item" style="display: flex; align-items: center; gap: 0.35rem;">
-                                <span style="color: #9aa49f;">Core:</span> <strong style="color: #eef1f0;">{{ $systemResources['cpu_count'] ?? 1 }} Core</strong>
+                                <span style="color: var(--muted);">Core:</span> <strong style="color: var(--text);">{{ $systemResources['cpu_count'] ?? 1 }} Core</strong>
                             </span>
-                            <span class="noc-badge-sub" style="font-size: 0.7rem; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 0.375rem; background: #1a1e1c; border: 1px solid #232826; color: #9aa49f;">
+                            <span class="noc-badge-sub" style="font-size: 0.7rem; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 0.375rem; background: var(--surface2); border: 1px solid var(--border); color: var(--muted);">
                                 {{ !empty($systemResources['cpu_frequency']) ? (is_numeric($systemResources['cpu_frequency']) ? $systemResources['cpu_frequency'] . ' MHz' : $systemResources['cpu_frequency']) : '-' }}
                             </span>
                         </div>
                     </div>
 
                     {{-- 2. RAM / Memory --}}
-                    <div class="isp-metric-card" style="background: #131615; border: 1px solid #232826; border-radius: 1rem; padding: 1.15rem 1.25rem; display: flex; flex-direction: column; justify-content: space-between; gap: 0.75rem;">
+                    <div class="isp-metric-card" style="background: var(--surface); border: 1px solid var(--border); border-radius: 1rem; padding: 1.15rem 1.25rem; display: flex; flex-direction: column; justify-content: space-between; gap: 0.75rem;">
                         <div class="noc-card-header" style="display: flex; align-items: center; justify-content: space-between;">
                             <div class="noc-card-label-wrap" style="display: flex; align-items: center; gap: 0.45rem;">
                                 <span class="noc-pulse-dot" style="width: 7px; height: 7px; border-radius: 9999px; display: inline-block; background: #38bdf8;"></span>
-                                <span class="noc-card-label" style="font-size: 0.725rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #9aa49f;">RAM / Memory Free</span>
+                                <span class="noc-card-label" style="font-size: 0.725rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted);">RAM / Memory Free</span>
                             </div>
-                            <div class="noc-metric-icon" style="width: 30px; height: 30px; border-radius: 8px; background: #1a1e1c; border: 1px solid #232826; display: flex; align-items: center; justify-content: center; color: #38bdf8;">
+                            <div class="noc-metric-icon" style="width: 30px; height: 30px; border-radius: 8px; background: var(--surface2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: #38bdf8;">
                                 <svg style="width: 17px; height: 17px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
                             </div>
                         </div>
@@ -201,35 +201,35 @@
                             <div class="noc-metric-val" style="font-size: 1.75rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; font-family: 'Plus Jakarta Sans', ui-monospace, monospace; color: #38bdf8;">
                                 {{ $systemResources['free_memory'] ?? '-' }}
                             </div>
-                            <div class="noc-track" style="width: 100%; height: 6px; border-radius: 9999px; background: #1a1e1c; border: 1px solid #232826; overflow: hidden; margin-top: 0.25rem;">
+                            <div class="noc-track" style="width: 100%; height: 6px; border-radius: 9999px; background: var(--surface2); border: 1px solid var(--border); overflow: hidden; margin-top: 0.25rem;">
                                 <div class="noc-bar" style="height: 100%; border-radius: 9999px; width: {{ min(100, max(5, $systemResources['memory_percentage'] ?? 20)) }}%; background: linear-gradient(90deg, #38bdf8, #00e07e);"></div>
                             </div>
                         </div>
 
-                        <div class="noc-card-footer" style="display: flex; align-items: center; justify-content: space-between; font-size: 0.725rem; color: #9aa49f; border-top: 1px solid #232826; padding-top: 0.55rem; margin-top: 0.2rem;">
+                        <div class="noc-card-footer" style="display: flex; align-items: center; justify-content: space-between; font-size: 0.725rem; color: var(--muted); border-top: 1px solid var(--border); padding-top: 0.55rem; margin-top: 0.2rem;">
                             <span class="noc-footer-item" style="display: flex; align-items: center; gap: 0.35rem;">
-                                <span style="color: #9aa49f;">Total:</span> <strong style="color: #eef1f0;">{{ $systemResources['total_memory'] ?? '-' }}</strong>
+                                <span style="color: var(--muted);">Total:</span> <strong style="color: var(--text);">{{ $systemResources['total_memory'] ?? '-' }}</strong>
                             </span>
-                            <span class="noc-badge-sub" style="font-size: 0.7rem; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 0.375rem; background: #1a1e1c; border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8;">
+                            <span class="noc-badge-sub" style="font-size: 0.7rem; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 0.375rem; background: var(--surface2); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8;">
                                 Terpakai: {{ $systemResources['memory_percentage'] ?? 0 }}%
                             </span>
                         </div>
                     </div>
 
                     {{-- 3. Uptime Sistem --}}
-                    <div class="isp-metric-card" style="background: #131615; border: 1px solid #232826; border-radius: 1rem; padding: 1.15rem 1.25rem; display: flex; flex-direction: column; justify-content: space-between; gap: 0.75rem;">
+                    <div class="isp-metric-card" style="background: var(--surface); border: 1px solid var(--border); border-radius: 1rem; padding: 1.15rem 1.25rem; display: flex; flex-direction: column; justify-content: space-between; gap: 0.75rem;">
                         <div class="noc-card-header" style="display: flex; align-items: center; justify-content: space-between;">
                             <div class="noc-card-label-wrap" style="display: flex; align-items: center; gap: 0.45rem;">
                                 <span class="noc-pulse-dot" style="width: 7px; height: 7px; border-radius: 9999px; display: inline-block; background: #00e07e;"></span>
-                                <span class="noc-card-label" style="font-size: 0.725rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #9aa49f;">Uptime Sistem</span>
+                                <span class="noc-card-label" style="font-size: 0.725rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted);">Uptime Sistem</span>
                             </div>
-                            <div class="noc-metric-icon" style="width: 30px; height: 30px; border-radius: 8px; background: #1a1e1c; border: 1px solid #232826; display: flex; align-items: center; justify-content: center; color: #00e07e;">
+                            <div class="noc-metric-icon" style="width: 30px; height: 30px; border-radius: 8px; background: var(--surface2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: #00e07e;">
                                 <svg style="width: 17px; height: 17px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                             </div>
                         </div>
 
                         <div class="noc-card-body" style="display: flex; flex-direction: column; gap: 0.35rem;">
-                            <div class="noc-metric-val" style="font-size: 1.5rem; font-weight: 800; letter-spacing: -0.01em; line-height: 1.15; font-family: ui-monospace, SFMono-Regular, monospace; color: #eef1f0;">
+                            <div class="noc-metric-val" style="font-size: 1.5rem; font-weight: 800; letter-spacing: -0.01em; line-height: 1.15; font-family: ui-monospace, SFMono-Regular, monospace; color: var(--text);">
                                 {{ $systemResources['uptime'] ?? '-' }}
                             </div>
                             <div style="font-size: 0.725rem; color: #00e07e; display: flex; align-items: center; gap: 4px; margin-top: 2px;">
@@ -238,9 +238,9 @@
                             </div>
                         </div>
 
-                        <div class="noc-card-footer" style="display: flex; align-items: center; justify-content: space-between; font-size: 0.725rem; color: #9aa49f; border-top: 1px solid #232826; padding-top: 0.55rem; margin-top: 0.2rem;">
+                        <div class="noc-card-footer" style="display: flex; align-items: center; justify-content: space-between; font-size: 0.725rem; color: var(--muted); border-top: 1px solid var(--border); padding-top: 0.55rem; margin-top: 0.2rem;">
                             <span class="noc-footer-item" style="display: flex; align-items: center; gap: 0.35rem;">
-                                <span style="color: #9aa49f;">RouterOS:</span>
+                                <span style="color: var(--muted);">RouterOS:</span>
                             </span>
                             <span class="noc-badge-sub" style="font-size: 0.7rem; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 0.375rem; background: rgba(0, 224, 126, 0.1); border: 1px solid rgba(0, 224, 126, 0.3); color: #00e07e;">
                                 v{{ $systemResources['version'] ?? 'RouterOS' }}
@@ -249,13 +249,13 @@
                     </div>
 
                     {{-- 4. Suhu & Daya Board --}}
-                    <div class="isp-metric-card" style="background: #131615; border: 1px solid #232826; border-radius: 1rem; padding: 1.15rem 1.25rem; display: flex; flex-direction: column; justify-content: space-between; gap: 0.75rem;">
+                    <div class="isp-metric-card" style="background: var(--surface); border: 1px solid var(--border); border-radius: 1rem; padding: 1.15rem 1.25rem; display: flex; flex-direction: column; justify-content: space-between; gap: 0.75rem;">
                         <div class="noc-card-header" style="display: flex; align-items: center; justify-content: space-between;">
                             <div class="noc-card-label-wrap" style="display: flex; align-items: center; gap: 0.45rem;">
                                 <span class="noc-pulse-dot" style="width: 7px; height: 7px; border-radius: 9999px; display: inline-block; background: #f2c56b;"></span>
-                                <span class="noc-card-label" style="font-size: 0.725rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #9aa49f;">Suhu &amp; Daya Board</span>
+                                <span class="noc-card-label" style="font-size: 0.725rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted);">Suhu &amp; Daya Board</span>
                             </div>
-                            <div class="noc-metric-icon" style="width: 30px; height: 30px; border-radius: 8px; background: #1a1e1c; border: 1px solid #232826; display: flex; align-items: center; justify-content: center; color: #f2c56b;">
+                            <div class="noc-metric-icon" style="width: 30px; height: 30px; border-radius: 8px; background: var(--surface2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: #f2c56b;">
                                 <svg style="width: 17px; height: 17px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                             </div>
                         </div>
@@ -264,19 +264,19 @@
                             <div class="noc-metric-val" style="display: flex; align-items: baseline; gap: 8px; font-size: 1.75rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; font-family: 'Plus Jakarta Sans', ui-monospace, monospace;">
                                 <span style="color: #f2c56b;">{{ $systemResources['temperature'] ?? 'Normal' }}</span>
                                 @if(!empty($systemResources['voltage']) && $systemResources['voltage'] !== '-')
-                                    <span style="font-size: 0.85rem; font-weight: 700; color: #9aa49f;">({{ $systemResources['voltage'] }})</span>
+                                    <span style="font-size: 0.85rem; font-weight: 700; color: var(--muted);">({{ $systemResources['voltage'] }})</span>
                                 @endif
                             </div>
-                            <div style="font-size: 0.725rem; color: #9aa49f; margin-top: 2px;">
+                            <div style="font-size: 0.725rem; color: var(--muted); margin-top: 2px;">
                                 Termal perangkat beroperasi aman
                             </div>
                         </div>
 
-                        <div class="noc-card-footer" style="display: flex; align-items: center; justify-content: space-between; font-size: 0.725rem; color: #9aa49f; border-top: 1px solid #232826; padding-top: 0.55rem; margin-top: 0.2rem;">
-                            <span class="noc-footer-item" style="color: #9aa49f;">
+                        <div class="noc-card-footer" style="display: flex; align-items: center; justify-content: space-between; font-size: 0.725rem; color: var(--muted); border-top: 1px solid var(--border); padding-top: 0.55rem; margin-top: 0.2rem;">
+                            <span class="noc-footer-item" style="color: var(--muted);">
                                 Hardware:
                             </span>
-                            <span class="noc-badge-sub" style="font-size: 0.7rem; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 0.375rem; background: #1a1e1c; border: 1px solid #232826; color: #eef1f0; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                            <span class="noc-badge-sub" style="font-size: 0.7rem; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 0.375rem; background: var(--surface2); border: 1px solid var(--border); color: var(--text); max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                                 {{ $systemResources['board_name'] ?? 'MikroTik Router' }}
                             </span>
                         </div>
@@ -446,7 +446,7 @@
             @elseif ($activeTab === 'pppoe')
                 <!-- Overview Stat Cards -->
                 <div class="isp-grid-4" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 1rem; margin-bottom: 1.25rem;">
-                    <div class="isp-metric-card" style="background: #131615; border: 1px solid #232826; border-radius: 1rem; padding: 1.15rem 1.25rem;">
+                    <div class="isp-metric-card" style="background: var(--surface); border: 1px solid var(--border); border-radius: 1rem; padding: 1.15rem 1.25rem;">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <div>
                                 <div style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #a1a1aa;">Sesi Online Aktif</div>
@@ -460,7 +460,7 @@
                         </div>
                     </div>
 
-                    <div class="isp-metric-card" style="background: #131615; border: 1px solid #232826; border-radius: 1rem; padding: 1.15rem 1.25rem;">
+                    <div class="isp-metric-card" style="background: var(--surface); border: 1px solid var(--border); border-radius: 1rem; padding: 1.15rem 1.25rem;">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <div>
                                 <div style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #a1a1aa;">Total PPPoE Secrets</div>
@@ -474,7 +474,7 @@
                         </div>
                     </div>
 
-                    <div class="isp-metric-card" style="background: #131615; border: 1px solid #232826; border-radius: 1rem; padding: 1.15rem 1.25rem;">
+                    <div class="isp-metric-card" style="background: var(--surface); border: 1px solid var(--border); border-radius: 1rem; padding: 1.15rem 1.25rem;">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <div>
                                 <div style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #a1a1aa;">Profil Paket PPPoE</div>
@@ -488,7 +488,7 @@
                         </div>
                     </div>
 
-                    <div class="isp-metric-card" style="background: #131615; border: 1px solid #232826; border-radius: 1rem; padding: 1.15rem 1.25rem;">
+                    <div class="isp-metric-card" style="background: var(--surface); border: 1px solid var(--border); border-radius: 1rem; padding: 1.15rem 1.25rem;">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <div>
                                 <div style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #a1a1aa;">Beban CPU Router</div>
@@ -667,7 +667,7 @@
             @elseif ($activeTab === 'hotspot')
                 <!-- Overview Stat Cards -->
                 <div class="isp-grid-4" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 1rem; margin-bottom: 1.25rem;">
-                    <div class="isp-metric-card" style="background: #131615; border: 1px solid #232826; border-radius: 1rem; padding: 1.15rem 1.25rem;">
+                    <div class="isp-metric-card" style="background: var(--surface); border: 1px solid var(--border); border-radius: 1rem; padding: 1.15rem 1.25rem;">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <div>
                                 <div style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #a1a1aa;">Pengguna Hotspot Aktif</div>
@@ -681,7 +681,7 @@
                         </div>
                     </div>
 
-                    <div class="isp-metric-card" style="background: #131615; border: 1px solid #232826; border-radius: 1rem; padding: 1.15rem 1.25rem;">
+                    <div class="isp-metric-card" style="background: var(--surface); border: 1px solid var(--border); border-radius: 1rem; padding: 1.15rem 1.25rem;">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <div>
                                 <div style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #a1a1aa;">Profil Hotspot MikroTik</div>
@@ -695,7 +695,7 @@
                         </div>
                     </div>
 
-                    <div class="isp-metric-card" style="background: #131615; border: 1px solid #232826; border-radius: 1rem; padding: 1.15rem 1.25rem;">
+                    <div class="isp-metric-card" style="background: var(--surface); border: 1px solid var(--border); border-radius: 1rem; padding: 1.15rem 1.25rem;">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <div>
                                 <div style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #a1a1aa;">Total User di MikroTik</div>
@@ -709,7 +709,7 @@
                         </div>
                     </div>
 
-                    <div class="isp-metric-card" style="background: #131615; border: 1px solid #232826; border-radius: 1rem; padding: 1.15rem 1.25rem;">
+                    <div class="isp-metric-card" style="background: var(--surface); border: 1px solid var(--border); border-radius: 1rem; padding: 1.15rem 1.25rem;">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <div>
                                 <div style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #a1a1aa;">Server Hotspot</div>

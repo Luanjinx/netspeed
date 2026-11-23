@@ -1,18 +1,18 @@
 <x-filament-panels::page>
     <div style="display: flex; flex-direction: column; gap: 1.5rem;">
         <!-- Router Selection & Status Bar -->
-        <div class="fi-section noc-router-bar" style="padding: 1rem 1.25rem; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; background: #131615; border: 1px solid #232826; border-radius: 1rem;">
+        <div class="fi-section noc-router-bar" style="padding: 1rem 1.25rem; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: 1rem;">
             <div style="display: flex; align-items: center; gap: 0.875rem; flex-wrap: wrap; flex: 1; min-width: 250px;">
-                <div class="noc-icon-box" style="width: 36px; height: 36px; border-radius: 0.5rem; background: #1a1e1c; border: 1px solid #232826; display: flex; align-items: center; justify-content: center; color: #f2c56b;">
+                <div class="noc-icon-box" style="width: 36px; height: 36px; border-radius: 0.5rem; background: var(--surface2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: #f2c56b;">
                     <span class="material-symbols-rounded" style="font-size: 20px;">wifi</span>
                 </div>
                 <div style="flex: 1; min-width: 180px;">
-                    <label style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #9aa49f; display: block;">
+                    <label style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); display: block;">
                         Pilih Router Hotspot MikroTik
                     </label>
-                    <select wire:model.live="selectedRouterId" style="width: 100%; margin-top: 0.25rem; font-size: 0.875rem; font-weight: 600; border-radius: 0.5rem; padding: 0.4rem 0.75rem; background: #1a1e1c; border: 1px solid #232826; color: #eef1f0; outline: none;">
+                    <select wire:model.live="selectedRouterId" style="width: 100%; margin-top: 0.25rem; font-size: 0.875rem; font-weight: 600; border-radius: 0.5rem; padding: 0.4rem 0.75rem; background: var(--surface2); border: 1px solid var(--border); color: var(--text); outline: none;">
                         @foreach (\App\Models\Router::where('is_active', true)->get() as $r)
-                            <option value="{{ $r->id }}" style="background: #181d1a; color: #ffffff;">{{ $r->name }} ({{ $r->host }}:{{ $r->port }})</option>
+                            <option value="{{ $r->id }}" style="background: var(--surface2); color: var(--text);">{{ $r->name }} ({{ $r->host }}:{{ $r->port }})</option>
                         @endforeach
                     </select>
                 </div>
@@ -32,7 +32,7 @@
 
             <!-- Quick Action Buttons -->
             <div class="noc-card-actions" style="display: flex; align-items: center; gap: 0.5rem;">
-                <button type="button" wire:click="refreshData" wire:loading.attr="disabled" class="noc-btn noc-btn-secondary" style="display: inline-flex; align-items: center; gap: 6px; padding: 0.45rem 0.85rem; border-radius: 0.5rem; background: #1a1e1c; border: 1px solid #232826; color: #eef1f0; font-size: 0.8125rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease;">
+                <button type="button" wire:click="refreshData" wire:loading.attr="disabled" class="noc-btn noc-btn-secondary" style="display: inline-flex; align-items: center; gap: 6px; padding: 0.45rem 0.85rem; border-radius: 0.5rem; background: var(--surface2); border: 1px solid var(--border); color: var(--text); font-size: 0.8125rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease;">
                     <span wire:loading.remove wire:target="refreshData" class="material-symbols-rounded" style="font-size: 16px; color: #00e07e;">refresh</span>
                     <span wire:loading wire:target="refreshData" class="material-symbols-rounded" style="font-size: 16px; color: #00e07e; animation: spin 1s linear infinite;">sync</span>
                     <span>Segarkan Data</span>
@@ -46,7 +46,7 @@
                     <span class="material-symbols-rounded" style="font-size: 28px; color: #f27b7b;">warning</span>
                     <div>
                         <strong style="font-size: 0.9375rem; color: #f27b7b;">Gagal Menghubungkan ke MikroTik:</strong>
-                        <div style="margin-top: 0.25rem; font-size: 0.8125rem; color: #9aa49f;">
+                        <div style="margin-top: 0.25rem; font-size: 0.8125rem; color: var(--muted);">
                             {{ $errorMessage ?: 'Pastikan IP, port API (8728), username, dan password router sudah benar serta firewall MikroTik mengizinkan koneksi API.' }}
                         </div>
                     </div>
@@ -55,12 +55,12 @@
         @else
             <!-- Hotspot Overview Stat Cards -->
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; width: 100%;">
-                <div class="isp-metric-card" style="background: #131615; border: 1px solid #232826; border-radius: 1rem; padding: 1.15rem 1.25rem;">
+                <div class="isp-metric-card" style="background: var(--surface); border: 1px solid var(--border); border-radius: 1rem; padding: 1.15rem 1.25rem;">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div>
-                            <div style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #9aa49f;">Total Voucher Hotspot</div>
+                            <div style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted);">Total Voucher Hotspot</div>
                             <div class="isp-stat-number" style="color: #f2c56b; margin-top: 0.25rem; font-size: 1.65rem; font-weight: 800;">
-                                {{ $this->voucherStats['total'] }} <span style="font-size: 0.75rem; font-weight: normal; color: #9aa49f;">Tiket</span>
+                                {{ $this->voucherStats['total'] }} <span style="font-size: 0.75rem; font-weight: normal; color: var(--muted);">Tiket</span>
                             </div>
                         </div>
                         <div class="noc-icon-box" style="width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: rgba(242, 197, 107, 0.15); color: #f2c56b;">
@@ -69,12 +69,12 @@
                     </div>
                 </div>
 
-                <div class="isp-metric-card" style="background: #131615; border: 1px solid #232826; border-radius: 1rem; padding: 1.15rem 1.25rem;">
+                <div class="isp-metric-card" style="background: var(--surface); border: 1px solid var(--border); border-radius: 1rem; padding: 1.15rem 1.25rem;">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div>
-                            <div style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #9aa49f;">Belum Terpakai</div>
+                            <div style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted);">Belum Terpakai</div>
                             <div class="isp-stat-number" style="color: #00e07e; margin-top: 0.25rem; font-size: 1.65rem; font-weight: 800;">
-                                {{ $this->voucherStats['unused'] }} <span style="font-size: 0.75rem; font-weight: normal; color: #9aa49f;">Siap Jual</span>
+                                {{ $this->voucherStats['unused'] }} <span style="font-size: 0.75rem; font-weight: normal; color: var(--muted);">Siap Jual</span>
                             </div>
                         </div>
                         <div class="noc-icon-box" style="width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: rgba(0, 224, 126, 0.15); color: #00e07e;">
@@ -83,26 +83,26 @@
                     </div>
                 </div>
 
-                <div class="isp-metric-card" style="background: #131615; border: 1px solid #232826; border-radius: 1rem; padding: 1.15rem 1.25rem;">
+                <div class="isp-metric-card" style="background: var(--surface); border: 1px solid var(--border); border-radius: 1rem; padding: 1.15rem 1.25rem;">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div>
-                            <div style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #9aa49f;">Sudah Terpakai</div>
-                            <div class="isp-stat-number" style="color: #9aa49f; margin-top: 0.25rem; font-size: 1.65rem; font-weight: 800;">
+                            <div style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted);">Sudah Terpakai</div>
+                            <div class="isp-stat-number" style="color: var(--muted); margin-top: 0.25rem; font-size: 1.65rem; font-weight: 800;">
                                 {{ $this->voucherStats['used'] }} <span style="font-size: 0.75rem; font-weight: normal; color: #71717a;">Voucher</span>
                             </div>
                         </div>
-                        <div class="noc-icon-box" style="width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: #1a1e1c; color: #9aa49f;">
+                        <div class="noc-icon-box" style="width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: var(--surface2); color: var(--muted);">
                             <span class="material-symbols-rounded" style="font-size: 18px;">receipt_long</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="isp-metric-card" style="background: #131615; border: 1px solid #232826; border-radius: 1rem; padding: 1.15rem 1.25rem;">
+                <div class="isp-metric-card" style="background: var(--surface); border: 1px solid var(--border); border-radius: 1rem; padding: 1.15rem 1.25rem;">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div>
-                            <div style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #9aa49f;">Sesi Hotspot Online</div>
+                            <div style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted);">Sesi Hotspot Online</div>
                             <div class="isp-stat-number" style="color: #38bdf8; margin-top: 0.25rem; font-size: 1.65rem; font-weight: 800;">
-                                {{ count($activeSessions) }} <span style="font-size: 0.75rem; font-weight: normal; color: #9aa49f;">Device</span>
+                                {{ count($activeSessions) }} <span style="font-size: 0.75rem; font-weight: normal; color: var(--muted);">Device</span>
                             </div>
                         </div>
                         <div class="noc-icon-box" style="width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: rgba(56, 189, 248, 0.15); color: #38bdf8;">
@@ -111,12 +111,12 @@
                     </div>
                 </div>
 
-                <div class="isp-metric-card" style="background: #131615; border: 1px solid #232826; border-radius: 1rem; padding: 1.15rem 1.25rem;">
+                <div class="isp-metric-card" style="background: var(--surface); border: 1px solid var(--border); border-radius: 1rem; padding: 1.15rem 1.25rem;">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div>
-                            <div style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #9aa49f;">Profil Hotspot Router</div>
+                            <div style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted);">Profil Hotspot Router</div>
                             <div class="isp-stat-number" style="color: #4deda4; margin-top: 0.25rem; font-size: 1.65rem; font-weight: 800;">
-                                {{ count($hotspotProfiles) }} <span style="font-size: 0.75rem; font-weight: normal; color: #9aa49f;">Profil</span>
+                                {{ count($hotspotProfiles) }} <span style="font-size: 0.75rem; font-weight: normal; color: var(--muted);">Profil</span>
                             </div>
                         </div>
                         <div class="noc-icon-box" style="width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: rgba(77, 237, 164, 0.15); color: #4deda4;">
@@ -125,10 +125,10 @@
                     </div>
                 </div>
 
-                <div class="isp-metric-card" style="background: #131615; border: 1px solid #232826; border-radius: 1rem; padding: 1.15rem 1.25rem;">
+                <div class="isp-metric-card" style="background: var(--surface); border: 1px solid var(--border); border-radius: 1rem; padding: 1.15rem 1.25rem;">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div>
-                            <div style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #9aa49f;">Beban CPU Router</div>
+                            <div style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted);">Beban CPU Router</div>
                             <div class="isp-stat-number" style="color: #00e07e; margin-top: 0.25rem; font-size: 1.65rem; font-weight: 800;">
                                 {{ $routerInfo['cpu-load'] ?? 0 }}%
                             </div>
@@ -167,26 +167,26 @@
 
                         <!-- Profil Filter -->
                         <select wire:model.live="voucherProfileFilter" style="font-size: 0.8125rem; border-radius: 0.5rem; padding: 0.4rem 0.75rem; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.12); color: currentColor;">
-                            <option value="" style="background: #18181c; color: #ffffff;">Semua Profil</option>
+                            <option value="" style="background: var(--surface2); color: var(--text);">Semua Profil</option>
                             @foreach (\App\Models\HotspotVoucher::distinct()->whereNotNull('profile')->pluck('profile') as $prof)
-                                <option value="{{ $prof }}" style="background: #18181c; color: #ffffff;">{{ $prof }}</option>
+                                <option value="{{ $prof }}" style="background: var(--surface2); color: var(--text);">{{ $prof }}</option>
                             @endforeach
                         </select>
 
                         <!-- Status Filter -->
                         <select wire:model.live="voucherStatusFilter" style="font-size: 0.8125rem; border-radius: 0.5rem; padding: 0.4rem 0.75rem; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.12); color: currentColor;">
-                            <option value="" style="background: #18181c; color: #ffffff;">Semua Status</option>
-                            <option value="unused" style="background: #18181c; color: #ffffff;">Belum Terpakai</option>
-                            <option value="used" style="background: #18181c; color: #ffffff;">Sudah Dipakai</option>
-                            <option value="expired" style="background: #18181c; color: #ffffff;">Kadaluarsa</option>
+                            <option value="" style="background: var(--surface2); color: var(--text);">Semua Status</option>
+                            <option value="unused" style="background: var(--surface2); color: var(--text);">Belum Terpakai</option>
+                            <option value="used" style="background: var(--surface2); color: var(--text);">Sudah Dipakai</option>
+                            <option value="expired" style="background: var(--surface2); color: var(--text);">Kadaluarsa</option>
                         </select>
 
                         <!-- Per Page -->
                         <select wire:model.live="voucherPerPage" style="font-size: 0.8125rem; border-radius: 0.5rem; padding: 0.4rem 0.75rem; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.12); color: currentColor;">
-                            <option value="15" style="background: #18181c; color: #ffffff;">15 / hal</option>
-                            <option value="30" style="background: #18181c; color: #ffffff;">30 / hal</option>
-                            <option value="50" style="background: #18181c; color: #ffffff;">50 / hal</option>
-                            <option value="100" style="background: #18181c; color: #ffffff;">100 / hal</option>
+                            <option value="15" style="background: var(--surface2); color: var(--text);">15 / hal</option>
+                            <option value="30" style="background: var(--surface2); color: var(--text);">30 / hal</option>
+                            <option value="50" style="background: var(--surface2); color: var(--text);">50 / hal</option>
+                            <option value="100" style="background: var(--surface2); color: var(--text);">100 / hal</option>
                         </select>
                     </div>
                 </div>

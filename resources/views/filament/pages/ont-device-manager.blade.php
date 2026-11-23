@@ -21,8 +21,8 @@
         }
 
         .ont-banner-connected {
-            background: #131615;
-            border: 1px solid #232826;
+            background: var(--surface);
+            border: 1px solid var(--border);
             border-radius: 0.875rem;
             padding: 0.75rem 1.25rem;
             display: flex;
@@ -41,8 +41,8 @@
         }
 
         .ont-card {
-            background: #131615;
-            border: 1px solid #232826;
+            background: var(--surface);
+            border: 1px solid var(--border);
             border-radius: 0.875rem;
             padding: 1.15rem 1.25rem;
             display: flex;
@@ -61,7 +61,7 @@
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.06em;
-            color: #9aa49f;
+            color: var(--muted);
         }
 
         .ont-card-number {
@@ -86,8 +86,8 @@
 
         /* Tabs & Filter Bar */
         .ont-toolbar {
-            background: #131615;
-            border: 1px solid #232826;
+            background: var(--surface);
+            border: 1px solid var(--border);
             border-radius: 0.875rem;
             padding: 0.75rem 1.25rem;
             display: flex;
@@ -124,23 +124,23 @@
         }
 
         .ont-tab-inactive {
-            background: #1a1e1c;
-            color: #9aa49f;
-            border: 1px solid #232826;
+            background: var(--surface2);
+            color: var(--muted);
+            border: 1px solid var(--border);
         }
 
         .ont-tab-inactive:hover {
-            color: #eef1f0;
+            color: var(--text);
             border-color: #38423e;
         }
 
         .ont-input {
             padding: 0.45rem 0.85rem;
-            background: #1a1e1c;
-            border: 1px solid #232826;
+            background: var(--surface2);
+            border: 1px solid var(--border);
             border-radius: 0.5rem;
             font-size: 0.8125rem;
-            color: #eef1f0;
+            color: var(--text);
             outline: none;
             transition: border-color 0.2s ease;
         }
@@ -151,8 +151,8 @@
 
         /* Simplified 5-Column Table */
         .ont-table-card {
-            background: #131615;
-            border: 1px solid #232826;
+            background: var(--surface);
+            border: 1px solid var(--border);
             border-radius: 0.875rem;
             overflow: hidden;
             width: 100%;
@@ -172,15 +172,15 @@
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            color: #9aa49f;
-            background: #171b19;
-            border-bottom: 1px solid #232826;
+            color: var(--muted);
+            background: var(--surface2);
+            border-bottom: 1px solid var(--border);
             white-space: nowrap;
         }
 
         .ont-td {
             padding: 0.85rem 1rem;
-            border-bottom: 1px solid #232826;
+            border-bottom: 1px solid var(--border);
             vertical-align: middle;
             color: #cbd5e1;
         }
@@ -195,8 +195,8 @@
             gap: 4px;
             padding: 0.35rem 0.65rem;
             border-radius: 0.45rem;
-            background: #1a1e1c;
-            border: 1px solid #232826;
+            background: var(--surface2);
+            border: 1px solid var(--border);
             font-size: 0.75rem;
             font-weight: 700;
             cursor: pointer;
@@ -204,7 +204,7 @@
         }
 
         .ont-btn-action:hover {
-            background: #232826;
+            background: var(--border);
         }
 
         /* Modals */
@@ -221,8 +221,8 @@
         }
 
         .ont-modal-card {
-            background: #131615;
-            border: 1px solid #232826;
+            background: var(--surface);
+            border: 1px solid var(--border);
             border-radius: 1rem;
             width: 100%;
             max-width: 580px;
@@ -247,12 +247,12 @@
                     <span class="material-symbols-rounded" style="color: #f2c56b; font-size: 26px;">cable</span>
                     <div>
                         <strong style="color: #f2c56b; font-size: 0.875rem;">Server GenieACS Belum Terhubung</strong>
-                        <div style="color: #9aa49f; font-size: 0.75rem; margin-top: 2px;">
+                        <div style="color: var(--muted); font-size: 0.75rem; margin-top: 2px;">
                             Masukkan IP STB Armbian Anda (port 7557) agar status modem, sinyal optik (dBm), dan ganti sandi Wi-Fi aktif.
                         </div>
                     </div>
                 </div>
-                <button type="button" wire:click="openServerConfigModal()" class="ont-btn-action" style="background: #f2c56b; color: #131615; border: none; padding: 0.45rem 0.95rem; font-weight: 800;">
+                <button type="button" wire:click="openServerConfigModal()" class="ont-btn-action" style="background: #f2c56b; color: var(--surface); border: none; padding: 0.45rem 0.95rem; font-weight: 800;">
                     <span class="material-symbols-rounded" style="font-size: 16px;">settings_ethernet</span>
                     <span>Hubungkan Server Sekarang</span>
                 </button>
@@ -261,12 +261,12 @@
             <div class="ont-banner-connected">
                 <div style="display: flex; align-items: center; gap: 0.75rem;">
                     <span class="ont-pulse-dot" style="background: #00e07e; animation: pulse 2s infinite;"></span>
-                    <span style="font-size: 0.8125rem; color: #eef1f0; font-weight: 600;">
-                        GenieACS Terhubung: <code style="color: #00e07e; font-family: ui-monospace, monospace; background: #1a1e1c; padding: 0.2rem 0.45rem; border-radius: 4px; border: 1px solid #232826;">{{ $activeServerUrl }}</code>
+                    <span style="font-size: 0.8125rem; color: var(--text); font-weight: 600;">
+                        GenieACS Terhubung: <code style="color: #00e07e; font-family: ui-monospace, monospace; background: var(--surface2); padding: 0.2rem 0.45rem; border-radius: 4px; border: 1px solid var(--border);">{{ $activeServerUrl }}</code>
                     </span>
-                    <span style="font-size: 0.75rem; color: #9aa49f;">(NBI Port 7557 Aktif)</span>
+                    <span style="font-size: 0.75rem; color: var(--muted);">(NBI Port 7557 Aktif)</span>
                 </div>
-                <button type="button" wire:click="openServerConfigModal()" class="ont-btn-action" style="color: #9aa49f; font-size: 0.75rem;">
+                <button type="button" wire:click="openServerConfigModal()" class="ont-btn-action" style="color: var(--muted); font-size: 0.75rem;">
                     <span class="material-symbols-rounded" style="font-size: 15px;">settings</span>
                     <span>Ubah IP Server</span>
                 </button>
@@ -283,7 +283,7 @@
                         <span>{{ $stats['online'] }}</span>
                         <span class="ont-pulse-dot" style="background: #00e07e;"></span>
                     </div>
-                    <div style="font-size: 0.6875rem; color: #9aa49f; margin-top: 2px;">Dari total {{ $stats['total'] }} modem terdaftar</div>
+                    <div style="font-size: 0.6875rem; color: var(--muted); margin-top: 2px;">Dari total {{ $stats['total'] }} modem terdaftar</div>
                 </div>
                 <div class="ont-card-icon" style="background: rgba(0,224,126,0.1); border: 1px solid rgba(0,224,126,0.25); color: #00e07e;">
                     <span class="material-symbols-rounded" style="font-size: 24px;">wifi</span>
@@ -295,7 +295,7 @@
                 <div>
                     <div class="ont-card-title">Modem Offline / LOS</div>
                     <div class="ont-card-number" style="color: #f27b7b;">{{ $stats['offline'] }}</div>
-                    <div style="font-size: 0.6875rem; color: #9aa49f; margin-top: 2px;">Mati lampu / kabel optik terputus</div>
+                    <div style="font-size: 0.6875rem; color: var(--muted); margin-top: 2px;">Mati lampu / kabel optik terputus</div>
                 </div>
                 <div class="ont-card-icon" style="background: rgba(242,123,123,0.1); border: 1px solid rgba(242,123,123,0.25); color: #f27b7b;">
                     <span class="material-symbols-rounded" style="font-size: 24px;">wifi_off</span>
@@ -309,7 +309,7 @@
                     <div class="ont-card-number" style="color: #f2c56b;">
                         <span>{{ $stats['critical'] }}</span>
                     </div>
-                    <div style="font-size: 0.6875rem; color: #9aa49f; margin-top: 2px;">Sinyal drop &lt; -27.00 dBm (Perlu perbaikan)</div>
+                    <div style="font-size: 0.6875rem; color: var(--muted); margin-top: 2px;">Sinyal drop &lt; -27.00 dBm (Perlu perbaikan)</div>
                 </div>
                 <div class="ont-card-icon" style="background: rgba(242,197,107,0.1); border: 1px solid rgba(242,197,107,0.25); color: #f2c56b;">
                     <span class="material-symbols-rounded" style="font-size: 24px;">warning</span>
@@ -340,7 +340,7 @@
             <!-- Search & Status Filter -->
             <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
                 <div style="position: relative;">
-                    <span class="material-symbols-rounded" style="position: absolute; left: 10px; top: 9px; font-size: 16px; color: #9aa49f;">search</span>
+                    <span class="material-symbols-rounded" style="position: absolute; left: 10px; top: 9px; font-size: 16px; color: var(--muted);">search</span>
                     <input type="text" wire:model.live.debounce.300ms="searchQuery" placeholder="Cari nama, SN, paket..."
                         class="ont-input" style="padding-left: 2rem; width: 220px;">
                 </div>
@@ -380,8 +380,8 @@
                                                 <span class="ont-pulse-dot" style="background: #f27b7b;" title="Offline"></span>
                                             @endif
                                             <div>
-                                                <div style="font-weight: 700; color: #eef1f0; font-size: 0.875rem;">{{ $dev['customer_name'] }}</div>
-                                                <div style="font-size: 0.6875rem; color: #9aa49f; margin-top: 1px;">
+                                                <div style="font-weight: 700; color: var(--text); font-size: 0.875rem;">{{ $dev['customer_name'] }}</div>
+                                                <div style="font-size: 0.6875rem; color: var(--muted); margin-top: 1px;">
                                                     {{ $dev['customer_number'] }} • <span style="color: #00e07e; font-weight: 600;">{{ $dev['package_name'] }}</span>
                                                 </div>
                                                 <div style="font-size: 0.625rem; color: #64748b; margin-top: 1px;">{{ $dev['odp_name'] }}</div>
@@ -391,8 +391,8 @@
 
                                     <!-- 2. Modem & SN -->
                                     <td class="ont-td" style="white-space: nowrap;">
-                                        <div style="font-weight: 600; color: #eef1f0;">{{ $dev['model'] }}</div>
-                                        <div style="font-family: ui-monospace, monospace; font-size: 0.725rem; color: #00e07e; background: #1a1e1c; padding: 0.15rem 0.4rem; border-radius: 4px; border: 1px solid #232826; display: inline-block; margin-top: 2px;">
+                                        <div style="font-weight: 600; color: var(--text);">{{ $dev['model'] }}</div>
+                                        <div style="font-family: ui-monospace, monospace; font-size: 0.725rem; color: #00e07e; background: var(--surface2); padding: 0.15rem 0.4rem; border-radius: 4px; border: 1px solid var(--border); display: inline-block; margin-top: 2px;">
                                             SN: {{ $dev['device_id'] }}
                                         </div>
                                     </td>
@@ -423,11 +423,11 @@
 
                                     <!-- 4. Wi-Fi & IP -->
                                     <td class="ont-td" style="white-space: nowrap;">
-                                        <div style="display: flex; align-items: center; gap: 4px; color: #eef1f0; font-weight: 600;">
+                                        <div style="display: flex; align-items: center; gap: 4px; color: var(--text); font-weight: 600;">
                                             <span class="material-symbols-rounded" style="font-size: 15px; color: #00e07e;">wifi</span>
                                             <span>{{ $dev['wifi_ssid'] }}</span>
                                         </div>
-                                        <div style="font-size: 0.6875rem; color: #9aa49f; font-family: ui-monospace, monospace; margin-top: 2px;">IP: {{ $dev['wan_ip'] }}</div>
+                                        <div style="font-size: 0.6875rem; color: var(--muted); font-family: ui-monospace, monospace; margin-top: 2px;">IP: {{ $dev['wan_ip'] }}</div>
                                     </td>
 
                                     <!-- 5. Aksi Cepat -->
@@ -458,8 +458,8 @@
                                 <tr>
                                     <td colspan="5" style="padding: 3rem 1.5rem; text-align: center; color: #64748b;">
                                         <span class="material-symbols-rounded" style="font-size: 40px; display: block; margin: 0 auto 0.5rem auto; opacity: 0.4;">router</span>
-                                        <div style="font-size: 0.875rem; color: #eef1f0; font-weight: 600;">Belum ada modem ONT yang terhubung</div>
-                                        <div style="font-size: 0.75rem; color: #9aa49f; margin-top: 4px;">
+                                        <div style="font-size: 0.875rem; color: var(--text); font-weight: 600;">Belum ada modem ONT yang terhubung</div>
+                                        <div style="font-size: 0.75rem; color: var(--muted); margin-top: 4px;">
                                             Modem pelanggan baru yang dicolokkan akan otomatis masuk ke tab <strong>"ONT Baru Terdeteksi"</strong>.
                                         </div>
                                     </td>
@@ -472,12 +472,12 @@
         @else
             <!-- TAB UNASSIGNED ONTS -->
             <div class="ont-table-card">
-                <div style="padding: 1rem 1.25rem; border-bottom: 1px solid #232826; background: #171b19;">
-                    <h4 style="font-weight: 700; font-size: 0.875rem; color: #eef1f0; margin: 0; display: flex; align-items: center; gap: 6px;">
+                <div style="padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); background: var(--surface2);">
+                    <h4 style="font-weight: 700; font-size: 0.875rem; color: var(--text); margin: 0; display: flex; align-items: center; gap: 6px;">
                         <span class="material-symbols-rounded" style="font-size: 18px; color: #38bdf8;">sensors</span>
                         <span>Daftar Modem Baru yang Belum Dipasangkan ke Pelanggan</span>
                     </h4>
-                    <p style="font-size: 0.75rem; color: #9aa49f; margin: 0.25rem 0 0 0;">
+                    <p style="font-size: 0.75rem; color: var(--muted); margin: 0.25rem 0 0 0;">
                         Modem ini baru dicolok kabel optik dan otomatis terdeteksi oleh GenieACS. Klik tombol untuk mengikatnya ke pelanggan.
                     </p>
                 </div>
@@ -500,13 +500,13 @@
                                         {{ $unassigned['device_id'] }}
                                     </td>
                                     <td class="ont-td">
-                                        <div style="font-weight: 600; color: #eef1f0;">{{ $unassigned['model'] }}</div>
-                                        <div style="font-size: 0.6875rem; color: #9aa49f;">{{ $unassigned['manufacturer'] }}</div>
+                                        <div style="font-weight: 600; color: var(--text);">{{ $unassigned['model'] }}</div>
+                                        <div style="font-size: 0.6875rem; color: var(--muted);">{{ $unassigned['manufacturer'] }}</div>
                                     </td>
-                                    <td class="ont-td" style="font-family: ui-monospace, monospace; font-size: 0.75rem; color: #9aa49f;">
+                                    <td class="ont-td" style="font-family: ui-monospace, monospace; font-size: 0.75rem; color: var(--muted);">
                                         {{ $unassigned['ip'] }}
                                     </td>
-                                    <td class="ont-td" style="color: #9aa49f; font-size: 0.75rem;">
+                                    <td class="ont-td" style="color: var(--muted); font-size: 0.75rem;">
                                         {{ $unassigned['last_inform'] }}
                                     </td>
                                     <td class="ont-td" style="padding-right: 1.25rem; text-align: right;">
@@ -521,8 +521,8 @@
                                 <tr>
                                     <td colspan="5" style="padding: 3rem 1.5rem; text-align: center; color: #64748b;">
                                         <span class="material-symbols-rounded" style="font-size: 40px; display: block; margin: 0 auto 0.5rem auto; opacity: 0.4;">task_alt</span>
-                                        <div style="font-size: 0.875rem; color: #eef1f0; font-weight: 600;">Tidak ada modem baru yang belum terpasang.</div>
-                                        <div style="font-size: 0.75rem; color: #9aa49f; margin-top: 4px;">
+                                        <div style="font-size: 0.875rem; color: var(--text); font-weight: 600;">Tidak ada modem baru yang belum terpasang.</div>
+                                        <div style="font-size: 0.75rem; color: var(--muted); margin-top: 4px;">
                                             Saat teknisi memasang modem baru di rumah pelanggan, modem akan otomatis muncul di sini.
                                         </div>
                                     </td>
@@ -541,28 +541,28 @@
             <div class="ont-modal-backdrop" x-data @keydown.escape.window="$wire.closeServerConfigModal()">
                 <div class="ont-modal-card">
                     <!-- Header -->
-                    <div style="padding: 1rem 1.25rem; border-bottom: 1px solid #232826; background: #171b19; display: flex; align-items: center; justify-content: space-between;">
+                    <div style="padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); background: var(--surface2); display: flex; align-items: center; justify-content: space-between;">
                         <div style="display: flex; align-items: center; gap: 0.75rem;">
                             <div style="width: 38px; height: 38px; border-radius: 0.5rem; background: rgba(0,224,126,0.12); border: 1px solid rgba(0,224,126,0.3); display: flex; align-items: center; justify-content: center; color: #00e07e;">
                                 <span class="material-symbols-rounded" style="font-size: 20px;">settings_ethernet</span>
                             </div>
                             <div>
-                                <h3 style="font-weight: 700; font-size: 0.9375rem; color: #eef1f0; margin: 0;">Hubungkan Server GenieACS (STB / VPS)</h3>
-                                <p style="font-size: 0.6875rem; color: #9aa49f; margin: 2px 0 0 0;">Konfigurasi API NBI agar NetSpeed terhubung ke GenieACS</p>
+                                <h3 style="font-weight: 700; font-size: 0.9375rem; color: var(--text); margin: 0;">Hubungkan Server GenieACS (STB / VPS)</h3>
+                                <p style="font-size: 0.6875rem; color: var(--muted); margin: 2px 0 0 0;">Konfigurasi API NBI agar NetSpeed terhubung ke GenieACS</p>
                             </div>
                         </div>
-                        <button type="button" wire:click="closeServerConfigModal()" style="color: #9aa49f; background: transparent; border: none; font-size: 1.25rem; cursor: pointer;">✕</button>
+                        <button type="button" wire:click="closeServerConfigModal()" style="color: var(--muted); background: transparent; border: none; font-size: 1.25rem; cursor: pointer;">✕</button>
                     </div>
 
                     <!-- Form -->
                     <div style="padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem;">
                         <div>
-                            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #eef1f0; margin-bottom: 0.25rem;">Nama Server</label>
+                            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text); margin-bottom: 0.25rem;">Nama Server</label>
                             <input type="text" wire:model="serverName" placeholder="cth: GenieACS STB Armbian" class="ont-input" style="width: 100%;">
                         </div>
 
                         <div>
-                            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #eef1f0; margin-bottom: 0.25rem;">
+                            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text); margin-bottom: 0.25rem;">
                                 Base URL API NBI GenieACS <span style="color: #f27b7b;">*</span>
                             </label>
                             <input type="text" wire:model="serverUrl" placeholder="http://192.168.3.1:7557" class="ont-input" style="width: 100%; font-family: ui-monospace, monospace;">
@@ -584,7 +584,7 @@
                     </div>
 
                     <!-- Footer with Test & Save Buttons -->
-                    <div style="padding: 1rem 1.25rem; border-top: 1px solid #232826; background: #171b19; display: flex; align-items: center; justify-content: space-between;">
+                    <div style="padding: 1rem 1.25rem; border-top: 1px solid var(--border); background: var(--surface2); display: flex; align-items: center; justify-content: space-between;">
                         <button type="button" wire:click="testServerConnection()" wire:loading.attr="disabled"
                             class="ont-btn-action" style="padding: 0.5rem 0.9rem; color: #38bdf8;">
                             <span wire:loading.remove wire:target="testServerConnection" class="material-symbols-rounded" style="font-size: 16px;">wifi_tethering</span>
@@ -593,7 +593,7 @@
                         </button>
 
                         <div style="display: flex; gap: 0.5rem;">
-                            <button type="button" wire:click="closeServerConfigModal()" class="ont-btn-action" style="padding: 0.5rem 1rem; color: #9aa49f;">Batal</button>
+                            <button type="button" wire:click="closeServerConfigModal()" class="ont-btn-action" style="padding: 0.5rem 1rem; color: var(--muted);">Batal</button>
                             <button type="button" wire:click="saveServerConfig()"
                                 class="ont-btn-action" style="background: #00e07e; color: #06261a; border: none; padding: 0.5rem 1.2rem; font-weight: 800;">
                                 Simpan
@@ -610,68 +610,68 @@
         @if ($showDiagnosticModal)
             <div class="ont-modal-backdrop" x-data @keydown.escape.window="$wire.closeDiagnosticModal()">
                 <div class="ont-modal-card" style="max-width: 620px;">
-                    <div style="padding: 1rem 1.25rem; border-bottom: 1px solid #232826; background: #171b19; display: flex; align-items: center; justify-content: space-between;">
+                    <div style="padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); background: var(--surface2); display: flex; align-items: center; justify-content: space-between;">
                         <div style="display: flex; align-items: center; gap: 0.75rem;">
                             <div style="width: 38px; height: 38px; border-radius: 0.5rem; background: rgba(0,224,126,0.12); border: 1px solid rgba(0,224,126,0.3); display: flex; align-items: center; justify-content: center; color: #00e07e;">
                                 <span class="material-symbols-rounded" style="font-size: 20px;">query_stats</span>
                             </div>
                             <div>
-                                <h3 style="font-weight: 700; font-size: 0.9375rem; color: #eef1f0; margin: 0;">Diagnosa Detail Modem ONT</h3>
-                                <p style="font-size: 0.6875rem; color: #9aa49f; margin: 2px 0 0 0;">Sinyal optik, suhu, voltase &amp; status PPPoE</p>
+                                <h3 style="font-weight: 700; font-size: 0.9375rem; color: var(--text); margin: 0;">Diagnosa Detail Modem ONT</h3>
+                                <p style="font-size: 0.6875rem; color: var(--muted); margin: 2px 0 0 0;">Sinyal optik, suhu, voltase &amp; status PPPoE</p>
                             </div>
                         </div>
-                        <button type="button" wire:click="closeDiagnosticModal()" style="color: #9aa49f; background: transparent; border: none; font-size: 1.25rem; cursor: pointer;">✕</button>
+                        <button type="button" wire:click="closeDiagnosticModal()" style="color: var(--muted); background: transparent; border: none; font-size: 1.25rem; cursor: pointer;">✕</button>
                     </div>
 
                     <div style="padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem; max-height: 70vh; overflow-y: auto;">
                         @if ($loadingDiagnostic)
-                            <div style="padding: 2.5rem; text-align: center; color: #9aa49f;">
+                            <div style="padding: 2.5rem; text-align: center; color: var(--muted);">
                                 <span class="material-symbols-rounded" style="font-size: 32px; color: #00e07e; animation: spin 1s linear infinite; display: block; margin: 0 auto 0.5rem auto;">sync</span>
                                 <div>Mengambil data sinyal langsung dari modem via GenieACS...</div>
                             </div>
                         @else
                             <!-- Sinyal Optik -->
-                            <div style="padding: 1rem; border-radius: 0.625rem; background: #1a1e1c; border: 1px solid #232826;">
-                                <div style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; color: #9aa49f; margin-bottom: 0.75rem;">
+                            <div style="padding: 1rem; border-radius: 0.625rem; background: var(--surface2); border: 1px solid var(--border);">
+                                <div style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; color: var(--muted); margin-bottom: 0.75rem;">
                                     Kekuatan Sinyal Optik (Optical Fiber)
                                 </div>
                                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 0.75rem;">
-                                    <div style="background: #131615; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #232826;">
-                                        <div style="font-size: 0.6875rem; color: #9aa49f;">RX Power</div>
+                                    <div style="background: var(--surface); padding: 0.75rem; border-radius: 0.5rem; border: 1px solid var(--border);">
+                                        <div style="font-size: 0.6875rem; color: var(--muted);">RX Power</div>
                                         <div style="font-size: 1.125rem; font-weight: 800; font-family: ui-monospace, monospace; color: #00e07e; margin-top: 2px;">{{ $diagnosticData['optical']['rx_power'] ?? '-' }}</div>
                                     </div>
-                                    <div style="background: #131615; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #232826;">
-                                        <div style="font-size: 0.6875rem; color: #9aa49f;">TX Power</div>
+                                    <div style="background: var(--surface); padding: 0.75rem; border-radius: 0.5rem; border: 1px solid var(--border);">
+                                        <div style="font-size: 0.6875rem; color: var(--muted);">TX Power</div>
                                         <div style="font-size: 1.125rem; font-weight: 800; font-family: ui-monospace, monospace; color: #38bdf8; margin-top: 2px;">{{ $diagnosticData['optical']['tx_power'] ?? '-' }}</div>
                                     </div>
-                                    <div style="background: #131615; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #232826;">
-                                        <div style="font-size: 0.6875rem; color: #9aa49f;">Suhu Chip</div>
-                                        <div style="font-size: 1.125rem; font-weight: 800; font-family: ui-monospace, monospace; color: #eef1f0; margin-top: 2px;">{{ $diagnosticData['optical']['temperature'] ?? '-' }}</div>
+                                    <div style="background: var(--surface); padding: 0.75rem; border-radius: 0.5rem; border: 1px solid var(--border);">
+                                        <div style="font-size: 0.6875rem; color: var(--muted);">Suhu Chip</div>
+                                        <div style="font-size: 1.125rem; font-weight: 800; font-family: ui-monospace, monospace; color: var(--text); margin-top: 2px;">{{ $diagnosticData['optical']['temperature'] ?? '-' }}</div>
                                     </div>
-                                    <div style="background: #131615; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #232826;">
-                                        <div style="font-size: 0.6875rem; color: #9aa49f;">Voltase</div>
-                                        <div style="font-size: 1.125rem; font-weight: 800; font-family: ui-monospace, monospace; color: #eef1f0; margin-top: 2px;">{{ $diagnosticData['optical']['voltage'] ?? '-' }}</div>
+                                    <div style="background: var(--surface); padding: 0.75rem; border-radius: 0.5rem; border: 1px solid var(--border);">
+                                        <div style="font-size: 0.6875rem; color: var(--muted);">Voltase</div>
+                                        <div style="font-size: 1.125rem; font-weight: 800; font-family: ui-monospace, monospace; color: var(--text); margin-top: 2px;">{{ $diagnosticData['optical']['voltage'] ?? '-' }}</div>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Hardware & Firmware -->
-                            <div style="padding: 1rem; border-radius: 0.625rem; background: #1a1e1c; border: 1px solid #232826; font-size: 0.75rem;">
-                                <div style="font-weight: 700; text-transform: uppercase; color: #9aa49f; margin-bottom: 0.5rem;">Informasi Hardware &amp; Uptime</div>
-                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.5rem; color: #cbd5e1;">
-                                    <div>Pabrikan / Merk: <strong style="color: #ffffff;">{{ $diagnosticData['device']['manufacturer'] ?? '-' }}</strong></div>
-                                    <div>Model: <strong style="color: #ffffff;">{{ $diagnosticData['device']['product_class'] ?? '-' }}</strong></div>
-                                    <div>Serial Number: <strong style="color: #ffffff; font-family: ui-monospace, monospace;">{{ $diagnosticData['device']['serial_number'] ?? '-' }}</strong></div>
-                                    <div>Firmware: <strong style="color: #ffffff; font-family: ui-monospace, monospace;">{{ $diagnosticData['device']['software_version'] ?? '-' }}</strong></div>
+                            <div style="padding: 1rem; border-radius: 0.625rem; background: var(--surface2); border: 1px solid var(--border); font-size: 0.75rem;">
+                                <div style="font-weight: 700; text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem;">Informasi Hardware &amp; Uptime</div>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.5rem; color: var(--muted);">
+                                    <div>Pabrikan / Merk: <strong style="color: var(--text);">{{ $diagnosticData['device']['manufacturer'] ?? '-' }}</strong></div>
+                                    <div>Model: <strong style="color: var(--text);">{{ $diagnosticData['device']['product_class'] ?? '-' }}</strong></div>
+                                    <div>Serial Number: <strong style="color: var(--text); font-family: ui-monospace, monospace;">{{ $diagnosticData['device']['serial_number'] ?? '-' }}</strong></div>
+                                    <div>Firmware: <strong style="color: var(--text); font-family: ui-monospace, monospace;">{{ $diagnosticData['device']['software_version'] ?? '-' }}</strong></div>
                                     <div>Uptime Modem: <strong style="color: #00e07e;">{{ $diagnosticData['device']['uptime'] ?? '-' }}</strong></div>
-                                    <div>Terakhir Inform: <strong style="color: #ffffff;">{{ $diagnosticData['device']['last_inform'] ?? '-' }}</strong></div>
+                                    <div>Terakhir Inform: <strong style="color: var(--text);">{{ $diagnosticData['device']['last_inform'] ?? '-' }}</strong></div>
                                 </div>
                             </div>
                         @endif
                     </div>
 
-                    <div style="padding: 1rem 1.25rem; border-top: 1px solid #232826; background: #171b19; display: flex; justify-content: flex-end;">
-                        <button type="button" wire:click="closeDiagnosticModal()" class="ont-btn-action" style="padding: 0.5rem 1rem; color: #ffffff;">Tutup</button>
+                    <div style="padding: 1rem 1.25rem; border-top: 1px solid var(--border); background: var(--surface2); display: flex; justify-content: flex-end;">
+                        <button type="button" wire:click="closeDiagnosticModal()" class="ont-btn-action" style="padding: 0.5rem 1rem; color: var(--text);">Tutup</button>
                     </div>
                 </div>
             </div>
@@ -683,34 +683,34 @@
         @if ($showWifiModal)
             <div class="ont-modal-backdrop" x-data @keydown.escape.window="$wire.closeWifiModal()">
                 <div class="ont-modal-card" style="max-width: 480px;">
-                    <div style="padding: 1rem 1.25rem; border-bottom: 1px solid #232826; background: #171b19; display: flex; align-items: center; justify-content: space-between;">
+                    <div style="padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); background: var(--surface2); display: flex; align-items: center; justify-content: space-between;">
                         <div style="display: flex; align-items: center; gap: 0.75rem;">
                             <div style="width: 38px; height: 38px; border-radius: 0.5rem; background: rgba(0,224,126,0.12); border: 1px solid rgba(0,224,126,0.3); display: flex; align-items: center; justify-content: center; color: #00e07e;">
                                 <span class="material-symbols-rounded" style="font-size: 20px;">wifi_password</span>
                             </div>
                             <div>
-                                <h3 style="font-weight: 700; font-size: 0.9375rem; color: #eef1f0; margin: 0;">Ganti Nama &amp; Password Wi-Fi</h3>
-                                <p style="font-size: 0.6875rem; color: #9aa49f; margin: 2px 0 0 0;">Pelanggan: <strong style="color: #ffffff;">{{ $wifiCustomerName }}</strong></p>
+                                <h3 style="font-weight: 700; font-size: 0.9375rem; color: var(--text); margin: 0;">Ganti Nama &amp; Password Wi-Fi</h3>
+                                <p style="font-size: 0.6875rem; color: var(--muted); margin: 2px 0 0 0;">Pelanggan: <strong style="color: #ffffff;">{{ $wifiCustomerName }}</strong></p>
                             </div>
                         </div>
-                        <button type="button" wire:click="closeWifiModal()" style="color: #9aa49f; background: transparent; border: none; font-size: 1.25rem; cursor: pointer;">✕</button>
+                        <button type="button" wire:click="closeWifiModal()" style="color: var(--muted); background: transparent; border: none; font-size: 1.25rem; cursor: pointer;">✕</button>
                     </div>
 
                     <div style="padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem;">
                         <div>
-                            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #eef1f0; margin-bottom: 0.25rem;">Nama Wi-Fi (SSID)</label>
+                            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text); margin-bottom: 0.25rem;">Nama Wi-Fi (SSID)</label>
                             <input type="text" wire:model="wifiSsid" placeholder="cth: NetSpeed_Rumah" class="ont-input" style="width: 100%;">
                         </div>
 
                         <div>
-                            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #eef1f0; margin-bottom: 0.25rem;">Password Wi-Fi Baru</label>
+                            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text); margin-bottom: 0.25rem;">Password Wi-Fi Baru</label>
                             <input type="text" wire:model="wifiPassword" placeholder="Biarkan kosong jika tidak ingin ganti password" class="ont-input" style="width: 100%; font-family: ui-monospace, monospace;">
-                            <p style="font-size: 0.6875rem; color: #9aa49f; margin: 4px 0 0 0;">Minimal 8 karakter.</p>
+                            <p style="font-size: 0.6875rem; color: var(--muted); margin: 4px 0 0 0;">Minimal 8 karakter.</p>
                         </div>
                     </div>
 
-                    <div style="padding: 1rem 1.25rem; border-top: 1px solid #232826; background: #171b19; display: flex; justify-content: flex-end; gap: 0.5rem;">
-                        <button type="button" wire:click="closeWifiModal()" class="ont-btn-action" style="padding: 0.5rem 1rem; color: #9aa49f;">Batal</button>
+                    <div style="padding: 1rem 1.25rem; border-top: 1px solid var(--border); background: var(--surface2); display: flex; justify-content: flex-end; gap: 0.5rem;">
+                        <button type="button" wire:click="closeWifiModal()" class="ont-btn-action" style="padding: 0.5rem 1rem; color: var(--muted);">Batal</button>
                         <button type="button" wire:click="saveWifi()" wire:loading.attr="disabled"
                             class="ont-btn-action" style="background: #00e07e; color: #06261a; border: none; padding: 0.5rem 1.1rem; font-weight: 800;">
                             <span wire:loading.remove wire:target="saveWifi">💾 Terapkan ke Modem</span>
@@ -727,20 +727,20 @@
         @if ($showAssignModal)
             <div class="ont-modal-backdrop" x-data @keydown.escape.window="$wire.closeAssignModal()">
                 <div class="ont-modal-card" style="max-width: 480px;">
-                    <div style="padding: 1rem 1.25rem; border-bottom: 1px solid #232826; background: #171b19; display: flex; align-items: center; justify-content: space-between;">
-                        <h3 style="font-weight: 700; font-size: 0.9375rem; color: #eef1f0; margin: 0;">Pasangkan Modem ke Akun Pelanggan</h3>
-                        <button type="button" wire:click="closeAssignModal()" style="color: #9aa49f; background: transparent; border: none; font-size: 1.25rem; cursor: pointer;">✕</button>
+                    <div style="padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); background: var(--surface2); display: flex; align-items: center; justify-content: space-between;">
+                        <h3 style="font-weight: 700; font-size: 0.9375rem; color: var(--text); margin: 0;">Pasangkan Modem ke Akun Pelanggan</h3>
+                        <button type="button" wire:click="closeAssignModal()" style="color: var(--muted); background: transparent; border: none; font-size: 1.25rem; cursor: pointer;">✕</button>
                     </div>
 
                     <div style="padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem;">
-                        <div style="background: #1a1e1c; padding: 0.85rem; border-radius: 0.5rem; border: 1px solid #232826;">
-                            <div style="font-size: 0.6875rem; color: #9aa49f;">Serial Number (GPON SN):</div>
+                        <div style="background: var(--surface2); padding: 0.85rem; border-radius: 0.5rem; border: 1px solid var(--border);">
+                            <div style="font-size: 0.6875rem; color: var(--muted);">Serial Number (GPON SN):</div>
                             <div style="font-family: ui-monospace, monospace; font-size: 0.875rem; font-weight: 700; color: #00e07e; margin-top: 2px;">{{ $assignDeviceId }}</div>
                             <div style="font-size: 0.75rem; color: #cbd5e1; margin-top: 4px;">Model: {{ $assignDeviceModel }}</div>
                         </div>
 
                         <div>
-                            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #eef1f0; margin-bottom: 0.25rem;">Pilih Akun Pelanggan</label>
+                            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text); margin-bottom: 0.25rem;">Pilih Akun Pelanggan</label>
                             <select wire:model="targetCustomerId" class="ont-input" style="width: 100%; cursor: pointer;">
                                 <option value="">-- Pilih Pelanggan --</option>
                                 @foreach ($this->customerOptions as $opt)
@@ -750,8 +750,8 @@
                         </div>
                     </div>
 
-                    <div style="padding: 1rem 1.25rem; border-top: 1px solid #232826; background: #171b19; display: flex; justify-content: flex-end; gap: 0.5rem;">
-                        <button type="button" wire:click="closeAssignModal()" class="ont-btn-action" style="padding: 0.5rem 1rem; color: #9aa49f;">Batal</button>
+                    <div style="padding: 1rem 1.25rem; border-top: 1px solid var(--border); background: var(--surface2); display: flex; justify-content: flex-end; gap: 0.5rem;">
+                        <button type="button" wire:click="closeAssignModal()" class="ont-btn-action" style="padding: 0.5rem 1rem; color: var(--muted);">Batal</button>
                         <button type="button" wire:click="assignDevice()" class="ont-btn-action" style="background: #00e07e; color: #06261a; border: none; padding: 0.5rem 1.1rem; font-weight: 800;">Pasangkan</button>
                     </div>
                 </div>

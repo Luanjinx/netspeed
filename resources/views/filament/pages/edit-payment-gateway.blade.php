@@ -87,7 +87,7 @@
 
         .pg-btn-primary {
             background: #00e07e;
-            color: #06261a;
+            color: #ffffff;
             font-weight: 800;
             font-size: 0.875rem;
             padding: 0.65rem 1.5rem;
@@ -102,7 +102,7 @@
 
         .pg-btn-primary:hover {
             background: #4deda4;
-            color: #06261a;
+            color: #ffffff;
             transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(0, 224, 126, 0.3);
         }
@@ -161,7 +161,7 @@
             box-shadow: var(--shadow);
         }
         .dark .pg-hero-card {
-            background: linear-gradient(135deg, #161a18 0%, #131615 100%);
+            background: linear-gradient(135deg, #161a18 0%, var(--surface) 100%);
         }
 
         .pg-switch-box {
