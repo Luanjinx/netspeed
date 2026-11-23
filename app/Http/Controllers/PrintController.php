@@ -41,13 +41,23 @@ class PrintController extends Controller
      */
     public function thermal(int $id)
     {
-        $invoice = Invoice::with(['customer.package', 'payments'])->findOrFail($id);
+        $invoice = Invoice::with(['customer.package', 'payments', 'agentTransactions.agent'])->findOrFail($id);
+        $agentTx = $invoice->agentTransactions()->with('agent')->latest()->first();
         $isp = [
-            'name' => IspSetting::get('company_name', 'NETSPEED INTERNET'),
-            'phone' => IspSetting::get('company_phone', '081234567890'),
-            'address' => IspSetting::get('company_address', 'Jakarta'),
+            'name' => IspSetting::get('company_name', 'NETSPEED INTERNET SERVICE'),
+            'phone' => IspSetting::get('company_phone', '0812-3456-7890'),
+            'address' => IspSetting::get('company_address', 'Jl. Telekomunikasi No. 88'),
+            'website' => IspSetting::get('company_website', url('/')),
         ];
 
-        return view('print.receipt-thermal', compact('invoice', 'isp'));
+        $verifyUrl = route('landing.check-bill').'?q='.urlencode($invoice->invoice_number);
+        $qrDataUri = null;
+        try {
+            $qrDataUri = $this->qrisService->renderDataUri($verifyUrl, 'svg');
+        } catch (\Throwable $e) {
+            $qrDataUri = null;
+        }
+
+        return view('print.receipt-thermal', compact('invoice', 'isp', 'agentTx', 'qrDataUri'));
     }
 }
