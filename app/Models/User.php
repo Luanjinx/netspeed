@@ -49,7 +49,7 @@ class User extends Authenticatable implements FilamentUser
      */
     public function canAccessPanel(Panel $panel): bool
     {
-        return $this->role === 'admin';
+        return in_array($this->role, ['admin', 'agent']);
     }
 
     /**
@@ -81,5 +81,13 @@ class User extends Authenticatable implements FilamentUser
     public function customer(): HasOne
     {
         return $this->hasOne(Customer::class);
+    }
+
+    /**
+     * Agent profile relation if this user is an agent.
+     */
+    public function agent(): HasOne
+    {
+        return $this->hasOne(Agent::class);
     }
 }
