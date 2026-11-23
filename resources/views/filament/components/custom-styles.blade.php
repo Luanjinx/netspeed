@@ -44,7 +44,7 @@
         --chk: #ffffff;
         --shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
         --btn: #00e07e;
-        --btnText: #ffffff;
+        --btnText: #06261a;
     }
 
     .dark, html.dark {
@@ -64,7 +64,7 @@
         --chk: #191d1b;
         --shadow: 0 1px 0 #ffffff08 inset, 0 10px 30px -10px rgba(0, 0, 0, 0.5);
         --btn: #00e07e;
-        --btnText: #ffffff;
+        --btnText: #06261a;
     }
 
     body,
@@ -270,7 +270,7 @@
     .dark .fi-tabs-item[aria-selected="true"],
     .dark .fi-tabs-item--active {
         background: var(--btn) !important;
-        color: #ffffff !important;
+        color: #06261a !important;
         font-weight: 800 !important;
         box-shadow: 0 4px 14px rgba(0, 224, 126, 0.35) !important;
         border-color: var(--btn) !important;
@@ -282,7 +282,7 @@
     .dark .fi-sc-tabs-tab[aria-selected="true"] *,
     .dark .fi-tabs-item[aria-selected="true"] *,
     .dark .fi-tabs-item--active * {
-        color: #ffffff !important;
+        color: #06261a !important;
     }
 
     .fi-modal-footer,
@@ -331,7 +331,7 @@
     .fi-ac-btn-action.fi-color-primary,
     .dark .fi-ac-btn-action.fi-color-primary {
         background-color: var(--btn) !important;
-        color: #ffffff !important;
+        color: #06261a !important;
         font-weight: 800 !important;
         border: none !important;
         box-shadow: 0 4px 14px rgba(0, 224, 126, 0.25) !important;
@@ -346,7 +346,7 @@
     .dark button[type="submit"].fi-btn:not(.fi-btn-outlined) *,
     .fi-ac-btn-action.fi-color-primary *,
     .dark .fi-ac-btn-action.fi-color-primary * {
-        color: #ffffff !important;
+        color: #06261a !important;
     }
 
     .fi-btn-primary:hover,
@@ -358,7 +358,7 @@
     .fi-ac-btn-action.fi-color-primary:hover,
     .dark .fi-ac-btn-action.fi-color-primary:hover {
         background-color: var(--accent2) !important;
-        color: #ffffff !important;
+        color: #06261a !important;
         transform: translateY(-1px) !important;
         box-shadow: 0 6px 20px rgba(0, 224, 126, 0.45) !important;
     }
@@ -371,7 +371,7 @@
     .dark button[type="submit"].fi-btn:not(.fi-btn-outlined):hover *,
     .fi-ac-btn-action.fi-color-primary:hover *,
     .dark .fi-ac-btn-action.fi-color-primary:hover * {
-        color: #ffffff !important;
+        color: #06261a !important;
     }
 
     /* RIGHT-ALIGNED FORM & MODAL ACTION BUTTONS */
