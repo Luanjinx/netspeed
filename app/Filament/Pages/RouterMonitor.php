@@ -40,6 +40,10 @@ class RouterMonitor extends Page
 
     public bool $autoRefresh = false;
 
+    public int $refreshInterval = 3;
+
+    public ?string $lastUpdatedAt = null;
+
     // --- Tab 1: Router & Interface Traffic ---
     public array $systemResources = [];
 
@@ -65,6 +69,7 @@ class RouterMonitor extends Page
 
     public function mount(): void
     {
+        $this->lastUpdatedAt = now()->format('H:i:s');
         $defaultRouter = Router::where('is_active', true)->first();
         if ($defaultRouter) {
             $this->selectedRouterId = $defaultRouter->id;
@@ -86,6 +91,27 @@ class RouterMonitor extends Page
     public function toggleAutoRefresh(): void
     {
         $this->autoRefresh = ! $this->autoRefresh;
+        if ($this->autoRefresh) {
+            $this->loadData();
+            Notification::make()
+                ->title("Auto-Refresh Aktif ({$this->refreshInterval}s)")
+                ->body('Data router akan diperbarui otomatis secara berkala.')
+                ->success()
+                ->send();
+        } else {
+            Notification::make()
+                ->title('Auto-Refresh Dimatikan')
+                ->info()
+                ->send();
+        }
+    }
+
+    public function updatedRefreshInterval(): void
+    {
+        $this->refreshInterval = max(2, (int) $this->refreshInterval);
+        if ($this->autoRefresh) {
+            $this->loadData();
+        }
     }
 
     public function refreshData(): void
@@ -99,6 +125,7 @@ class RouterMonitor extends Page
 
     public function loadData(): void
     {
+        $this->lastUpdatedAt = now()->format('H:i:s');
         if (! $this->selectedRouterId) {
             $this->isConnected = false;
 

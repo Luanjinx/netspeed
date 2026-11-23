@@ -1,5 +1,81 @@
 <x-filament-panels::page>
-    <div style="display: flex; flex-direction: column; gap: 1.5rem;" @if ($autoRefresh) wire:poll.5s="loadData" @endif>
+    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+
+        <!-- 1. Real-time Auto-Refresh Engine (Alpine.js Non-blocking Async Poller) -->
+        <div x-data="{
+            active: @entangle('autoRefresh'),
+            interval: @entangle('refreshInterval'),
+            timer: null,
+            isPolling: false,
+            init() {
+                this.$watch('active', (val) => {
+                    if (val) {
+                        this.startPolling();
+                    } else {
+                        this.stopPolling();
+                    }
+                });
+                this.$watch('interval', () => {
+                    if (this.active) {
+                        this.startPolling();
+                    }
+                });
+                if (this.active) {
+                    this.startPolling();
+                }
+            },
+            startPolling() {
+                this.stopPolling();
+                this.scheduleNext(100);
+            },
+            scheduleNext(delayMs) {
+                if (!this.active) return;
+                this.timer = setTimeout(async () => {
+                    if (!this.active) return;
+                    if (!this.isPolling) {
+                        this.isPolling = true;
+                        try {
+                            await $wire.loadData();
+                        } catch (e) {
+                            console.warn('[RouterMonitor] Polling tick:', e);
+                        } finally {
+                            this.isPolling = false;
+                        }
+                    }
+                    if (this.active) {
+                        const sec = Math.max(2, parseInt(this.interval) || 3);
+                        this.scheduleNext(sec * 1000);
+                    }
+                }, delayMs);
+            },
+            stopPolling() {
+                if (this.timer) {
+                    clearTimeout(this.timer);
+                    this.timer = null;
+                }
+                this.isPolling = false;
+            },
+            destroy() {
+                this.stopPolling();
+            }
+        }" style="display: none;"></div>
+
+        <style>
+            @keyframes pulse-radar {
+                0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 224, 126, 0.7); }
+                70% { transform: scale(1.05); box-shadow: 0 0 0 6px rgba(0, 224, 126, 0); }
+                100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 224, 126, 0); }
+            }
+            .pulse-dot-live {
+                width: 8px;
+                height: 8px;
+                border-radius: 9999px;
+                background: #00e07e;
+                display: inline-block;
+                animation: pulse-radar 1.5s infinite;
+            }
+        </style>
+
         <!-- Top Router Selector & Actions Bar -->
         <div class="fi-section noc-router-bar" style="padding: 1rem 1.25rem; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: 1rem;">
             <div style="display: flex; align-items: center; gap: 0.875rem; flex-wrap: wrap;">
@@ -22,6 +98,12 @@
                         <span class="noc-dot noc-dot-success" style="width: 7px; height: 7px; border-radius: 9999px; background: #00e07e; display: inline-block;"></span>
                         Terhubung ke RouterOS
                     </span>
+                    @if ($lastUpdatedAt)
+                        <span style="font-size: 0.725rem; color: var(--muted); display: inline-flex; align-items: center; gap: 4px; padding: 0.25rem 0.55rem; background: var(--surface2); border: 1px solid var(--border); border-radius: 9999px; white-space: nowrap;">
+                            <span class="material-symbols-rounded" style="font-size: 14px; color: #00e07e;">update</span>
+                            <span>Update: <strong style="color: var(--text);">{{ $lastUpdatedAt }}</strong></span>
+                        </span>
+                    @endif
                     @if ($isSimulated)
                         <span class="noc-pill noc-pill-neutral" style="font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 0.35rem 0.65rem; border-radius: 9999px; background: var(--surface2); border: 1px solid var(--border); color: var(--muted); white-space: nowrap;">
                             Preview Data
@@ -37,24 +119,35 @@
 
             <!-- Dynamic Action Buttons by Active Tab -->
             <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;">
-                <!-- Auto-Refresh Toggle Button -->
-                <button type="button"
-                        wire:click="toggleAutoRefresh"
-                        style="height: 38px; padding: 0 0.95rem; border-radius: 0.5rem; font-size: 0.8125rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s ease; @if ($autoRefresh) background: rgba(0, 224, 126, 0.15); color: #00e07e; border: 1px solid rgba(0, 224, 126, 0.4); @else background: var(--surface2); color: var(--text); border: 1px solid var(--border); @endif">
-                    <span class="material-symbols-rounded" style="font-size: 17px; @if ($autoRefresh) color: #00e07e; @else color: var(--muted); @endif">bolt</span>
-                    <span>{{ $autoRefresh ? 'Auto-Refresh Aktif (5s)' : 'Aktifkan Auto-Refresh' }}</span>
-                    @if ($autoRefresh)
-                        <span style="width: 6px; height: 6px; border-radius: 9999px; background: #00e07e; display: inline-block;"></span>
-                    @endif
-                </button>
+                <!-- Combined Auto-Refresh Segment (Toggle + Speed Selector) -->
+                <div style="display: inline-flex; align-items: center; border-radius: 0.5rem; overflow: hidden; border: 1px solid @if ($autoRefresh) rgba(0, 224, 126, 0.45) @else var(--border) @endif; background: @if ($autoRefresh) rgba(0, 224, 126, 0.12) @else var(--surface2) @endif; transition: all 0.2s ease;">
+                    <button type="button"
+                            wire:click="toggleAutoRefresh"
+                            style="height: 38px; padding: 0 0.85rem; font-size: 0.8125rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; border: none; background: transparent; color: @if ($autoRefresh) #00e07e @else var(--text) @endif; transition: all 0.2s ease;">
+                        <span class="material-symbols-rounded" style="font-size: 18px; color: @if ($autoRefresh) #00e07e @else var(--muted) @endif;">bolt</span>
+                        <span>{{ $autoRefresh ? "Auto-Refresh ({$refreshInterval}s)" : 'Aktifkan Auto-Refresh' }}</span>
+                        @if ($autoRefresh)
+                            <span class="pulse-dot-live"></span>
+                        @endif
+                    </button>
+                    <select wire:model.live="refreshInterval"
+                            title="Kecepatan Auto-Refresh"
+                            style="height: 38px; padding: 0 0.5rem; font-size: 0.75rem; font-weight: 700; background: var(--surface); color: var(--text); border: none; border-left: 1px solid var(--border); outline: none; cursor: pointer;">
+                        <option value="2">2s (Real-Time)</option>
+                        <option value="3">3s (Cepat)</option>
+                        <option value="5">5s (Standar)</option>
+                        <option value="10">10s (Santai)</option>
+                    </select>
+                </div>
 
                 <!-- Perbarui Data Button (Sync Icon - Not Letter C) -->
                 <button type="button"
                         wire:click="refreshData"
                         wire:loading.attr="disabled"
+                        wire:target="refreshData, loadData"
                         style="height: 38px; padding: 0 1rem; border-radius: 0.5rem; font-size: 0.8125rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s ease; background: #00e07e; color: #06261a; border: 1px solid #00e07e; box-shadow: 0 2px 8px rgba(0, 224, 126, 0.25);">
-                    <span wire:loading.remove wire:target="refreshData" class="material-symbols-rounded" style="font-size: 18px; color: #06261a; font-weight: 700;">sync</span>
-                    <span wire:loading wire:target="refreshData" class="material-symbols-rounded" style="font-size: 18px; color: #06261a; animation: spin 1s linear infinite;">sync</span>
+                    <span wire:loading.remove wire:target="refreshData, loadData" class="material-symbols-rounded" style="font-size: 18px; color: #06261a; font-weight: 700;">sync</span>
+                    <span wire:loading wire:target="refreshData, loadData" class="material-symbols-rounded" style="font-size: 18px; color: #06261a; animation: spin 1s linear infinite;">sync</span>
                     <span>Perbarui Data</span>
                 </button>
 
