@@ -155,17 +155,40 @@ class QrisService
     }
 
     /**
-     * Generate QR Code as Base64 Data URI (SVG).
+     * Generate QR Code as Base64 Data URI (defaults to PNG for maximum cross-platform compatibility).
      */
-    public function renderDataUri(string $qrisString): string
+    public function renderDataUri(string $qrisString, string $format = 'png'): string
     {
-        $svg = $this->renderSvg($qrisString);
+        if ($format === 'svg') {
+            $svg = $this->renderSvg($qrisString);
 
-        if (str_starts_with($svg, 'data:image/')) {
-            return $svg;
+            if (str_starts_with($svg, 'data:image/')) {
+                return $svg;
+            }
+
+            return 'data:image/svg+xml;base64,'.base64_encode($svg);
         }
 
-        return 'data:image/svg+xml;base64,'.base64_encode($svg);
+        return $this->renderPngDataUri($qrisString);
+    }
+
+    /**
+     * Generate QR Code as Base64 Data URI in PNG format.
+     */
+    public function renderPngDataUri(string $qrisString, int $scale = 8): string
+    {
+        $options = new QROptions([
+            'version' => QRCode::VERSION_AUTO,
+            'outputType' => QRCode::OUTPUT_IMAGE_PNG,
+            'eccLevel' => QRCode::ECC_M,
+            'scale' => $scale,
+            'imageBase64' => true,
+            'addQuietzone' => true,
+        ]);
+
+        $qrcode = new QRCode($options);
+
+        return $qrcode->render($qrisString);
     }
 
     /**

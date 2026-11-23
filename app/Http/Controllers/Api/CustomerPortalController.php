@@ -301,9 +301,46 @@ class CustomerPortalController extends Controller
             ->orderBy('due_date', 'desc')
             ->get();
 
+        $staticQris = IspSetting::get('static_qris_string') ?: IspSetting::get('static_qris', '');
+        if (empty($staticQris)) {
+            $gw = PaymentGateway::where('code', 'qris_manual')->first();
+            $staticQris = $gw?->config['static_qris_string'] ?? '';
+        }
+
+        $invoicesData = $invoices->map(function ($invoice) use ($staticQris) {
+            $data = $invoice->toArray();
+
+            if ($invoice->status === 'unpaid' && ! empty($staticQris)) {
+                if (empty($invoice->qris_payload)) {
+                    try {
+                        $invoice->qris_payload = $this->qrisService->convertStaticToDynamic(
+                            $staticQris,
+                            (float) ($invoice->total_amount ?? $invoice->amount),
+                            $invoice->invoice_number
+                        );
+                        $invoice->save();
+                    } catch (Exception $e) {
+                        // Ignore
+                    }
+                }
+
+                if (! empty($invoice->qris_payload)) {
+                    try {
+                        $qrDataUri = $this->qrisService->renderDataUri($invoice->qris_payload);
+                        $data['qris_qr'] = $qrDataUri;
+                        $data['qris_data_uri'] = $qrDataUri;
+                    } catch (Exception $e) {
+                        // Ignore
+                    }
+                }
+            }
+
+            return $data;
+        });
+
         return response()->json([
             'success' => true,
-            'data' => $invoices,
+            'data' => $invoicesData,
         ]);
     }
 
@@ -322,12 +359,17 @@ class CustomerPortalController extends Controller
 
         // Ensure dynamic QRIS payload exists
         if (empty($invoice->qris_payload)) {
-            $staticQris = IspSetting::get('static_qris_string');
+            $staticQris = IspSetting::get('static_qris_string') ?: IspSetting::get('static_qris', '');
+            if (empty($staticQris)) {
+                $gw = PaymentGateway::where('code', 'qris_manual')->first();
+                $staticQris = $gw?->config['static_qris_string'] ?? '';
+            }
+
             if (! empty($staticQris)) {
                 try {
                     $invoice->qris_payload = $this->qrisService->convertStaticToDynamic(
                         $staticQris,
-                        $invoice->total_amount,
+                        (float) ($invoice->total_amount ?? $invoice->amount),
                         $invoice->invoice_number
                     );
                     $invoice->save();

@@ -109,14 +109,19 @@ class LandingPageController extends Controller
             $cleanPhone = '62'.substr($cleanPhone, 1);
         }
 
-        $staticQris = IspSetting::get('static_qris', '');
+        $staticQris = IspSetting::get('static_qris_string') ?: IspSetting::get('static_qris', '');
+        if (empty($staticQris)) {
+            $gw = PaymentGateway::where('code', 'qris_manual')->first();
+            $staticQris = $gw?->config['static_qris_string'] ?? '';
+        }
+
         $qrisQr = null;
 
         if ($unpaidInvoice && ! empty($staticQris)) {
             try {
                 $qrisString = $qrisService->convertStaticToDynamic(
                     $staticQris,
-                    (float) $unpaidInvoice->amount,
+                    (float) ($unpaidInvoice->total_amount ?? $unpaidInvoice->amount),
                     $unpaidInvoice->invoice_number
                 );
                 $qrisQr = $qrisService->renderDataUri($qrisString);
