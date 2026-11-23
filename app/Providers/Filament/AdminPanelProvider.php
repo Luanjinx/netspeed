@@ -4,10 +4,10 @@ namespace App\Providers\Filament;
 
 use App\Filament\Pages\Auth\EditProfile;
 use App\Filament\Pages\Auth\Login;
+use App\Http\Middleware\AuthenticateAdminPanel;
 use App\Http\Middleware\BlockDemoMutations;
 use App\Providers\DemoModeServiceProvider;
 use Filament\FontProviders\LocalFontProvider;
-use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -103,7 +103,7 @@ class AdminPanelProvider extends PanelProvider
                 BlockDemoMutations::class,
             ])
             ->authMiddleware([
-                Authenticate::class,
+                AuthenticateAdminPanel::class,
             ]);
     }
 }
