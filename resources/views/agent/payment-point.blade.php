@@ -48,7 +48,10 @@
                        id="search-input"
                        placeholder="Ketik No Invoice, Username PPPoE, Nama, No WA, atau Scan Barcode..."
                        autofocus
-                       class="w-full pl-12 pr-12 py-3.5 rounded-xl bg-surface2 border border-border text-white text-sm font-semibold placeholder:text-muted focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition shadow-inner">
+                       class="w-full pl-12 pr-20 py-3.5 rounded-xl bg-surface2 border border-border text-white text-sm font-semibold placeholder:text-muted focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition shadow-inner">
+                <div id="search-spinner" class="hidden absolute right-10 top-1/2 -translate-y-1/2 text-accent">
+                    <span class="material-symbols-rounded text-xl animate-spin">progress_activity</span>
+                </div>
                 <button type="button" id="btn-clear-search" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-white p-1">
                     <span class="material-symbols-rounded text-lg">close</span>
                 </button>
@@ -62,16 +65,10 @@
 
     <!-- Search Results / Invoice List -->
     <div id="results-container" class="space-y-4">
-        <!-- Placeholder / Loading indicator -->
-        <div id="loading-state" class="hidden py-12 text-center text-muted">
-            <span class="material-symbols-rounded text-3xl animate-spin text-accent mb-2 block">progress_activity</span>
-            <p class="text-xs">Mencari data tagihan di sistem...</p>
-        </div>
-
-        <div id="empty-state" class="hidden py-12 text-center text-muted rounded-2xl bg-surface border border-border">
-            <span class="material-symbols-rounded text-4xl block mb-2 opacity-40">search_off</span>
-            <p class="text-sm font-bold text-white">Tagihan Belum Ditemukan</p>
-            <p class="text-xs mt-1 text-muted">Pastikan nomor invoice, username PPPoE, atau nomor HP yang diketik sudah benar.</p>
+        <div id="empty-state" class="hidden py-8 text-center text-muted rounded-2xl bg-surface border border-border">
+            <span class="material-symbols-rounded text-3xl block mb-1 opacity-40">search_off</span>
+            <p class="text-xs font-bold text-white">Tagihan Tidak Ditemukan</p>
+            <p class="text-[11px] mt-0.5 text-muted">Pastikan nomor invoice, username PPPoE, atau nomor HP yang diketik sudah benar.</p>
         </div>
 
         <!-- Dynamic Results Cards will be rendered here -->
@@ -150,7 +147,7 @@
 
     const searchInput = document.getElementById('search-input');
     const btnClearSearch = document.getElementById('btn-clear-search');
-    const loadingState = document.getElementById('loading-state');
+    const searchSpinner = document.getElementById('search-spinner');
     const emptyState = document.getElementById('empty-state');
     const invoicesGrid = document.getElementById('invoices-grid');
     const confirmModal = document.getElementById('confirm-modal');
@@ -166,12 +163,11 @@
         if (val.length < 2) {
             invoicesGrid.innerHTML = '';
             emptyState.classList.add('hidden');
-            loadingState.classList.add('hidden');
+            searchSpinner.classList.add('hidden');
             return;
         }
 
-        loadingState.classList.remove('hidden');
-        emptyState.classList.add('hidden');
+        searchSpinner.classList.remove('hidden');
 
         searchTimer = setTimeout(() => {
             fetchInvoices(val);
@@ -182,6 +178,7 @@
         searchInput.value = '';
         searchInput.focus();
         btnClearSearch.classList.add('hidden');
+        searchSpinner.classList.add('hidden');
         invoicesGrid.innerHTML = '';
         emptyState.classList.add('hidden');
     });
@@ -190,7 +187,7 @@
         try {
             const res = await fetch(`{{ route('agent.ajax.search-invoices') }}?q=${encodeURIComponent(query)}`);
             const json = await res.json();
-            loadingState.classList.add('hidden');
+            searchSpinner.classList.add('hidden');
 
             if (json.status === 'success' && json.data.length > 0) {
                 renderInvoices(json.data);
@@ -200,7 +197,7 @@
                 emptyState.classList.remove('hidden');
             }
         } catch (err) {
-            loadingState.classList.add('hidden');
+            searchSpinner.classList.add('hidden');
             console.error(err);
         }
     }
