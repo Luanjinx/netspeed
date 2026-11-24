@@ -33,6 +33,7 @@
                     $categories = [
                         'all' => 'Semua Tools',
                         'security' => '🛡️ Keamanan & Hardening',
+                        'ip' => '🌐 IP & Pool',
                         'network' => '⚡ Optimasi Jaringan',
                         'maintenance' => '🧹 Reset & Maintenance',
                     ];
@@ -68,6 +69,32 @@
                     'v6' => true,
                     'v7' => true,
                     'url' => route('filament.admin.pages.mikrotik-tools.add-admin-user'),
+                ],
+                [
+                    'title' => 'Add IP Address',
+                    'slug' => 'add-ip-address',
+                    'category' => 'ip',
+                    'category_label' => 'IP & Pool',
+                    'description' => 'Tetapkan alamat IP beserta subnet CIDR ke interface router (ethernet, bridge, atau vlan) dengan opsi network custom.',
+                    'icon' => 'lan',
+                    'color' => '#38bdf8',
+                    'status' => 'ready',
+                    'v6' => true,
+                    'v7' => true,
+                    'url' => route('filament.admin.pages.mikrotik-tools.add-ip-address'),
+                ],
+                [
+                    'title' => 'Add IP Pool',
+                    'slug' => 'add-ip-pool',
+                    'category' => 'ip',
+                    'category_label' => 'IP & Pool',
+                    'description' => 'Buat alokasi rentang IP dinamis (IP Pool) untuk layanan DHCP Server, PPPoE Profile, atau Hotspot Voucher.',
+                    'icon' => 'view_stream',
+                    'color' => '#a855f7',
+                    'status' => 'ready',
+                    'v6' => true,
+                    'v7' => true,
+                    'url' => route('filament.admin.pages.mikrotik-tools.add-ip-pool'),
                 ],
                 [
                     'title' => 'Anti DDoS Attacks',
@@ -259,3 +286,4 @@
         </div>
     </div>
 </x-filament-panels::page>
+

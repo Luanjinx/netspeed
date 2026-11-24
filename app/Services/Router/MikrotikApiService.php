@@ -3374,4 +3374,140 @@ HTML;
             ];
         }
     }
+
+    /**
+     * Add or update an IP address on MikroTik interface.
+     */
+    public function addIpAddress(Router $router, array $data): array
+    {
+        if (! $this->connect($router)) {
+            return [
+                'success' => false,
+                'message' => 'Gagal terhubung ke router: '.$this->lastError,
+            ];
+        }
+
+        try {
+            $address = trim($data['address'] ?? '');
+            $interface = trim($data['interface'] ?? '');
+            $network = trim($data['network'] ?? '');
+            $comment = trim($data['comment'] ?? 'NetSpeed IP Address');
+            $disabled = ! empty($data['disabled']) ? 'yes' : 'no';
+
+            if (empty($address) || empty($interface)) {
+                $this->disconnect();
+
+                return ['success' => false, 'message' => 'IP Address (beserta subnet CIDR misal /24) dan Interface wajib diisi.'];
+            }
+
+            // Check if IP on interface already exists
+            $check = $this->comm('/ip/address/print', [
+                '?address' => $address,
+                '?interface' => $interface,
+            ]);
+
+            $params = [
+                'address' => $address,
+                'interface' => $interface,
+                'comment' => $comment,
+                'disabled' => $disabled,
+            ];
+            if (! empty($network)) {
+                $params['network'] = $network;
+            }
+
+            $existing = $check['!re'][0] ?? null;
+            if ($existing && isset($existing['.id'])) {
+                $params['numbers'] = $existing['.id'];
+                $res = $this->comm('/ip/address/set', $params);
+                $actionMsg = "IP Address [{$address}] pada interface [{$interface}] berhasil diperbarui";
+            } else {
+                $res = $this->comm('/ip/address/add', $params);
+                $actionMsg = "IP Address baru [{$address}] pada interface [{$interface}] berhasil ditambahkan";
+            }
+
+            $this->disconnect();
+
+            if (! empty($res['!trap'])) {
+                $err = $res['!trap'][0]['message'] ?? 'Gagal menambahkan IP Address ke router.';
+
+                return ['success' => false, 'message' => "MikroTik Error: {$err}"];
+            }
+
+            return ['success' => true, 'message' => $actionMsg];
+        } catch (\Throwable $e) {
+            $this->disconnect();
+
+            return [
+                'success' => false,
+                'message' => 'Terjadi kesalahan: '.$e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Add or update an IP pool on MikroTik.
+     */
+    public function addIpPool(Router $router, array $data): array
+    {
+        if (! $this->connect($router)) {
+            return [
+                'success' => false,
+                'message' => 'Gagal terhubung ke router: '.$this->lastError,
+            ];
+        }
+
+        try {
+            $name = trim($data['name'] ?? '');
+            $ranges = trim($data['ranges'] ?? '');
+            $nextPool = trim($data['next_pool'] ?? '');
+            $comment = trim($data['comment'] ?? 'NetSpeed IP Pool');
+
+            if (empty($name) || empty($ranges)) {
+                $this->disconnect();
+
+                return ['success' => false, 'message' => 'Nama IP Pool dan Rentang IP (Ranges) wajib diisi.'];
+            }
+
+            $check = $this->comm('/ip/pool/print', [
+                '?name' => $name,
+            ]);
+
+            $params = [
+                'name' => $name,
+                'ranges' => $ranges,
+                'comment' => $comment,
+            ];
+            if (! empty($nextPool) && strtolower($nextPool) !== 'none') {
+                $params['next-pool'] = $nextPool;
+            }
+
+            $existing = $check['!re'][0] ?? null;
+            if ($existing && isset($existing['.id'])) {
+                $params['numbers'] = $existing['.id'];
+                $res = $this->comm('/ip/pool/set', $params);
+                $actionMsg = "IP Pool [{$name}] dengan rentang [{$ranges}] berhasil diperbarui";
+            } else {
+                $res = $this->comm('/ip/pool/add', $params);
+                $actionMsg = "IP Pool baru [{$name}] dengan rentang [{$ranges}] berhasil ditambahkan";
+            }
+
+            $this->disconnect();
+
+            if (! empty($res['!trap'])) {
+                $err = $res['!trap'][0]['message'] ?? 'Gagal menambahkan IP Pool ke router.';
+
+                return ['success' => false, 'message' => "MikroTik Error: {$err}"];
+            }
+
+            return ['success' => true, 'message' => $actionMsg];
+        } catch (\Throwable $e) {
+            $this->disconnect();
+
+            return [
+                'success' => false,
+                'message' => 'Terjadi kesalahan: '.$e->getMessage(),
+            ];
+        }
+    }
 }
