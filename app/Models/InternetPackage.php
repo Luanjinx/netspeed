@@ -30,6 +30,7 @@ class InternetPackage extends Model
         'fup_throttle_speed',
         'fup_mikrotik_profile',
         'description',
+        'features',
         'image',
         'is_active',
     ];
@@ -44,6 +45,7 @@ class InternetPackage extends Model
         'fup_enabled' => 'boolean',
         'fup_limit_gb' => 'integer',
         'is_active' => 'boolean',
+        'features' => 'array',
     ];
 
     protected $appends = [

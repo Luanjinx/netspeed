@@ -5,6 +5,7 @@ namespace App\Filament\Resources\InternetPackages\Schemas;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Radio;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -75,7 +76,41 @@ class InternetPackageForm
                                 ->helperText('Jika kosong, akan memakai profil isolir global'),
                         ]),
                         Textarea::make('description')
-                            ->label('Deskripsi / Benefit Paket')
+                            ->label('Deskripsi Singkat Paket (Opsional)')
+                            ->rows(2)
+                            ->placeholder('cth: Paket internet hemat untuk kebutuhan browsing dan media sosial keluarga.')
+                            ->columnSpanFull(),
+
+                        Repeater::make('features')
+                            ->label('Fitur dan Benefit')
+                            ->helperText('Tambahkan poin fitur & benefit paket satu per satu. Tombol "+ Tambah Fitur / Benefit" untuk menambah poin baru.')
+                            ->schema([
+                                Grid::make(12)->schema([
+                                    TextInput::make('text')
+                                        ->label('Fitur / Benefit')
+                                        ->placeholder('cth: Internet UNLIMITED Tanpa FUP')
+                                        ->required()
+                                        ->columnSpan(8),
+                                    Select::make('icon')
+                                        ->label('Ikon')
+                                        ->options([
+                                            'wifi' => '📶 Sinyal / Unlimited',
+                                            'router' => '📟 Modem / ONT',
+                                            'wrench' => '🔧 Gratis Instalasi',
+                                            'devices' => '📱 Multi Device',
+                                            'bolt' => '⚡ Kecepatan Tinggi',
+                                            'shield' => '🛡️ Keamanan / FUP',
+                                            'star' => '⭐ Spesial / Premium',
+                                            'check' => '✓ Ceklis (Default)',
+                                        ])
+                                        ->default('check')
+                                        ->columnSpan(4),
+                                ]),
+                            ])
+                            ->addActionLabel('+ Tambah Fitur / Benefit')
+                            ->itemLabel(fn (array $state): ?string => $state['text'] ?? null)
+                            ->collapsible()
+                            ->defaultItems(0)
                             ->columnSpanFull(),
                         Radio::make('image_type')
                             ->label('Pilihan Metode Input Gambar / Brosur')
