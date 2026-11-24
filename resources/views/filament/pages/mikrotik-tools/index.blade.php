@@ -104,10 +104,10 @@
                     'description' => 'Filter proteksi dari serangan TCP SYN Flood, UDP Flood limiter, dan jump-target block dynamic DDoS list.',
                     'icon' => 'security',
                     'color' => '#f27b7b',
-                    'status' => 'upcoming',
+                    'status' => 'ready',
                     'v6' => true,
                     'v7' => true,
-                    'url' => null,
+                    'url' => route('filament.admin.pages.mikrotik-tools.anti-ddos'),
                 ],
                 [
                     'title' => 'Anti Netcut & ARP Spoofing',
