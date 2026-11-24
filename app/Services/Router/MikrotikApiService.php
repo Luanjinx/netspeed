@@ -3224,4 +3224,154 @@ HTML;
             return false;
         }
     }
+
+    /**
+     * Add or update an admin user on MikroTik RouterOS with specified group and permissions.
+     */
+    public function addAdminUser(Router $router, array $data): array
+    {
+        if (! $this->connect($router)) {
+            return [
+                'success' => false,
+                'message' => 'Gagal terhubung ke router: '.$this->lastError,
+            ];
+        }
+
+        try {
+            $username = trim($data['username'] ?? '');
+            $password = $data['password'] ?? '';
+            $group = $data['group'] ?? 'full';
+            $address = trim($data['allowed_address'] ?? '');
+            $comment = trim($data['comment'] ?? 'Admin dibuat via NetSpeed Tools');
+            $disableDefaultAdmin = ! empty($data['disable_default_admin']);
+
+            if (empty($username) || empty($password)) {
+                $this->disconnect();
+
+                return ['success' => false, 'message' => 'Username dan password wajib diisi.'];
+            }
+
+            // Check if user already exists
+            $check = $this->comm('/user/print', [
+                '?name' => $username,
+            ]);
+
+            $params = [
+                'name' => $username,
+                'group' => $group,
+                'password' => $password,
+                'comment' => $comment,
+                'disabled' => 'no',
+            ];
+            if (! empty($address)) {
+                $params['address'] = $address;
+            }
+
+            $existing = $check['!re'][0] ?? null;
+            if ($existing) {
+                $params['numbers'] = $existing['.id'];
+                $res = $this->comm('/user/set', $params);
+                $actionMsg = "User admin [{$username}] sudah ada di router, password dan konfigurasi berhasil diperbarui";
+            } else {
+                $res = $this->comm('/user/add', $params);
+                $actionMsg = "User admin baru [{$username}] dengan grup akses [{$group}] berhasil ditambahkan";
+            }
+
+            if (! empty($res['!trap'])) {
+                $err = $res['!trap'][0]['message'] ?? 'Gagal menambahkan user admin.';
+                $this->disconnect();
+
+                return ['success' => false, 'message' => "MikroTik Error: {$err}"];
+            }
+
+            // Disable default admin user if requested and username is not 'admin'
+            $disabledDefaultMsg = '';
+            if ($disableDefaultAdmin && strtolower($username) !== 'admin') {
+                $findAdmin = $this->comm('/user/print', ['?name' => 'admin']);
+                $adminUser = $findAdmin['!re'][0] ?? null;
+                if ($adminUser && isset($adminUser['.id'])) {
+                    $this->comm('/user/set', [
+                        'numbers' => $adminUser['.id'],
+                        'disabled' => 'yes',
+                    ]);
+                    $disabledDefaultMsg = ' Serta akun bawaan [admin] telah dinonaktifkan demi keamanan.';
+                }
+            }
+
+            $this->disconnect();
+
+            return [
+                'success' => true,
+                'message' => "{$actionMsg}.{$disabledDefaultMsg}",
+            ];
+        } catch (\Throwable $e) {
+            $this->disconnect();
+
+            return [
+                'success' => false,
+                'message' => 'Terjadi kesalahan: '.$e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Execute arbitrary RouterOS script on the specified router via temporary script runner.
+     */
+    public function executeScript(Router $router, string $scriptContent): array
+    {
+        if (! $this->connect($router)) {
+            return [
+                'success' => false,
+                'message' => 'Gagal terhubung ke router: '.$this->lastError,
+            ];
+        }
+
+        try {
+            $tempName = 'netspeed_tool_'.time().'_'.rand(100, 999);
+            $addRes = $this->comm('/system/script/add', [
+                'name' => $tempName,
+                'source' => $scriptContent,
+                'comment' => 'NetSpeed Admin Tools Execution',
+            ]);
+
+            if (! empty($addRes['!trap'])) {
+                $err = $addRes['!trap'][0]['message'] ?? 'Gagal membuat script sementara di router.';
+                $this->disconnect();
+
+                return ['success' => false, 'message' => "MikroTik Error: {$err}"];
+            }
+
+            $runRes = $this->comm('/system/script/run', [
+                'number' => $tempName,
+            ]);
+
+            // Clean up temporary script
+            $find = $this->comm('/system/script/print', ['?name' => $tempName]);
+            if (! empty($find['!re'][0]['.id'])) {
+                $this->comm('/system/script/remove', [
+                    'numbers' => $find['!re'][0]['.id'],
+                ]);
+            }
+
+            $this->disconnect();
+
+            if (! empty($runRes['!trap'])) {
+                $err = $runRes['!trap'][0]['message'] ?? 'Eksekusi script gagal di router.';
+
+                return ['success' => false, 'message' => "MikroTik Error: {$err}"];
+            }
+
+            return [
+                'success' => true,
+                'message' => 'Script berhasil dieksekusi di router '.$router->name,
+            ];
+        } catch (\Throwable $e) {
+            $this->disconnect();
+
+            return [
+                'success' => false,
+                'message' => 'Terjadi kesalahan: '.$e->getMessage(),
+            ];
+        }
+    }
 }
