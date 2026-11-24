@@ -72,6 +72,12 @@ class Customer extends Model
 
     protected static function booted(): void
     {
+        static::creating(function (Customer $customer) {
+            if (empty($customer->customer_number)) {
+                $customer->customer_number = self::generateCustomerNumber();
+            }
+        });
+
         static::saving(function (Customer $customer) {
             if ($customer->exists && $customer->isDirty('package_id')) {
                 $customer->promo_cycles_used = 0;
@@ -110,6 +116,18 @@ class Customer extends Model
                 }
             }
         });
+    }
+
+    /**
+     * Generate unique numeric-only customer number (8 digits, e.g. 10000000 - 99999999).
+     */
+    public static function generateCustomerNumber(): string
+    {
+        do {
+            $number = (string) random_int(10000000, 99999999);
+        } while (self::where('customer_number', $number)->exists());
+
+        return $number;
     }
 
     public function user(): BelongsTo

@@ -161,14 +161,8 @@ class AuthController extends Controller
             }
         }
 
-        // Generate unique customer number
-        $monthPrefix = date('Ym');
-        $customerCount = Customer::whereYear('created_at', date('Y'))->whereMonth('created_at', date('m'))->count();
-        $counter = $customerCount + 1;
-        do {
-            $customerNumber = 'CUST-'.$monthPrefix.'-'.str_pad((string) $counter, 4, '0', STR_PAD_LEFT);
-            $counter++;
-        } while (Customer::where('customer_number', $customerNumber)->exists());
+        // Generate unique customer number (random numbers only)
+        $customerNumber = Customer::generateCustomerNumber();
 
         $passwordHash = Hash::make($request->input('password'));
         $userEmail = $request->filled('email') ? trim((string) $request->input('email')) : "{$customerNumber}@customer.netspeed";

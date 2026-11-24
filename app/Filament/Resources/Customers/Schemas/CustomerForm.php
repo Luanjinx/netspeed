@@ -30,9 +30,11 @@ class CustomerForm
                         Grid::make(['default' => 1, 'sm' => 2, 'lg' => 3])->schema([
                             TextInput::make('customer_number')
                                 ->label('Nomor Pelanggan')
-                                ->default(fn () => 'CUST-'.date('Ym').'-'.rand(100, 999))
+                                ->default(fn () => Customer::generateCustomerNumber())
                                 ->required()
-                                ->unique(ignoreRecord: true),
+                                ->numeric()
+                                ->unique(ignoreRecord: true)
+                                ->helperText('Nomor pelanggan acak (hanya angka) dan unik otomatis.'),
                             TextInput::make('name')
                                 ->label('Nama Lengkap')
                                 ->placeholder('cth: Budi Santoso')

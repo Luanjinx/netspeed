@@ -334,7 +334,7 @@ class PppoeManager extends Page
                                     : '08'.rand(1111111111, 9999999999);
 
                                 $cust = Customer::create([
-                                    'customer_number' => 'CUST-'.date('Ym').'-'.rand(100, 999),
+                                    'customer_number' => Customer::generateCustomerNumber(),
                                     'name' => $custName,
                                     'phone' => $custPhone,
                                     'router_id' => $router->id,

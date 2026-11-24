@@ -1268,7 +1268,7 @@ class MikrotikApiService
                 $updated++;
             } else {
                 Customer::create([
-                    'customer_number' => 'CUST-'.date('Ym').'-'.rand(1000, 9999),
+                    'customer_number' => Customer::generateCustomerNumber(),
                     'name' => $displayName,
                     'phone' => $phone,
                     'router_id' => $router->id,

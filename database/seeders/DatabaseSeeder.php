@@ -125,8 +125,9 @@ class DatabaseSeeder extends Seeder
         );
 
         $customer = Customer::firstOrCreate(
-            ['customer_number' => 'CUST-202610-001'],
+            ['phone' => '081298765432'],
             [
+                'customer_number' => Customer::generateCustomerNumber(),
                 'user_id' => $customerUser->id,
                 'name' => 'Budi Santoso',
                 'phone' => '081298765432',

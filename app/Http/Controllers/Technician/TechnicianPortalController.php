@@ -432,7 +432,7 @@ class TechnicianPortalController extends Controller
 
         $technician = Auth::user();
 
-        $customerNumber = 'CUST-'.date('Ym').'-'.rand(100, 999);
+        $customerNumber = Customer::generateCustomerNumber();
         $opticalPower = $request->input('optical_power_dbm');
 
         $customer = Customer::create([
