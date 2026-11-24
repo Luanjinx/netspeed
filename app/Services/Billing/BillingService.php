@@ -253,6 +253,14 @@ class BillingService
 
             $customer = $invoice->customer;
             if ($customer) {
+                // If invoice is for package upgrade or different package, update package_id
+                if ($invoice->package_id && (int) $invoice->package_id !== (int) $customer->package_id) {
+                    $customer->package_id = $invoice->package_id;
+                    $customer->promo_cycles_used = 0;
+                    $customer->save();
+                    $customer->refresh();
+                }
+
                 $customer->update(['status' => 'active']);
 
                 // Auto-activate on MikroTik router

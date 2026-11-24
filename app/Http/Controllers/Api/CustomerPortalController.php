@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
+use App\Models\HotspotVoucher;
 use App\Models\InternetPackage;
 use App\Models\Invoice;
 use App\Models\IspSetting;
@@ -11,13 +12,20 @@ use App\Models\Page;
 use App\Models\Payment;
 use App\Models\PaymentGateway;
 use App\Models\Promo;
+use App\Models\Router;
 use App\Models\SupportTicket;
 use App\Models\TicketReply;
+use App\Models\VoucherOrder;
 use App\Services\Genieacs\GenieacsApiService;
+use App\Services\Hotspot\VoucherService;
 use App\Services\Payment\QrisService;
+use App\Services\Router\MikrotikApiService;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class CustomerPortalController extends Controller
 {
@@ -849,6 +857,358 @@ class CustomerPortalController extends Controller
                 'optical_signal' => '-21.4 dBm (Normal)',
                 'overall_health' => $customer->status === 'active' ? 'Sangat Baik' : 'Ada Kendala',
             ],
+        ]);
+    }
+
+    /**
+     * Calculate prorata estimate for PPPoE package upgrade.
+     */
+    public function packageUpgradeEstimate(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $customer = $user->customer;
+        if (! $customer) {
+            return response()->json(['success' => false, 'message' => 'Profil pelanggan tidak ditemukan.'], 404);
+        }
+
+        $packageId = (int) $request->input('package_id');
+        $targetPackage = InternetPackage::findOrFail($packageId);
+        $currentPackage = $customer->package;
+
+        $now = Carbon::now();
+        $daysInMonth = $now->daysInMonth;
+        $remainingDays = max(1, $daysInMonth - $now->day + 1);
+
+        $currentPrice = $currentPackage ? (float) ($currentPackage->promo_price ?: $currentPackage->price) : 0;
+        $targetPrice = (float) ($targetPackage->promo_price ?: $targetPackage->price);
+
+        $priceDiff = max(0, $targetPrice - $currentPrice);
+        $prorataAmount = round(($priceDiff / $daysInMonth) * $remainingDays);
+
+        $gateways = PaymentGateway::active()->get()->map(function ($gw) {
+            return [
+                'id' => $gw->id,
+                'code' => $gw->code,
+                'name' => $gw->name,
+                'category' => $gw->category,
+                'logo' => $gw->logo,
+                'description' => $gw->description,
+                'instructions' => $gw->instructions,
+                'bank_info' => $gw->code === 'manual_transfer' ? [
+                    'bank_name' => $gw->config['bank_name'] ?? 'BCA',
+                    'account_number' => $gw->config['account_number'] ?? '',
+                    'account_holder' => $gw->config['account_holder'] ?? '',
+                ] : null,
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'current_package' => $currentPackage,
+                'target_package' => $targetPackage,
+                'days_in_month' => $daysInMonth,
+                'remaining_days' => $remainingDays,
+                'current_price' => $currentPrice,
+                'target_price' => $targetPrice,
+                'price_difference' => $priceDiff,
+                'prorata_amount' => $prorataAmount,
+                'gateways' => $gateways,
+            ],
+        ]);
+    }
+
+    /**
+     * Submit PPPoE package upgrade with prorata billing.
+     */
+    public function packageUpgrade(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $customer = $user->customer;
+        if (! $customer) {
+            return response()->json(['success' => false, 'message' => 'Profil pelanggan tidak ditemukan.'], 404);
+        }
+
+        $packageId = (int) $request->input('package_id');
+        $paymentMethod = $request->input('payment_method', 'qris_manual');
+        $targetPackage = InternetPackage::findOrFail($packageId);
+        $currentPackage = $customer->package;
+
+        if ($targetPackage->type !== 'pppoe') {
+            return response()->json(['success' => false, 'message' => 'Hanya paket PPPoE yang dapat di-upgrade.'], 422);
+        }
+
+        $now = Carbon::now();
+        $daysInMonth = $now->daysInMonth;
+        $remainingDays = max(1, $daysInMonth - $now->day + 1);
+
+        $currentPrice = $currentPackage ? (float) ($currentPackage->promo_price ?: $currentPackage->price) : 0;
+        $targetPrice = (float) ($targetPackage->promo_price ?: $targetPackage->price);
+
+        $priceDiff = max(0, $targetPrice - $currentPrice);
+        $prorataAmount = round(($priceDiff / $daysInMonth) * $remainingDays);
+
+        // If no payment required (same price / downgrade), activate immediately
+        if ($prorataAmount <= 0) {
+            $customer->package_id = $targetPackage->id;
+            $customer->promo_cycles_used = 0;
+            $customer->save();
+
+            if ($customer->router && $customer->pppoe_username && ! empty($targetPackage->mikrotik_profile)) {
+                try {
+                    app(MikrotikApiService::class)->activatePppCustomer(
+                        $customer->router,
+                        $customer->pppoe_username,
+                        $targetPackage->mikrotik_profile
+                    );
+                } catch (\Throwable $e) {
+                    Log::warning('MikroTik sync error on upgrade: '.$e->getMessage());
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'is_instant' => true,
+                'message' => 'Paket berhasil di-upgrade ke '.$targetPackage->name.'! Kecepatan baru langsung aktif.',
+            ]);
+        }
+
+        // Create upgrade invoice
+        $useUniqueCode = IspSetting::get('use_unique_code', '1') === '1';
+        $uniqueCode = $useUniqueCode ? rand(101, 999) : 0;
+        $totalAmount = $prorataAmount + $uniqueCode;
+        $period = $now->format('Y-m');
+        $invoiceNumber = 'UPG-'.str_replace('-', '', $period).'-'.sprintf('%04d', $customer->id).'-'.rand(10, 99);
+
+        $staticQris = IspSetting::get('static_qris_string') ?: IspSetting::get('static_qris', '');
+        if (empty($staticQris)) {
+            $gw = PaymentGateway::where('code', 'qris_manual')->first();
+            $staticQris = $gw?->config['static_qris_string'] ?? '';
+        }
+
+        $qrisPayload = null;
+        if (! empty($staticQris)) {
+            try {
+                $qrisPayload = $this->qrisService->convertStaticToDynamic($staticQris, $totalAmount, $invoiceNumber);
+            } catch (\Throwable $e) {
+                // Ignore
+            }
+        }
+
+        $notes = 'UPGRADE PAKET: Prorata ganti paket dari '.($currentPackage?->name ?? '-')." ke {$targetPackage->name} ({$remainingDays}/{$daysInMonth} hari)";
+
+        $invoice = Invoice::create([
+            'invoice_number' => $invoiceNumber,
+            'customer_id' => $customer->id,
+            'package_id' => $targetPackage->id,
+            'period' => $period,
+            'amount' => $prorataAmount,
+            'unique_code' => $uniqueCode,
+            'total_amount' => $totalAmount,
+            'status' => 'unpaid',
+            'due_date' => $now->copy()->addDays(2),
+            'payment_method' => $paymentMethod,
+            'qris_payload' => $qrisPayload,
+            'notes' => $notes,
+        ]);
+
+        $invoiceData = $invoice->toArray();
+        if (! empty($qrisPayload)) {
+            try {
+                $invoiceData['qris_qr'] = $this->qrisService->renderDataUri($qrisPayload);
+                $invoiceData['qris_data_uri'] = $invoiceData['qris_qr'];
+            } catch (\Throwable $e) {
+                // Ignore
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'is_instant' => false,
+            'message' => 'Tagihan upgrade prorata berhasil diterbitkan.',
+            'data' => [
+                'invoice' => $invoiceData,
+                'target_package' => $targetPackage,
+                'prorata_amount' => $prorataAmount,
+                'unique_code' => $uniqueCode,
+                'total_amount' => $totalAmount,
+            ],
+        ]);
+    }
+
+    /**
+     * Create a new hotspot voucher purchase order.
+     */
+    public function voucherOrder(Request $request): JsonResponse
+    {
+        $packageId = (int) $request->input('package_id');
+        $package = InternetPackage::where('id', $packageId)
+            ->where('type', 'hotspot')
+            ->where('is_active', true)
+            ->firstOrFail();
+
+        $buyerName = trim((string) $request->input('buyer_name', ''));
+        $buyerPhone = trim((string) $request->input('buyer_phone', ''));
+        $paymentMethod = $request->input('payment_method', 'qris_manual');
+
+        $router = Router::where('is_active', true)->first();
+        if (! $router) {
+            return response()->json(['success' => false, 'message' => 'Router hotspot belum aktif.'], 500);
+        }
+
+        $orderNumber = 'VCH-'.date('YmdHis').'-'.rand(100, 999);
+        $amount = (float) ($package->promo_price ?: $package->price);
+        $useUniqueCode = IspSetting::get('use_unique_code', '1') === '1';
+        $uniqueCode = $useUniqueCode ? rand(11, 99) : 0;
+        $totalAmount = $amount + $uniqueCode;
+
+        $staticQris = IspSetting::get('static_qris_string') ?: IspSetting::get('static_qris', '');
+        if (empty($staticQris)) {
+            $gw = PaymentGateway::where('code', 'qris_manual')->first();
+            $staticQris = $gw?->config['static_qris_string'] ?? '';
+        }
+
+        $qrisPayload = null;
+        if (! empty($staticQris)) {
+            try {
+                $qrisPayload = $this->qrisService->convertStaticToDynamic($staticQris, $totalAmount, $orderNumber);
+            } catch (\Throwable $e) {
+                // Ignore
+            }
+        }
+
+        $customerId = null;
+        if ($request->user() && $request->user()->customer) {
+            $customerId = $request->user()->customer->id;
+            if (empty($buyerName)) {
+                $buyerName = $request->user()->customer->name;
+            }
+            if (empty($buyerPhone)) {
+                $buyerPhone = $request->user()->customer->phone;
+            }
+        }
+
+        $order = VoucherOrder::create([
+            'order_number' => $orderNumber,
+            'customer_id' => $customerId,
+            'package_id' => $package->id,
+            'router_id' => $router->id,
+            'buyer_name' => $buyerName ?: 'Pelanggan Hotspot',
+            'buyer_phone' => $buyerPhone ?: '-',
+            'amount' => $amount,
+            'total_amount' => $totalAmount,
+            'payment_method' => $paymentMethod,
+            'status' => 'pending',
+            'qris_payload' => $qrisPayload,
+            'notes' => "Order Voucher: {$package->name} ({$package->validity_days} Hari)",
+        ]);
+
+        $data = $order->toArray();
+        $data['package'] = $package;
+        if (! empty($qrisPayload)) {
+            try {
+                $data['qris_qr'] = $this->qrisService->renderDataUri($qrisPayload);
+                $data['qris_data_uri'] = $data['qris_qr'];
+            } catch (\Throwable $e) {
+                // Ignore
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Pesanan voucher berhasil dibuat.',
+            'data' => $data,
+        ]);
+    }
+
+    /**
+     * Confirm voucher payment and generate MikroTik Hotspot code automatically.
+     */
+    public function voucherOrderConfirm(Request $request, string $orderNumber): JsonResponse
+    {
+        $order = VoucherOrder::where('order_number', $orderNumber)->with(['package', 'router'])->firstOrFail();
+
+        if ($order->status === 'paid' && ! empty($order->voucher_code)) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Voucher sudah aktif.',
+                'data' => $order,
+            ]);
+        }
+
+        $package = $order->package;
+        $router = $order->router ?: Router::where('is_active', true)->firstOrFail();
+
+        // Generate unique 6-character uppercase code & password
+        $voucherCode = strtoupper(Str::random(6));
+        $voucherPassword = $voucherCode;
+
+        // Create HotspotVoucher in database
+        $voucher = HotspotVoucher::create([
+            'router_id' => $router->id,
+            'code' => $voucherCode,
+            'password' => $voucherPassword,
+            'profile' => $package->mikrotik_profile ?: 'default',
+            'shared_users' => $package->shared_users ?? 1,
+            'price' => $order->amount,
+            'validity' => $package->validity_days.' Hari',
+            'status' => 'unused',
+            'generated_batch' => 'AUTO-'.date('Ymd'),
+        ]);
+
+        // Push directly to MikroTik router Hotspot
+        try {
+            app(VoucherService::class)->syncSingleVoucherToRouter($voucher);
+        } catch (\Throwable $e) {
+            Log::warning('MikroTik sync voucher error: '.$e->getMessage());
+        }
+
+        $order->update([
+            'status' => 'paid',
+            'paid_at' => now(),
+            'hotspot_voucher_id' => $voucher->id,
+            'voucher_code' => $voucherCode,
+            'voucher_password' => $voucherPassword,
+        ]);
+
+        $order->refresh();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Pembayaran terverifikasi! Kode voucher hotspot berhasil diterbitkan.',
+            'data' => [
+                'order_number' => $order->order_number,
+                'package_name' => $package->name,
+                'speed_rate' => $package->speed_rate,
+                'validity' => $package->validity_days.' Hari',
+                'voucher_code' => $voucherCode,
+                'voucher_password' => $voucherPassword,
+                'shared_users' => $package->shared_users ?? 1,
+                'paid_at' => $order->paid_at?->toIso8601String(),
+            ],
+        ]);
+    }
+
+    /**
+     * Get voucher purchase history.
+     */
+    public function voucherHistory(Request $request): JsonResponse
+    {
+        $query = VoucherOrder::with(['package'])
+            ->where('status', 'paid')
+            ->orderBy('id', 'desc');
+
+        if ($request->user() && $request->user()->customer) {
+            $query->where('customer_id', $request->user()->customer->id);
+        } elseif ($request->filled('phone')) {
+            $query->where('buyer_phone', $request->input('phone'));
+        }
+
+        $orders = $query->limit(30)->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $orders,
         ]);
     }
 }

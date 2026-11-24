@@ -20,6 +20,11 @@ Route::post('/payment/webhook', [PaymentWebhookController::class, 'handle']);
 Route::get('/payment/gateways', [CustomerPortalController::class, 'paymentGateways']);
 Route::post('/telegram/webhook', [TelegramWebhookController::class, 'handle']);
 
+// Hotspot Voucher purchase & confirmation (Public / Guest)
+Route::post('/public/voucher/order', [CustomerPortalController::class, 'voucherOrder']);
+Route::post('/public/voucher/order/{orderNumber}/confirm', [CustomerPortalController::class, 'voucherOrderConfirm']);
+Route::get('/public/voucher/history', [CustomerPortalController::class, 'voucherHistory']);
+
 // Network Ping & Speedtest for Flutter
 Route::prefix('network')->group(function () {
     Route::get('/ping', [NetworkTestController::class, 'ping']);
@@ -56,6 +61,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/tickets', [CustomerPortalController::class, 'createTicket']);
         Route::get('/tickets/{id}', [CustomerPortalController::class, 'ticketDetail']);
         Route::post('/tickets/{id}/reply', [CustomerPortalController::class, 'replyTicket']);
+
+        // PPPoE Package Upgrade with Prorata
+        Route::get('/package/upgrade-estimate', [CustomerPortalController::class, 'packageUpgradeEstimate']);
+        Route::post('/package/upgrade', [CustomerPortalController::class, 'packageUpgrade']);
+
+        // Hotspot Voucher Order for Logged-In Customer
+        Route::post('/voucher/order', [CustomerPortalController::class, 'voucherOrder']);
+        Route::post('/voucher/order/{orderNumber}/confirm', [CustomerPortalController::class, 'voucherOrderConfirm']);
+        Route::get('/vouchers', [CustomerPortalController::class, 'voucherHistory']);
     });
 
     // Admin & Technician Endpoints for Flutter Admin App
