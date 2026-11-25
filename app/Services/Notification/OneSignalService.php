@@ -173,6 +173,7 @@ class OneSignalService
             case 'external_user_ids':
                 if (! empty($externalIds)) {
                     $stringIds = array_map('strval', $externalIds);
+                    $payload['target_channel'] = 'push';
                     $payload['include_aliases'] = ['external_id' => $stringIds];
                     $payload['include_external_user_ids'] = $stringIds;
                 }
