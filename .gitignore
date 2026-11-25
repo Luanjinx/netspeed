@@ -107,6 +107,7 @@ Homestead.yaml
 # MOBILE APPS (Separated into own repository)
 # ==============================================================================
 /isp_customer_app/
+/isp_technician_app/
 /genieacs/
 /isp_admin_app/
 

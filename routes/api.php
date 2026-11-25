@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CustomerPortalController;
 use App\Http\Controllers\Api\NetworkTestController;
 use App\Http\Controllers\Api\PaymentWebhookController;
+use App\Http\Controllers\Api\TechnicianApiController;
 use App\Http\Controllers\Api\TelegramWebhookController;
 use App\Http\Middleware\EnsureAdminOrTechnicianApi;
 use Illuminate\Http\Request;
@@ -104,5 +105,40 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/package-requests', [AdminApiController::class, 'packageRequests']);
         Route::post('/package-requests/{id}/approve', [AdminApiController::class, 'approvePackageRequest']);
         Route::post('/package-requests/{id}/reject', [AdminApiController::class, 'rejectPackageRequest']);
+    });
+
+    // Dedicated Field Technician App Endpoints
+    Route::middleware(EnsureAdminOrTechnicianApi::class)->prefix('technician')->group(function () {
+        Route::get('/dashboard', [TechnicianApiController::class, 'dashboard']);
+
+        // Work Orders (SPK)
+        Route::get('/work-orders/{id}', [TechnicianApiController::class, 'showWorkOrder']);
+        Route::post('/work-orders/{id}/start', [TechnicianApiController::class, 'startWorkOrder']);
+        Route::post('/work-orders/{id}/complete', [TechnicianApiController::class, 'completeWorkOrder']);
+
+        // Live Connectivity & GenieACS ONT Control
+        Route::get('/customers/{customerId}/live-status', [TechnicianApiController::class, 'checkLiveStatus']);
+        Route::post('/ont/wifi', [TechnicianApiController::class, 'updateOntWifi']);
+        Route::post('/ont/reboot', [TechnicianApiController::class, 'rebootOnt']);
+
+        // Pool Tickets & Replies
+        Route::get('/pool-tickets', [TechnicianApiController::class, 'poolTickets']);
+        Route::post('/pool-tickets/{id}/claim', [TechnicianApiController::class, 'claimTicket']);
+        Route::post('/tickets/{id}/reply', [TechnicianApiController::class, 'replyTicket']);
+
+        // Package Approvals
+        Route::get('/package-requests', [AdminApiController::class, 'packageRequests']);
+        Route::post('/package-requests/{id}/approve', [AdminApiController::class, 'approvePackageRequest']);
+        Route::post('/package-requests/{id}/reject', [AdminApiController::class, 'rejectPackageRequest']);
+
+        // History, Network Monitoring & Field PSB Registration
+        Route::get('/history', [TechnicianApiController::class, 'history']);
+        Route::get('/monitoring', [TechnicianApiController::class, 'monitoring']);
+        Route::get('/psb/options', [TechnicianApiController::class, 'psbOptions']);
+        Route::get('/odps/{odpId}/ports', [TechnicianApiController::class, 'getOdpPorts']);
+        Route::post('/psb', [TechnicianApiController::class, 'storePsbCustomer']);
+
+        // Technician Account Password
+        Route::post('/profile/password', [TechnicianApiController::class, 'updatePassword']);
     });
 });
