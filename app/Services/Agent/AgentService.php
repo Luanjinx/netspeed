@@ -94,8 +94,8 @@ class AgentService
             throw new Exception("Tagihan {$invoice->invoice_number} sudah berstatus LUNAS.");
         }
 
-        if (! $agent->is_active) {
-            throw new Exception("Akun Agen {$agent->name} sedang nonaktif. Silakan hubungi admin.");
+        if (! $agent->canOperate()) {
+            throw new Exception("Akun Agen {$agent->name} belum disetujui atau sedang nonaktif. Silakan hubungi admin.");
         }
 
         $fee = (float) $agent->commission_per_transaction;

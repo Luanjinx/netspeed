@@ -35,6 +35,18 @@ class AgentResource extends Resource
 
     protected static ?int $navigationSort = 4;
 
+    public static function getNavigationBadge(): ?string
+    {
+        $pendingCount = Agent::where('approval_status', Agent::STATUS_PENDING)->count();
+
+        return $pendingCount > 0 ? (string) $pendingCount : null;
+    }
+
+    public static function getNavigationBadgeColor(): string|array|null
+    {
+        return 'warning';
+    }
+
     public static function form(Schema $schema): Schema
     {
         return AgentForm::configure($schema);

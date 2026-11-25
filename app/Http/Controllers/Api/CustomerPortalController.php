@@ -217,6 +217,7 @@ class CustomerPortalController extends Controller
             'success' => true,
             'data' => [
                 'customer' => $customer,
+                'agent' => $user->agent,
                 'package_requests' => $latestRequests,
                 'pending_upgrade_request' => $latestRequests->first(
                     fn (PackageRequest $r) => $r->type === PackageRequest::TYPE_UPGRADE && $r->isPending()

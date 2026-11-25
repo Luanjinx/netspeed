@@ -9,10 +9,12 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Support\HtmlString;
 
@@ -59,15 +61,122 @@ class AgentsTable
                     ->label('Aktif')
                     ->boolean(),
 
+                TextColumn::make('approval_status')
+                    ->label('Status Pengajuan')
+                    ->badge()
+                    ->formatStateUsing(fn (?string $state): string => match ($state) {
+                        Agent::STATUS_PENDING => 'Menunggu ACC',
+                        Agent::STATUS_REJECTED => 'Ditolak',
+                        default => 'Disetujui',
+                    })
+                    ->color(fn (?string $state): string => match ($state) {
+                        Agent::STATUS_PENDING => 'warning',
+                        Agent::STATUS_REJECTED => 'danger',
+                        default => 'success',
+                    })
+                    ->sortable(),
+
                 TextColumn::make('created_at')
                     ->label('Bergabung')
                     ->dateTime('d M Y')
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                SelectFilter::make('approval_status')
+                    ->label('Status Pengajuan')
+                    ->options([
+                        Agent::STATUS_PENDING => 'Menunggu ACC',
+                        Agent::STATUS_APPROVED => 'Disetujui',
+                        Agent::STATUS_REJECTED => 'Ditolak',
+                    ]),
             ])
             ->recordActions([
+                // Approve Registration Action
+                Action::make('approve')
+                    ->label('Setujui')
+                    ->icon('heroicon-o-check-circle')
+                    ->color('success')
+                    ->visible(fn (Agent $record): bool => $record->approval_status !== Agent::STATUS_APPROVED)
+                    ->form([
+                        TextInput::make('commission_per_transaction')
+                            ->label('Komisi per Transaksi PPPoE')
+                            ->numeric()
+                            ->prefix('Rp')
+                            ->default(fn (Agent $record): float => (float) ($record->commission_per_transaction ?: 2000))
+                            ->required()
+                            ->minValue(0),
+                        TextInput::make('initial_balance')
+                            ->label('Saldo Deposit Awal (Opsional)')
+                            ->numeric()
+                            ->prefix('Rp')
+                            ->default(0)
+                            ->minValue(0)
+                            ->helperText('Isi jika mitra sudah menyetor deposit awal.'),
+                    ])
+                    ->action(function (Agent $record, array $data): void {
+                        try {
+                            $record->update([
+                                'approval_status' => Agent::STATUS_APPROVED,
+                                'is_active' => true,
+                                'commission_per_transaction' => (float) $data['commission_per_transaction'],
+                                'rejection_reason' => null,
+                                'approved_by' => auth()->id(),
+                                'approved_at' => now(),
+                            ]);
+
+                            $initialBalance = (float) ($data['initial_balance'] ?? 0);
+                            if ($initialBalance > 0) {
+                                app(AgentService::class)->topUpBalance(
+                                    $record->fresh(),
+                                    $initialBalance,
+                                    'Deposit awal persetujuan mitra agen',
+                                    auth()->user()
+                                );
+                            }
+
+                            Notification::make()
+                                ->title('Mitra Agen Disetujui')
+                                ->body("Akun Mitra Agen {$record->name} ({$record->agent_code}) kini aktif.")
+                                ->success()
+                                ->send();
+                        } catch (\Throwable $e) {
+                            Notification::make()
+                                ->title('Gagal Menyetujui Agen')
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+                    }),
+
+                // Reject Registration Action
+                Action::make('reject')
+                    ->label('Tolak')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')
+                    ->visible(fn (Agent $record): bool => $record->approval_status === Agent::STATUS_PENDING)
+                    ->form([
+                        Textarea::make('rejection_reason')
+                            ->label('Alasan Penolakan')
+                            ->required()
+                            ->rows(3)
+                            ->placeholder('cth: Alamat loket kurang lengkap / area belum terjangkau.'),
+                    ])
+                    ->action(function (Agent $record, array $data): void {
+                        $record->update([
+                            'approval_status' => Agent::STATUS_REJECTED,
+                            'is_active' => false,
+                            'rejection_reason' => $data['rejection_reason'],
+                            'approved_by' => auth()->id(),
+                            'approved_at' => now(),
+                        ]);
+
+                        Notification::make()
+                            ->title('Pengajuan Agen Ditolak')
+                            ->body("Pengajuan {$record->name} telah ditolak.")
+                            ->warning()
+                            ->send();
+                    }),
+
                 // Top-Up Action
                 Action::make('topUp')
                     ->label('Top-Up')

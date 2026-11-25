@@ -33,18 +33,22 @@ class EditAgent extends EditRecord
         $agent = $this->record;
 
         if ($agent->user) {
-            $update = [
-                'name' => $agent->name,
-                'phone' => $agent->phone,
-                'is_active' => $agent->is_active,
-            ];
-            if (! empty($data['email'])) {
-                $update['email'] = $data['email'];
+            if ($agent->user->role === 'agent') {
+                $update = [
+                    'name' => $agent->name,
+                    'phone' => $agent->phone,
+                    'is_active' => $agent->is_active,
+                ];
+                if (! empty($data['email'])) {
+                    $update['email'] = $data['email'];
+                }
+                if (! empty($data['password'])) {
+                    $update['password'] = bcrypt($data['password']);
+                }
+                $agent->user->update($update);
+            } elseif (! empty($data['password'])) {
+                $agent->user->update(['password' => bcrypt($data['password'])]);
             }
-            if (! empty($data['password'])) {
-                $update['password'] = bcrypt($data['password']);
-            }
-            $agent->user->update($update);
         } elseif (! empty($data['email']) && ! empty($data['password'])) {
             $user = User::firstOrCreate(
                 ['email' => $data['email']],

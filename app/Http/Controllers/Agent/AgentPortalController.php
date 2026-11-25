@@ -24,13 +24,13 @@ class AgentPortalController extends Controller
     protected function getActiveAgent(): ?Agent
     {
         $user = Auth::user();
-        if ($user && $user->role === 'agent') {
+        if ($user && ($user->role === 'agent' || ($user->role === 'customer' && $user->agent?->canOperate()))) {
             return $user->agent;
         }
 
         // For admin inspecting the portal, return first active agent
         if ($user && $user->role === 'admin') {
-            return Agent::where('is_active', true)->first();
+            return Agent::where('is_active', true)->where('approval_status', Agent::STATUS_APPROVED)->first();
         }
 
         return null;
@@ -43,7 +43,7 @@ class AgentPortalController extends Controller
     {
         if (Auth::check()) {
             $user = Auth::user();
-            if ($user->role === 'agent' || $user->role === 'admin') {
+            if ($user->role === 'agent' || $user->role === 'admin' || ($user->role === 'customer' && $user->agent?->canOperate())) {
                 return redirect()->route('agent.dashboard');
             }
             if ($user->role === 'technician') {
@@ -231,10 +231,10 @@ class AgentPortalController extends Controller
             ], 422);
         }
 
-        if (! $agent->is_active) {
+        if (! $agent->canOperate()) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Akun loket agen Anda sedang nonaktif.',
+                'message' => 'Akun loket agen Anda belum disetujui atau sedang nonaktif.',
             ], 422);
         }
 

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AdminApiController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CustomerAgentController;
 use App\Http\Controllers\Api\CustomerPortalController;
 use App\Http\Controllers\Api\NetworkTestController;
 use App\Http\Controllers\Api\PaymentWebhookController;
@@ -73,6 +74,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/voucher/order', [CustomerPortalController::class, 'voucherOrder']);
         Route::post('/voucher/order/{orderNumber}/confirm', [CustomerPortalController::class, 'voucherOrderConfirm']);
         Route::get('/vouchers', [CustomerPortalController::class, 'voucherHistory']);
+
+        // Customer Dual-Role Agent Registration & Native Cashier Portal
+        Route::prefix('agent')->group(function () {
+            Route::get('/status', [CustomerAgentController::class, 'status']);
+            Route::post('/register', [CustomerAgentController::class, 'register']);
+            Route::get('/search-invoices', [CustomerAgentController::class, 'searchInvoices']);
+            Route::post('/pay-invoice', [CustomerAgentController::class, 'payInvoice']);
+            Route::get('/transactions', [CustomerAgentController::class, 'transactions']);
+        });
     });
 
     // Admin & Technician Endpoints for Flutter Admin App

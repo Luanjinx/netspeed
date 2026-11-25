@@ -19,7 +19,10 @@ class EnsureAgentUser
             return redirect()->route('agent.login');
         }
 
-        if ($user->role !== 'agent' && $user->role !== 'admin') {
+        $isAuthorizedRole = in_array($user->role, ['agent', 'admin'], true)
+            || ($user->role === 'customer' && $user->agent?->canOperate());
+
+        if (! $isAuthorizedRole) {
             return redirect()->route('agent.login')->withErrors([
                 'login' => 'Akses portal khusus untuk akun mitra agen loket pembayaran.',
             ]);

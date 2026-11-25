@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Agents\Schemas;
 
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -67,10 +68,21 @@ class AgentForm
                                 ->rows(3),
                         ]),
 
-                        Toggle::make('is_active')
-                            ->label('Status Agen Aktif')
-                            ->helperText('Jika nonaktif, agen tidak dapat melakukan pembayaran atau transaksi loket.')
-                            ->default(true),
+                        Grid::make(['default' => 1, 'sm' => 2])->schema([
+                            Select::make('approval_status')
+                                ->label('Status Pengajuan')
+                                ->options([
+                                    'pending' => 'Menunggu ACC',
+                                    'approved' => 'Disetujui',
+                                    'rejected' => 'Ditolak',
+                                ])
+                                ->default('approved')
+                                ->required(),
+                            Toggle::make('is_active')
+                                ->label('Status Agen Aktif')
+                                ->helperText('Jika nonaktif, agen tidak dapat melakukan pembayaran atau transaksi loket.')
+                                ->default(true),
+                        ]),
                     ]),
 
                 Section::make('Akun Login Portal Agen')
