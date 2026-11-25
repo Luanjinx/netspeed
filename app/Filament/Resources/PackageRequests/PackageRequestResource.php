@@ -11,6 +11,7 @@ use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Schema as DatabaseSchema;
 use UnitEnum;
 
 class PackageRequestResource extends Resource
@@ -41,6 +42,10 @@ class PackageRequestResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
+        if (! DatabaseSchema::hasTable('package_requests')) {
+            return null;
+        }
+
         $pendingCount = PackageRequest::where('status', PackageRequest::STATUS_PENDING)->count();
 
         return $pendingCount > 0 ? (string) $pendingCount : null;

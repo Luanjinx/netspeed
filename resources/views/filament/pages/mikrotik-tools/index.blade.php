@@ -58,6 +58,19 @@
         @php
             $tools = [
                 [
+                    'title' => 'Basic Configuration Script Generator',
+                    'slug' => 'basic-config',
+                    'category' => 'network',
+                    'category_label' => 'Optimasi Jaringan',
+                    'description' => 'Generate script setup dasar MikroTik lengkap: Identity, NTP, WAN (DHCP/Static/PPPoE), Bridge LAN, DHCP Server, NAT, dan Firewall dasar.',
+                    'icon' => 'settings_ethernet',
+                    'color' => '#00e07e',
+                    'status' => 'ready',
+                    'v6' => true,
+                    'v7' => true,
+                    'url' => route('filament.admin.pages.mikrotik-tools.basic-config'),
+                ],
+                [
                     'title' => 'Add Admin User',
                     'slug' => 'add-admin-user',
                     'category' => 'security',

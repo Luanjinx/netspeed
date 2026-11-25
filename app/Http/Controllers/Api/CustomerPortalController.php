@@ -49,6 +49,7 @@ class CustomerPortalController extends Controller
         $companyPhone = IspSetting::get('company_phone', '0812-3456-7890');
         $companyEmail = IspSetting::get('company_email', 'cs@netspeed.net.id');
         $companyAddress = IspSetting::get('company_address', 'Jl. Telekomunikasi No. 1, Cyber Park');
+        $oneSignalAppId = trim((string) IspSetting::get('onesignal_app_id', ''));
 
         // Dynamic Promos / Banners from Database
         $promos = Promo::with('package')
@@ -169,6 +170,9 @@ class CustomerPortalController extends Controller
                     'phone' => $companyPhone,
                     'email' => $companyEmail,
                     'address' => $companyAddress,
+                ],
+                'app_config' => [
+                    'onesignal_app_id' => $oneSignalAppId,
                 ],
                 'pppoe_packages' => $pppoePackages,
                 'hotspot_packages' => $hotspotPackages,
@@ -483,7 +487,21 @@ class CustomerPortalController extends Controller
         $user = $request->user();
         $customer = $user->customer;
 
-        if (! $customer || empty($customer->genieacs_device_id) || ! $customer->genieacsServer) {
+        if (! $customer) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Profil pelanggan tidak ditemukan.',
+            ], 404);
+        }
+
+        if (in_array($customer->status, ['pending', 'rejected'], true)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Layanan Anda belum aktif atau sedang menunggu persetujuan Admin/Teknisi.',
+            ], 403);
+        }
+
+        if (empty($customer->genieacs_device_id) || ! $customer->genieacsServer) {
             return response()->json([
                 'success' => false,
                 'message' => 'Modem ONT belum terhubung ke sistem TR-069 GenieACS.',
@@ -513,29 +531,58 @@ class CustomerPortalController extends Controller
         $request->validate([
             'ssid' => 'required|string|min:2|max:32',
             'password' => 'nullable|string|min:8|max:64',
+            'reboot' => 'nullable|boolean',
         ]);
 
         $user = $request->user();
         $customer = $user->customer;
 
-        if (! $customer || empty($customer->genieacs_device_id) || ! $customer->genieacsServer) {
+        if (! $customer) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Profil pelanggan tidak ditemukan.',
+            ], 404);
+        }
+
+        if ($customer->status !== 'active') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Pengaturan Wi-Fi hanya dapat diubah saat layanan berstatus aktif.',
+            ], 403);
+        }
+
+        if (empty($customer->genieacs_device_id) || ! $customer->genieacsServer) {
             return response()->json([
                 'success' => false,
                 'message' => 'Modem ONT belum terhubung ke sistem TR-069 GenieACS.',
             ], 404);
         }
 
+        $ssid = trim((string) $request->input('ssid'));
+        $password = $request->filled('password') ? (string) $request->input('password') : null;
+
         $success = $this->genieacsService->setWifiSettings(
             $customer->genieacsServer,
             $customer->genieacs_device_id,
-            $request->input('ssid'),
-            $request->input('password')
+            $ssid,
+            $password
         );
 
         if ($success) {
+            $rebooted = false;
+            if ($request->boolean('reboot')) {
+                $rebooted = $this->genieacsService->rebootDevice(
+                    $customer->genieacsServer,
+                    $customer->genieacs_device_id
+                );
+            }
+
             return response()->json([
                 'success' => true,
-                'message' => 'Pengaturan Wi-Fi berhasil diperbarui dan dikirim ke modem ONT.',
+                'rebooted' => $rebooted,
+                'message' => $rebooted
+                    ? 'Pengaturan Wi-Fi berhasil diperbarui dan perintah restart modem telah dikirim.'
+                    : 'Pengaturan Wi-Fi berhasil diperbarui dan dikirim ke modem ONT.',
             ]);
         }
 
@@ -859,12 +906,25 @@ class CustomerPortalController extends Controller
         $user = $request->user();
         $customer = $user->customer;
 
-        if (! $customer || empty($customer->genieacs_device_id) || ! $customer->genieacsServer) {
+        if (! $customer) {
             return response()->json([
-                'success' => true,
-                'simulated' => true,
-                'message' => 'Perintah restart modem berhasil dikirimkan.',
-            ]);
+                'success' => false,
+                'message' => 'Profil pelanggan tidak ditemukan.',
+            ], 404);
+        }
+
+        if ($customer->status !== 'active') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Restart modem hanya tersedia untuk layanan berstatus aktif.',
+            ], 403);
+        }
+
+        if (empty($customer->genieacs_device_id) || ! $customer->genieacsServer) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Modem ONT belum terhubung ke sistem TR-069 GenieACS.',
+            ], 404);
         }
 
         $success = $this->genieacsService->rebootDevice($customer->genieacsServer, $customer->genieacs_device_id);
@@ -872,7 +932,7 @@ class CustomerPortalController extends Controller
         return response()->json([
             'success' => $success,
             'message' => $success ? 'Perintah restart modem berhasil dikirim.' : 'Gagal mengirim perintah restart ke modem.',
-        ]);
+        ], $success ? 200 : 500);
     }
 
     /**
