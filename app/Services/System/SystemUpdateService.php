@@ -6,9 +6,11 @@ use App\Models\IspSetting;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\Process\Process;
+use ZipArchive;
 
 class SystemUpdateService
 {
@@ -40,23 +42,16 @@ class SystemUpdateService
     {
         $hasGitDir = is_dir($this->basePath.DIRECTORY_SEPARATOR.'.git');
 
-        if (! $hasGitDir) {
-            return [
-                'has_git' => false,
-                'commit_hash' => IspSetting::get('system_current_commit', '351b5d1') ?? '351b5d1',
-                'commit_full_hash' => '',
-                'commit_message' => 'Versi rilis stabil',
-                'commit_date' => now()->toDateTimeString(),
-                'commit_author' => 'System',
-                'branch' => 'main',
-                'remote_url' => 'https://github.com/Luanjinx/netspeed.git',
-                'repo_owner' => 'Luanjinx',
-                'repo_name' => 'netspeed',
-                'has_uncommitted_changes' => false,
-            ];
+        if (! $hasGitDir || ! $this->canExecuteGit()) {
+            return $this->getStoredVersionInfo();
         }
 
-        $shortHash = $this->runGitCommand(['rev-parse', '--short', 'HEAD'])['output'] ?: 'unknown';
+        $shortHashRes = $this->runGitCommand(['rev-parse', '--short', 'HEAD']);
+        if (! $shortHashRes['success'] || empty($shortHashRes['output'])) {
+            return $this->getStoredVersionInfo();
+        }
+
+        $shortHash = $shortHashRes['output'];
         $fullHash = $this->runGitCommand(['rev-parse', 'HEAD'])['output'] ?: '';
         $message = $this->runGitCommand(['log', '-1', '--pretty=format:%s'])['output'] ?: 'No commit message';
         $date = $this->runGitCommand(['log', '-1', '--pretty=format:%ci'])['output'] ?: '';
@@ -85,6 +80,43 @@ class SystemUpdateService
             'repo_owner' => $repoDetails['owner'],
             'repo_name' => $repoDetails['repo'],
             'has_uncommitted_changes' => $hasUncommitted,
+        ];
+    }
+
+    /**
+     * Fallback version info stored in settings (used on shared hosting / non-git STB installs).
+     *
+     * @return array{
+     *     has_git: bool,
+     *     commit_hash: string,
+     *     commit_full_hash: string,
+     *     commit_message: string,
+     *     commit_date: string,
+     *     commit_author: string,
+     *     branch: string,
+     *     remote_url: string,
+     *     repo_owner: string,
+     *     repo_name: string,
+     *     has_uncommitted_changes: bool
+     * }
+     */
+    protected function getStoredVersionInfo(): array
+    {
+        $remoteUrl = IspSetting::get('system_update_remote_url', 'https://github.com/Luanjinx/netspeed.git') ?: 'https://github.com/Luanjinx/netspeed.git';
+        $repoDetails = $this->parseRepoDetails($remoteUrl);
+
+        return [
+            'has_git' => false,
+            'commit_hash' => IspSetting::get('system_current_commit', '351b5d1') ?: '351b5d1',
+            'commit_full_hash' => IspSetting::get('system_current_commit_full', '') ?: '',
+            'commit_message' => IspSetting::get('system_current_commit_message', 'Versi rilis stabil') ?: 'Versi rilis stabil',
+            'commit_date' => IspSetting::get('system_current_commit_date', now()->toDateTimeString()) ?: now()->toDateTimeString(),
+            'commit_author' => IspSetting::get('system_current_commit_author', 'System') ?: 'System',
+            'branch' => IspSetting::get('system_update_branch', 'main') ?: 'main',
+            'remote_url' => $remoteUrl,
+            'repo_owner' => $repoDetails['owner'],
+            'repo_name' => $repoDetails['repo'],
+            'has_uncommitted_changes' => false,
         ];
     }
 
@@ -298,57 +330,76 @@ class SystemUpdateService
                 );
             }
 
-            // STEP 2: Git Pull / Fetch & Reset
-            $this->clearUnwriteableFetchHead();
-            if ($forceReset) {
-                $stepGit = [
-                    'step' => '2. Mengambil Pembaruan dari GitHub (Git Fetch & Reset Hard)',
-                    'command' => "git fetch origin {$branch} && git reset --hard origin/{$branch}",
-                    'output' => '',
-                    'success' => true,
-                ];
+            // STEP 2: Git Pull / Reset, with automatic GitHub ZIP archive fallback for shared hosting / STB
+            $gitSucceeded = false;
 
-                $fetchRes = $this->runGitCommand(['fetch', 'origin', $branch], 120);
-                $stepGit['output'] .= "[fetch]:\n".($fetchRes['output'] ?: $fetchRes['error'])."\n";
+            if ($versionBefore['has_git'] && $this->canExecuteGit()) {
+                $this->clearUnwriteableFetchHead();
+                if ($forceReset) {
+                    $stepGit = [
+                        'step' => '2. Mengambil Pembaruan dari GitHub (Git Fetch & Reset Hard)',
+                        'command' => "git fetch origin {$branch} && git reset --hard origin/{$branch}",
+                        'output' => '',
+                        'success' => true,
+                    ];
 
-                $resetRes = $this->runGitCommand(['reset', '--hard', "origin/{$branch}"], 60);
-                $stepGit['output'] .= "[reset --hard]:\n".($resetRes['output'] ?: $resetRes['error']);
-                $stepGit['success'] = $fetchRes['success'] && $resetRes['success'];
+                    $fetchRes = $this->runGitCommand(['fetch', 'origin', $branch], 120);
+                    $stepGit['output'] .= "[fetch]:\n".($fetchRes['output'] ?: $fetchRes['error'])."\n";
 
-                $logs[] = $stepGit;
-                if (! $stepGit['success']) {
-                    $overallSuccess = false;
+                    $resetRes = $this->runGitCommand(['reset', '--hard', "origin/{$branch}"], 60);
+                    $stepGit['output'] .= "[reset --hard]:\n".($resetRes['output'] ?: $resetRes['error']);
+                    $stepGit['success'] = $fetchRes['success'] && $resetRes['success'];
+
+                    $logs[] = $stepGit;
+                    $gitSucceeded = $stepGit['success'];
+                } else {
+                    $pullRes = $this->runGitCommand(['pull', 'origin', $branch], 120);
+                    $logs[] = [
+                        'step' => "2. Menarik Kode Terbaru dari GitHub (git pull origin {$branch})",
+                        'command' => "git pull origin {$branch}",
+                        'output' => $pullRes['output'] ?: ($pullRes['error'] ?: 'Pull completed without output.'),
+                        'success' => $pullRes['success'],
+                    ];
+                    $gitSucceeded = $pullRes['success'];
                 }
-            } else {
-                $pullRes = $this->runGitCommand(['pull', 'origin', $branch], 120);
-                $logs[] = [
-                    'step' => "2. Menarik Kode Terbaru dari GitHub (git pull origin {$branch})",
-                    'command' => "git pull origin {$branch}",
-                    'output' => $pullRes['output'] ?: ($pullRes['error'] ?: 'Pull completed without output.'),
-                    'success' => $pullRes['success'],
-                ];
+            }
 
-                if (! $pullRes['success']) {
+            if (! $gitSucceeded) {
+                $zipRes = $this->updateViaGitHubArchive(
+                    $versionBefore['repo_owner'],
+                    $versionBefore['repo_name'],
+                    $branch
+                );
+                $logs[] = $zipRes;
+                if (! $zipRes['success']) {
                     $overallSuccess = false;
                 }
             }
 
             // STEP 3: Database Migrations
             if ($overallSuccess && $runMigrations) {
-                $logs[] = $this->executeArtisanStep(
+                $migrateLog = $this->executeArtisanStep(
                     step: '3. Menjalankan Migrasi Database (php artisan migrate --force)',
                     command: 'migrate',
                     parameters: ['--force' => true]
                 );
+                $logs[] = $migrateLog;
+                if (! $migrateLog['success']) {
+                    $overallSuccess = false;
+                }
             }
 
             // STEP 4: Filament Assets & Upgrade
             if ($overallSuccess && $upgradeFilament) {
-                $logs[] = $this->executeArtisanStep(
+                $filamentLog = $this->executeArtisanStep(
                     step: '4. Memperbarui Komponen & Aset Filament (php artisan filament:upgrade)',
                     command: 'filament:upgrade',
                     parameters: []
                 );
+                $logs[] = $filamentLog;
+                if (! $filamentLog['success']) {
+                    $overallSuccess = false;
+                }
             }
 
             // STEP 5: Clear and Rebuild Caches
@@ -476,6 +527,201 @@ class SystemUpdateService
     }
 
     /**
+     * Determine whether PHP can invoke the git CLI binary.
+     */
+    protected function canExecuteGit(): bool
+    {
+        if (! function_exists('proc_open')) {
+            return false;
+        }
+
+        try {
+            $process = new Process(['git', '--version'], $this->basePath);
+            $process->setTimeout(5);
+            $process->run();
+
+            return $process->isSuccessful();
+        } catch (Exception) {
+            return false;
+        }
+    }
+
+    /**
+     * Fallback updater via GitHub Zipball API + PHP ZipArchive.
+     * Enables one-click updates on shared hosting or STB setups without Git/SSH/proc_open.
+     *
+     * @return array{step: string, command: string, output: string, success: bool}
+     */
+    protected function updateViaGitHubArchive(string $owner, string $repo, string $branch): array
+    {
+        $stepLabel = '2b. Mengunduh & Mengekstrak Pembaruan via GitHub ZIP (Mode Non-Git / Shared Hosting)';
+        $zipUrl = "https://api.github.com/repos/{$owner}/{$repo}/zipball/{$branch}";
+
+        if (! class_exists(ZipArchive::class)) {
+            return [
+                'step' => $stepLabel,
+                'command' => "GET {$zipUrl}",
+                'output' => 'Ekstensi PHP ZipArchive (ext-zip) tidak aktif di server ini.',
+                'success' => false,
+            ];
+        }
+
+        $tmpZip = sys_get_temp_dir().DIRECTORY_SEPARATOR.'netspeed-update-'.uniqid('', true).'.zip';
+
+        try {
+            $headers = [
+                'User-Agent' => 'NetSpeed-ISP-Billing',
+                'Accept' => 'application/vnd.github+json',
+            ];
+
+            $githubToken = IspSetting::get('github_access_token');
+            $commitReq = Http::timeout(20)->withHeaders($headers);
+            $zipReq = Http::timeout(120)->withHeaders($headers);
+
+            if (! empty($githubToken)) {
+                $commitReq = $commitReq->withToken($githubToken);
+                $zipReq = $zipReq->withToken($githubToken);
+            }
+
+            // Fetch metadata of the target commit so non-git installs show accurate local commit info
+            $commitMeta = [];
+            $commitResp = $commitReq->get("https://api.github.com/repos/{$owner}/{$repo}/commits/{$branch}");
+            if ($commitResp->successful()) {
+                $commitMeta = $commitResp->json();
+            }
+
+            $zipResponse = $zipReq->get($zipUrl);
+            if (! $zipResponse->successful()) {
+                return [
+                    'step' => $stepLabel,
+                    'command' => "GET {$zipUrl}",
+                    'output' => 'Gagal mengunduh arsip pembaruan GitHub (HTTP '.$zipResponse->status().').',
+                    'success' => false,
+                ];
+            }
+
+            file_put_contents($tmpZip, $zipResponse->body());
+
+            $zip = new ZipArchive;
+            $openStatus = $zip->open($tmpZip);
+            if ($openStatus !== true) {
+                return [
+                    'step' => $stepLabel,
+                    'command' => "GET {$zipUrl}",
+                    'output' => "Gagal membuka file ZIP pembaruan (kode: {$openStatus}).",
+                    'success' => false,
+                ];
+            }
+
+            $extractedFiles = 0;
+            $skippedFiles = 0;
+            $rootPrefix = null;
+
+            for ($i = 0; $i < $zip->numFiles; $i++) {
+                $entryName = str_replace('\\', '/', (string) $zip->getNameIndex($i));
+                if ($rootPrefix === null && str_contains($entryName, '/')) {
+                    $rootPrefix = substr($entryName, 0, strpos($entryName, '/') + 1);
+                }
+
+                $relativePath = ($rootPrefix !== null && str_starts_with($entryName, $rootPrefix))
+                    ? substr($entryName, strlen($rootPrefix))
+                    : $entryName;
+
+                $relativePath = ltrim($relativePath, '/');
+                if ($relativePath === '' || str_ends_with($relativePath, '/') || str_contains($relativePath, '..')) {
+                    continue;
+                }
+
+                if ($this->isProtectedArchivePath($relativePath)) {
+                    $skippedFiles++;
+
+                    continue;
+                }
+
+                $destination = $this->basePath.DIRECTORY_SEPARATOR.str_replace('/', DIRECTORY_SEPARATOR, $relativePath);
+                $content = $zip->getFromIndex($i);
+                if ($content === false) {
+                    continue;
+                }
+
+                File::ensureDirectoryExists(dirname($destination));
+                if (file_put_contents($destination, $content) === false) {
+                    $zip->close();
+
+                    return [
+                        'step' => $stepLabel,
+                        'command' => "GET {$zipUrl}",
+                        'output' => "Gagal menulis file pembaruan ke: {$relativePath} (periksa izin tulis direktori).",
+                        'success' => false,
+                    ];
+                }
+
+                $extractedFiles++;
+            }
+
+            $zip->close();
+
+            if (! empty($commitMeta['sha'])) {
+                $sha = (string) $commitMeta['sha'];
+                IspSetting::set('system_current_commit', substr($sha, 0, 7));
+                IspSetting::set('system_current_commit_full', $sha);
+                IspSetting::set('system_current_commit_message', (string) ($commitMeta['commit']['message'] ?? 'Updated via GitHub ZIP'));
+                IspSetting::set('system_current_commit_author', (string) ($commitMeta['commit']['author']['name'] ?? 'GitHub'));
+                $dateStr = $commitMeta['commit']['author']['date'] ?? null;
+                IspSetting::set('system_current_commit_date', $dateStr ? Carbon::parse($dateStr)->toDateTimeString() : now()->toDateTimeString());
+            }
+
+            return [
+                'step' => $stepLabel,
+                'command' => "GET {$zipUrl}",
+                'output' => "Berhasil memperbarui {$extractedFiles} file via arsip GitHub ZIP ({$skippedFiles} file konfigurasi/storage dilindungi).",
+                'success' => true,
+            ];
+        } catch (Exception $e) {
+            return [
+                'step' => $stepLabel,
+                'command' => "GET {$zipUrl}",
+                'output' => 'Error pembaruan ZIP: '.$e->getMessage(),
+                'success' => false,
+            ];
+        } finally {
+            if (file_exists($tmpZip)) {
+                @unlink($tmpZip);
+            }
+        }
+    }
+
+    /**
+     * Paths that must never be overwritten during ZIP archive updates.
+     */
+    protected function isProtectedArchivePath(string $relativePath): bool
+    {
+        $normalized = ltrim(str_replace('\\', '/', $relativePath), '/');
+
+        if ($normalized === '.env' || str_starts_with($normalized, '.env.')) {
+            return true;
+        }
+
+        $protectedPrefixes = [
+            '.git/',
+            'storage/',
+            'bootstrap/cache/',
+            'public/storage/',
+            'vendor/',
+            'node_modules/',
+            'isp_customer_app/android/key.properties',
+        ];
+
+        foreach ($protectedPrefixes as $prefix) {
+            if ($normalized === rtrim($prefix, '/') || str_starts_with($normalized, $prefix)) {
+                return true;
+            }
+        }
+
+        return str_ends_with($normalized, '.jks') || str_ends_with($normalized, '.keystore');
+    }
+
+    /**
      * Run a git command in the project directory using Symfony Process.
      *
      * @param  array<int, string>  $args
@@ -483,19 +729,34 @@ class SystemUpdateService
      */
     protected function runGitCommand(array $args, int $timeout = 60): array
     {
+        if (! function_exists('proc_open')) {
+            return [
+                'success' => false,
+                'output' => '',
+                'error' => 'Fungsi proc_open dinonaktifkan oleh server PHP.',
+                'exit_code' => 1,
+            ];
+        }
+
         try {
-            array_unshift($args, 'git');
-            $process = new Process($args, $this->basePath);
+            $safeDir = str_replace('\\', '/', $this->basePath);
+            $command = array_merge(['git', '-c', "safe.directory={$safeDir}"], $args);
+            $env = [];
+            if (empty(getenv('HOME'))) {
+                $env['HOME'] = sys_get_temp_dir();
+            }
+
+            $process = new Process($command, $this->basePath, ! empty($env) ? $env : null);
             $process->setTimeout($timeout);
             $process->run();
 
             $errorOutput = trim($process->getErrorOutput());
-            if (! empty($errorOutput) && (str_contains($errorOutput, 'FETCH_HEAD') || str_contains($errorOutput, 'Permission denied') || str_contains($errorOutput, 'permission denied'))) {
+            if (! empty($errorOutput) && (str_contains($errorOutput, 'FETCH_HEAD') || str_contains($errorOutput, 'Permission denied') || str_contains($errorOutput, 'permission denied') || str_contains($errorOutput, 'dubious ownership'))) {
                 $errorOutput .= "\n\n💡 [PENYEBAB & SOLUSI IZIN FILE]:\n"
-                    ."Folder '.git' di server tidak memiliki izin tulis untuk user web server (misal: www-data).\n"
+                    ."Folder proyek atau '.git' di server tidak dimiliki/bisa ditulis oleh user web server (misal: www-data).\n"
                     ."Jalankan perintah berikut di terminal SSH server:\n"
-                    ."  sudo chown -R www-data:www-data .git\n"
-                    ."  sudo chmod -R 775 .git storage bootstrap/cache\n";
+                    ."  sudo chown -R www-data:www-data {$this->basePath}\n"
+                    ."  sudo -u www-data git config --global --add safe.directory {$this->basePath}\n";
             }
 
             return [
