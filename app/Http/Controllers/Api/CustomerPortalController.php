@@ -4,10 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
-use App\Models\HotspotVoucher;
 use App\Models\InternetPackage;
 use App\Models\Invoice;
 use App\Models\IspSetting;
+use App\Models\PackageRequest;
 use App\Models\Page;
 use App\Models\Payment;
 use App\Models\PaymentGateway;
@@ -17,15 +17,11 @@ use App\Models\SupportTicket;
 use App\Models\TicketReply;
 use App\Models\VoucherOrder;
 use App\Services\Genieacs\GenieacsApiService;
-use App\Services\Hotspot\VoucherService;
 use App\Services\Payment\QrisService;
-use App\Services\Router\MikrotikApiService;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 
 class CustomerPortalController extends Controller
 {
@@ -279,10 +275,29 @@ class CustomerPortalController extends Controller
             ], 404);
         }
 
+        $latestRequests = PackageRequest::with([
+            'currentPackage:id,name,speed_rate,price',
+            'requestedPackage:id,name,speed_rate,price',
+            'invoice:id,invoice_number,total_amount,status',
+            'workOrder:id,order_number,status,scheduled_date',
+            'reviewer:id,name,role',
+        ])
+            ->where('customer_id', $customer->id)
+            ->latest()
+            ->take(10)
+            ->get();
+
         return response()->json([
             'success' => true,
             'data' => [
                 'customer' => $customer,
+                'package_requests' => $latestRequests,
+                'pending_upgrade_request' => $latestRequests->first(
+                    fn (PackageRequest $r) => $r->type === PackageRequest::TYPE_UPGRADE && $r->isPending()
+                ),
+                'registration_request' => $latestRequests->first(
+                    fn (PackageRequest $r) => $r->type === PackageRequest::TYPE_REGISTRATION
+                ),
                 'isp' => [
                     'name' => IspSetting::get('company_name', 'ISP Internet'),
                     'phone' => IspSetting::get('company_phone', ''),
@@ -359,6 +374,10 @@ class CustomerPortalController extends Controller
     {
         $user = $request->user();
         $customer = $user->customer;
+
+        if (! $customer) {
+            return response()->json(['success' => false, 'message' => 'Profil pelanggan tidak ditemukan.'], 404);
+        }
 
         $invoice = Invoice::where('id', $id)
             ->where('customer_id', $customer->id)
@@ -538,6 +557,10 @@ class CustomerPortalController extends Controller
         $user = $request->user();
         $customer = $user->customer;
 
+        if (! $customer) {
+            return response()->json(['success' => false, 'message' => 'Profil pelanggan tidak ditemukan.'], 404);
+        }
+
         $invoice = Invoice::where('id', $invoiceId)
             ->where('customer_id', $customer->id)
             ->firstOrFail();
@@ -568,6 +591,10 @@ class CustomerPortalController extends Controller
         $user = $request->user();
         $customer = $user->customer;
 
+        if (! $customer) {
+            return response()->json(['success' => false, 'message' => 'Profil pelanggan tidak ditemukan.'], 404);
+        }
+
         $tickets = SupportTicket::where('customer_id', $customer->id)
             ->orderBy('created_at', 'desc')
             ->get();
@@ -592,6 +619,10 @@ class CustomerPortalController extends Controller
         $user = $request->user();
         $customer = $user->customer;
 
+        if (! $customer) {
+            return response()->json(['success' => false, 'message' => 'Profil pelanggan tidak ditemukan.'], 404);
+        }
+
         $ticket = SupportTicket::create([
             'ticket_number' => 'TCK-'.date('Ym').'-'.rand(100, 999),
             'customer_id' => $customer->id,
@@ -615,6 +646,10 @@ class CustomerPortalController extends Controller
     {
         $user = $request->user();
         $customer = $user->customer;
+
+        if (! $customer) {
+            return response()->json(['success' => false, 'message' => 'Profil pelanggan tidak ditemukan.'], 404);
+        }
 
         $ticket = SupportTicket::where('customer_id', $customer->id)
             ->where('id', $id)
@@ -653,6 +688,10 @@ class CustomerPortalController extends Controller
 
         $user = $request->user();
         $customer = $user->customer;
+
+        if (! $customer) {
+            return response()->json(['success' => false, 'message' => 'Profil pelanggan tidak ditemukan.'], 404);
+        }
 
         $ticket = SupportTicket::where('customer_id', $customer->id)
             ->where('id', $id)
@@ -919,7 +958,34 @@ class CustomerPortalController extends Controller
     }
 
     /**
-     * Submit PPPoE package upgrade with prorata billing.
+     * List customer's registration & package upgrade approval requests.
+     */
+    public function packageRequests(Request $request): JsonResponse
+    {
+        $customer = $request->user()->customer;
+        if (! $customer) {
+            return response()->json(['success' => false, 'message' => 'Profil pelanggan tidak ditemukan.'], 404);
+        }
+
+        $requests = PackageRequest::with([
+            'currentPackage:id,name,speed_rate,price',
+            'requestedPackage:id,name,speed_rate,price',
+            'invoice:id,invoice_number,total_amount,status,due_date,paid_at',
+            'workOrder:id,order_number,status,scheduled_date,completed_at',
+            'reviewer:id,name,role',
+        ])
+            ->where('customer_id', $customer->id)
+            ->latest()
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $requests,
+        ]);
+    }
+
+    /**
+     * Submit PPPoE package upgrade with prorata billing (requires Admin/Technician approval).
      */
     public function packageUpgrade(Request $request): JsonResponse
     {
@@ -929,13 +995,37 @@ class CustomerPortalController extends Controller
             return response()->json(['success' => false, 'message' => 'Profil pelanggan tidak ditemukan.'], 404);
         }
 
+        if ($customer->status !== 'active') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Akun Anda belum aktif atau masih menunggu persetujuan Admin/Teknisi.',
+            ], 422);
+        }
+
+        $hasPendingUpgrade = PackageRequest::where('customer_id', $customer->id)
+            ->where('type', PackageRequest::TYPE_UPGRADE)
+            ->where('status', PackageRequest::STATUS_PENDING)
+            ->exists();
+
+        if ($hasPendingUpgrade) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda masih memiliki pengajuan upgrade paket yang menunggu persetujuan Admin/Teknisi.',
+            ], 422);
+        }
+
         $packageId = (int) $request->input('package_id');
         $paymentMethod = $request->input('payment_method', 'qris_manual');
+        $customerNotes = $request->input('notes');
         $targetPackage = InternetPackage::findOrFail($packageId);
         $currentPackage = $customer->package;
 
         if ($targetPackage->type !== 'pppoe') {
             return response()->json(['success' => false, 'message' => 'Hanya paket PPPoE yang dapat di-upgrade.'], 422);
+        }
+
+        if ((int) $customer->package_id === (int) $targetPackage->id) {
+            return response()->json(['success' => false, 'message' => 'Anda sedang berlangganan paket ini.'], 422);
         }
 
         $now = Carbon::now();
@@ -948,28 +1038,27 @@ class CustomerPortalController extends Controller
         $priceDiff = max(0, $targetPrice - $currentPrice);
         $prorataAmount = round(($priceDiff / $daysInMonth) * $remainingDays);
 
-        // If no payment required (same price / downgrade), activate immediately
+        // If no payment required (same price / downgrade), queue for Admin/Technician approval
         if ($prorataAmount <= 0) {
-            $customer->package_id = $targetPackage->id;
-            $customer->promo_cycles_used = 0;
-            $customer->save();
-
-            if ($customer->router && $customer->pppoe_username && ! empty($targetPackage->mikrotik_profile)) {
-                try {
-                    app(MikrotikApiService::class)->activatePppCustomer(
-                        $customer->router,
-                        $customer->pppoe_username,
-                        $targetPackage->mikrotik_profile
-                    );
-                } catch (\Throwable $e) {
-                    Log::warning('MikroTik sync error on upgrade: '.$e->getMessage());
-                }
-            }
+            $packageRequest = PackageRequest::create([
+                'customer_id' => $customer->id,
+                'type' => PackageRequest::TYPE_UPGRADE,
+                'current_package_id' => $customer->package_id,
+                'requested_package_id' => $targetPackage->id,
+                'status' => PackageRequest::STATUS_PENDING,
+                'payment_status' => PackageRequest::PAYMENT_NOT_REQUIRED,
+                'customer_notes' => $customerNotes,
+            ])->load(['currentPackage:id,name,speed_rate,price', 'requestedPackage:id,name,speed_rate,price']);
 
             return response()->json([
                 'success' => true,
-                'is_instant' => true,
-                'message' => 'Paket berhasil di-upgrade ke '.$targetPackage->name.'! Kecepatan baru langsung aktif.',
+                'is_instant' => false,
+                'requires_payment' => false,
+                'message' => 'Pengajuan upgrade ke '.$targetPackage->name.' berhasil dikirim. Menunggu persetujuan Admin/Teknisi.',
+                'data' => [
+                    'package_request' => $packageRequest,
+                    'target_package' => $targetPackage,
+                ],
             ]);
         }
 
@@ -1012,6 +1101,17 @@ class CustomerPortalController extends Controller
             'notes' => $notes,
         ]);
 
+        $packageRequest = PackageRequest::create([
+            'customer_id' => $customer->id,
+            'type' => PackageRequest::TYPE_UPGRADE,
+            'current_package_id' => $customer->package_id,
+            'requested_package_id' => $targetPackage->id,
+            'invoice_id' => $invoice->id,
+            'status' => PackageRequest::STATUS_PENDING,
+            'payment_status' => PackageRequest::PAYMENT_UNPAID,
+            'customer_notes' => $customerNotes,
+        ])->load(['currentPackage:id,name,speed_rate,price', 'requestedPackage:id,name,speed_rate,price']);
+
         $invoiceData = $invoice->toArray();
         if (! empty($qrisPayload)) {
             try {
@@ -1025,9 +1125,11 @@ class CustomerPortalController extends Controller
         return response()->json([
             'success' => true,
             'is_instant' => false,
-            'message' => 'Tagihan upgrade prorata berhasil diterbitkan.',
+            'requires_payment' => true,
+            'message' => 'Tagihan upgrade prorata berhasil diterbitkan. Setelah dibayar, pengajuan akan diproses untuk persetujuan Admin/Teknisi.',
             'data' => [
                 'invoice' => $invoiceData,
+                'package_request' => $packageRequest,
                 'target_package' => $targetPackage,
                 'prorata_amount' => $prorataAmount,
                 'unique_code' => $uniqueCode,
@@ -1122,75 +1224,48 @@ class CustomerPortalController extends Controller
     }
 
     /**
-     * Confirm voucher payment and generate MikroTik Hotspot code automatically.
+     * Check voucher payment verification and deliver Hotspot voucher code only when paid.
      */
     public function voucherOrderConfirm(Request $request, string $orderNumber): JsonResponse
     {
         $order = VoucherOrder::where('order_number', $orderNumber)->with(['package', 'router'])->firstOrFail();
 
-        if ($order->status === 'paid' && ! empty($order->voucher_code)) {
+        $authCustomer = $request->user()?->customer;
+        if ($authCustomer && $order->customer_id && (int) $order->customer_id !== (int) $authCustomer->id) {
             return response()->json([
-                'success' => true,
-                'message' => 'Voucher sudah aktif.',
-                'data' => $order,
-            ]);
+                'success' => false,
+                'message' => 'Anda tidak memiliki akses ke pesanan voucher ini.',
+            ], 403);
+        }
+
+        if ($order->status !== 'paid' || empty($order->voucher_code)) {
+            return response()->json([
+                'success' => false,
+                'status' => $order->status,
+                'message' => 'Pembayaran belum terverifikasi. Selesaikan pembayaran QRIS/Transfer atau hubungi Admin untuk verifikasi.',
+            ], 402);
         }
 
         $package = $order->package;
-        $router = $order->router ?: Router::where('is_active', true)->firstOrFail();
-
-        // Generate unique 6-character uppercase code & password
-        $voucherCode = strtoupper(Str::random(6));
-        $voucherPassword = $voucherCode;
-
-        // Create HotspotVoucher in database
-        $voucher = HotspotVoucher::create([
-            'router_id' => $router->id,
-            'code' => $voucherCode,
-            'password' => $voucherPassword,
-            'profile' => $package->mikrotik_profile ?: 'default',
-            'shared_users' => $package->shared_users ?? 1,
-            'price' => $order->amount,
-            'validity' => $package->validity_days.' Hari',
-            'status' => 'unused',
-            'generated_batch' => 'AUTO-'.date('Ymd'),
-        ]);
-
-        // Push directly to MikroTik router Hotspot
-        try {
-            app(VoucherService::class)->syncSingleVoucherToRouter($voucher);
-        } catch (\Throwable $e) {
-            Log::warning('MikroTik sync voucher error: '.$e->getMessage());
-        }
-
-        $order->update([
-            'status' => 'paid',
-            'paid_at' => now(),
-            'hotspot_voucher_id' => $voucher->id,
-            'voucher_code' => $voucherCode,
-            'voucher_password' => $voucherPassword,
-        ]);
-
-        $order->refresh();
 
         return response()->json([
             'success' => true,
-            'message' => 'Pembayaran terverifikasi! Kode voucher hotspot berhasil diterbitkan.',
+            'message' => 'Pembayaran terverifikasi! Kode voucher hotspot siap digunakan.',
             'data' => [
                 'order_number' => $order->order_number,
-                'package_name' => $package->name,
-                'speed_rate' => $package->speed_rate,
-                'validity' => $package->validity_days.' Hari',
-                'voucher_code' => $voucherCode,
-                'voucher_password' => $voucherPassword,
-                'shared_users' => $package->shared_users ?? 1,
+                'package_name' => $package?->name ?? '-',
+                'speed_rate' => $package?->speed_rate ?? '-',
+                'validity' => ($package?->validity_days ?? 1).' Hari',
+                'voucher_code' => $order->voucher_code,
+                'voucher_password' => $order->voucher_password,
+                'shared_users' => $package?->shared_users ?? 1,
                 'paid_at' => $order->paid_at?->toIso8601String(),
             ],
         ]);
     }
 
     /**
-     * Get voucher purchase history.
+     * Get voucher purchase history (scoped to authenticated customer or verified buyer phone).
      */
     public function voucherHistory(Request $request): JsonResponse
     {
@@ -1200,8 +1275,24 @@ class CustomerPortalController extends Controller
 
         if ($request->user() && $request->user()->customer) {
             $query->where('customer_id', $request->user()->customer->id);
-        } elseif ($request->filled('phone')) {
-            $query->where('buyer_phone', $request->input('phone'));
+        } else {
+            $rawPhone = trim((string) $request->input('phone', ''));
+            $digits = preg_replace('/[^0-9]/', '', $rawPhone);
+            if (strlen($digits) < 8) {
+                return response()->json([
+                    'success' => true,
+                    'data' => [],
+                ]);
+            }
+
+            $variants = [$rawPhone, $digits];
+            if (str_starts_with($digits, '0')) {
+                $variants[] = '62'.substr($digits, 1);
+            } elseif (str_starts_with($digits, '62')) {
+                $variants[] = '0'.substr($digits, 2);
+            }
+
+            $query->whereIn('buyer_phone', array_unique($variants));
         }
 
         $orders = $query->limit(30)->get();

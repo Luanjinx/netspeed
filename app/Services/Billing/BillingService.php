@@ -5,6 +5,7 @@ namespace App\Services\Billing;
 use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\IspSetting;
+use App\Models\PackageRequest;
 use App\Models\Payment;
 use App\Services\Notification\TelegramService;
 use App\Services\Notification\WhatsAppService;
@@ -253,8 +254,11 @@ class BillingService
 
             $customer = $invoice->customer;
             if ($customer) {
-                // If invoice is for package upgrade or different package, update package_id
-                if ($invoice->package_id && (int) $invoice->package_id !== (int) $customer->package_id) {
+                $packageRequest = PackageRequest::where('invoice_id', $invoice->id)->first();
+                if ($packageRequest) {
+                    $packageRequest->update(['payment_status' => PackageRequest::PAYMENT_PAID]);
+                } elseif ($invoice->package_id && (int) $invoice->package_id !== (int) $customer->package_id) {
+                    // Legacy non-approval invoice for different package
                     $customer->package_id = $invoice->package_id;
                     $customer->promo_cycles_used = 0;
                     $customer->save();

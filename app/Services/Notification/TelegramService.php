@@ -136,14 +136,20 @@ class TelegramService
     }
 
     /**
-     * Set webhook URL for Telegram updates.
+     * Set webhook URL for Telegram updates with a secret verification token.
      */
     public function setWebhook(?string $url = null): array
     {
         $webhookUrl = $url ?: url('/api/telegram/webhook');
+        $secretToken = trim((string) IspSetting::get('telegram_webhook_secret', ''));
+        if ($secretToken === '') {
+            $secretToken = bin2hex(random_bytes(24));
+            IspSetting::set('telegram_webhook_secret', $secretToken);
+        }
 
         return $this->makeRequest('setWebhook', [
             'url' => $webhookUrl,
+            'secret_token' => $secretToken,
             'allowed_updates' => ['message', 'callback_query'],
         ]);
     }

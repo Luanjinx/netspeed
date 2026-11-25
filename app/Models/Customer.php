@@ -150,6 +150,11 @@ class Customer extends Model
         return $this->belongsTo(InternetPackage::class, 'package_id');
     }
 
+    public function packageRequests(): HasMany
+    {
+        return $this->hasMany(PackageRequest::class);
+    }
+
     public function technician(): BelongsTo
     {
         return $this->belongsTo(User::class, 'technician_id');

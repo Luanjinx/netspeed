@@ -35,14 +35,14 @@ Route::prefix('install')->name('install.')->group(function () {
 // Public Landing Page & Self-Service
 Route::get('/', [LandingPageController::class, 'index'])->name('landing');
 Route::get('/page/{slug}', [LandingPageController::class, 'showPage'])->name('page.show');
-Route::post('/cek-tagihan', [LandingPageController::class, 'checkBill'])->name('landing.check-bill');
-Route::post('/daftar-langganan', [LandingPageController::class, 'registerLead'])->name('landing.register');
+Route::post('/cek-tagihan', [LandingPageController::class, 'checkBill'])->middleware('throttle:20,1')->name('landing.check-bill');
+Route::post('/daftar-langganan', [LandingPageController::class, 'registerLead'])->middleware('throttle:5,1')->name('landing.register');
 
 // Customer Web Portal Authentication
 Route::middleware('guest')->group(function () {
     Route::get('/login', [CustomerAuthController::class, 'showLoginForm'])->name('login');
     Route::get('/customer/login', fn () => redirect()->route('login'))->name('customer.login');
-    Route::post('/login', [CustomerAuthController::class, 'login'])->name('customer.login.submit');
+    Route::post('/login', [CustomerAuthController::class, 'login'])->middleware('throttle:10,1')->name('customer.login.submit');
 });
 
 Route::post('/logout', [CustomerAuthController::class, 'logout'])->name('customer.logout');
@@ -82,6 +82,11 @@ Route::middleware(['auth', EnsureTechnicianUser::class])->prefix('teknisi')->nam
     Route::post('/pasang-baru', [TechnicianPortalController::class, 'storeCustomer'])->name('store-customer');
     Route::get('/ajax/odp-ports/{odpId}', [TechnicianPortalController::class, 'getOdpPorts'])->name('ajax.odp-ports');
 
+    // Persetujuan Pendaftaran & Upgrade Paket
+    Route::get('/pengajuan', [TechnicianPortalController::class, 'packageRequests'])->name('package-requests');
+    Route::post('/pengajuan/{id}/approve', [TechnicianPortalController::class, 'approvePackageRequest'])->name('package-requests.approve');
+    Route::post('/pengajuan/{id}/reject', [TechnicianPortalController::class, 'rejectPackageRequest'])->name('package-requests.reject');
+
     // Kontrol GenieACS ONT
     Route::post('/ont/wifi', [TechnicianPortalController::class, 'updateOntWifi'])->name('ont.wifi');
     Route::post('/ont/reboot', [TechnicianPortalController::class, 'rebootOnt'])->name('ont.reboot');
@@ -105,7 +110,7 @@ Route::prefix('agen')->name('agent.')->group(function () {
 
     Route::middleware('guest')->group(function () {
         Route::get('/login', [AgentPortalController::class, 'showLoginForm'])->name('login');
-        Route::post('/login', [AgentPortalController::class, 'login'])->name('login.submit');
+        Route::post('/login', [AgentPortalController::class, 'login'])->middleware('throttle:10,1')->name('login.submit');
     });
 
     Route::post('/logout', [AgentPortalController::class, 'logout'])->name('logout');
@@ -121,32 +126,40 @@ Route::prefix('agen')->name('agent.')->group(function () {
     });
 });
 
-// Network map endpoints for Admin and Tech
-Route::get('/admin/map-data', [NetworkMapController::class, 'getMapData'])->name('network.map.data');
-Route::post('/admin/map-save-cable', [NetworkMapController::class, 'saveCablePath'])->name('network.map.save-cable');
-Route::get('/admin/map-traffic/{id}', [NetworkMapController::class, 'getCustomerTraffic'])->name('network.map.traffic');
+// Network map endpoints for authenticated Admin and Technician users only
+Route::middleware(['auth', EnsureTechnicianUser::class])->group(function () {
+    Route::get('/admin/map-data', [NetworkMapController::class, 'getMapData'])->name('network.map.data');
+    Route::post('/admin/map-save-cable', [NetworkMapController::class, 'saveCablePath'])->name('network.map.save-cable');
+    Route::get('/admin/map-traffic/{id}', [NetworkMapController::class, 'getCustomerTraffic'])->name('network.map.traffic');
 
-// Technician Field Map (Mobile-responsive web interface)
-Route::get('/tech/map', function () {
-    $office = IspSetting::getOfficeLocation();
+    // Technician Field Map (Mobile-responsive web interface)
+    Route::get('/tech/map', function () {
+        $office = IspSetting::getOfficeLocation();
 
-    return view('tech.map', compact('office'));
-})->name('tech.map');
+        return view('tech.map', compact('office'));
+    })->name('tech.map');
+});
 
-// Printable routes
-Route::get('/print/invoice/{id}', [PrintController::class, 'invoice'])->name('print.invoice');
-Route::get('/print/thermal/{id}', [PrintController::class, 'thermal'])->name('print.thermal');
+// Printable routes (authenticated + role/ownership checked)
+Route::middleware('auth')->group(function () {
+    Route::get('/print/invoice/{id}', [PrintController::class, 'invoice'])->name('print.invoice');
+    Route::get('/print/thermal/{id}', [PrintController::class, 'thermal'])->name('print.thermal');
 
-Route::get('/print/vouchers/{batch}', function (string $batch) {
-    $vouchers = HotspotVoucher::where('generated_batch', $batch)->get();
-    $ispName = IspSetting::get('company_name', 'NETSPEED WI-FI');
+    Route::get('/print/vouchers/{batch}', function (string $batch) {
+        abort_unless(in_array(auth()->user()?->role, ['admin', 'technician', 'agent'], true), 403);
 
-    return view('print.voucher-sheet', compact('vouchers', 'ispName', 'batch'));
-})->name('print.vouchers');
+        $vouchers = HotspotVoucher::where('generated_batch', $batch)->get();
+        $ispName = IspSetting::get('company_name', 'NETSPEED WI-FI');
 
-Route::get('/print/voucher/{id}', function (int $id) {
-    $voucher = HotspotVoucher::with('router')->findOrFail($id);
-    $ispName = IspSetting::get('company_name', 'NETSPEED WI-FI');
+        return view('print.voucher-sheet', compact('vouchers', 'ispName', 'batch'));
+    })->name('print.vouchers');
 
-    return view('print.voucher-single', compact('voucher', 'ispName'));
-})->name('print.voucher.single');
+    Route::get('/print/voucher/{id}', function (int $id) {
+        abort_unless(in_array(auth()->user()?->role, ['admin', 'technician', 'agent'], true), 403);
+
+        $voucher = HotspotVoucher::with('router')->findOrFail($id);
+        $ispName = IspSetting::get('company_name', 'NETSPEED WI-FI');
+
+        return view('print.voucher-single', compact('voucher', 'ispName'));
+    })->name('print.voucher.single');
+});

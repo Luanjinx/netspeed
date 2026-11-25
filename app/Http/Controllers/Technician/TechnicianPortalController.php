@@ -7,12 +7,14 @@ use App\Models\Customer;
 use App\Models\InternetPackage;
 use App\Models\IspSetting;
 use App\Models\Odp;
+use App\Models\PackageRequest;
 use App\Models\Router;
 use App\Models\SupportTicket;
 use App\Models\TicketReply;
 use App\Models\WorkOrder;
 use App\Services\Genieacs\GenieacsApiService;
 use App\Services\Notification\WhatsAppService;
+use App\Services\PackageRequestApprovalService;
 use App\Services\Router\MikrotikApiService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -176,13 +178,23 @@ class TechnicianPortalController extends Controller
 
         $customer = $workOrder->customer;
 
-        // If installation: activate customer & sync to router
+        // If installation: activate customer, approve linked PackageRequest & sync to router
         if ($workOrder->type === 'installation' && $customer) {
             $customer->update([
                 'status' => 'active',
                 'install_date' => $customer->install_date ?: today(),
                 'optical_power_dbm' => $opticalPower ?: $customer->optical_power_dbm,
             ]);
+
+            PackageRequest::where('customer_id', $customer->id)
+                ->where('type', PackageRequest::TYPE_REGISTRATION)
+                ->where('status', PackageRequest::STATUS_PENDING)
+                ->update([
+                    'status' => PackageRequest::STATUS_APPROVED,
+                    'reviewed_by' => $technician->id,
+                    'reviewed_at' => now(),
+                    'admin_notes' => $completionNotes ?: 'Disetujui melalui penyelesaian SPK instalasi '.$workOrder->order_number,
+                ]);
 
             if ($customer->connection_type === 'pppoe' && $customer->router) {
                 try {
@@ -670,5 +682,77 @@ class TechnicianPortalController extends Controller
         }
 
         return back()->with('success', 'Balasan Anda berhasil dikirim ke tiket!');
+    }
+
+    /**
+     * List pending & processed registration and package upgrade requests for Technician approval.
+     */
+    public function packageRequests(Request $request): View
+    {
+        $technician = Auth::user();
+        $statusFilter = $request->query('status', 'pending');
+
+        $query = PackageRequest::with([
+            'customer',
+            'currentPackage',
+            'requestedPackage',
+            'invoice',
+            'workOrder',
+            'reviewer',
+        ])->latest();
+
+        if (in_array($statusFilter, [PackageRequest::STATUS_PENDING, PackageRequest::STATUS_APPROVED, PackageRequest::STATUS_REJECTED], true)) {
+            $query->where('status', $statusFilter);
+        }
+
+        $requests = $query->get();
+        $pendingCount = PackageRequest::where('status', PackageRequest::STATUS_PENDING)->count();
+        $companyName = IspSetting::get('company_name', 'NetSpeed ISP');
+
+        return view('technician.package-requests', compact(
+            'technician',
+            'requests',
+            'statusFilter',
+            'pendingCount',
+            'companyName'
+        ));
+    }
+
+    /**
+     * Approve a registration or package upgrade request as Technician.
+     */
+    public function approvePackageRequest(Request $request, int $id, PackageRequestApprovalService $approvalService): RedirectResponse
+    {
+        $technician = Auth::user();
+        $packageRequest = PackageRequest::findOrFail($id);
+
+        try {
+            $approvalService->approve($packageRequest, $technician, $request->input('notes'));
+
+            return back()->with('success', "Pengajuan {$packageRequest->request_number} berhasil di-ACC!");
+        } catch (\Throwable $e) {
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
+    /**
+     * Reject a registration or package upgrade request as Technician.
+     */
+    public function rejectPackageRequest(Request $request, int $id, PackageRequestApprovalService $approvalService): RedirectResponse
+    {
+        $request->validate([
+            'reason' => 'required|string|max:1000',
+        ]);
+
+        $technician = Auth::user();
+        $packageRequest = PackageRequest::findOrFail($id);
+
+        try {
+            $approvalService->reject($packageRequest, $technician, (string) $request->input('reason'));
+
+            return back()->with('success', "Pengajuan {$packageRequest->request_number} telah ditolak.");
+        } catch (\Throwable $e) {
+            return back()->with('error', $e->getMessage());
+        }
     }
 }

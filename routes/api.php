@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\CustomerPortalController;
 use App\Http\Controllers\Api\NetworkTestController;
 use App\Http\Controllers\Api\PaymentWebhookController;
 use App\Http\Controllers\Api\TelegramWebhookController;
+use App\Http\Middleware\EnsureAdminOrTechnicianApi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -14,16 +15,16 @@ Route::get('/public/home', [CustomerPortalController::class, 'publicHome']);
 Route::get('/public/promos/{id}', [CustomerPortalController::class, 'publicPromoDetail']);
 Route::get('/public/pages', [CustomerPortalController::class, 'publicPages']);
 Route::get('/public/pages/{slug}', [CustomerPortalController::class, 'publicPageDetail']);
-Route::post('/auth/login', [AuthController::class, 'login']);
-Route::post('/auth/register', [AuthController::class, 'register']);
+Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
+Route::post('/auth/register', [AuthController::class, 'register'])->middleware('throttle:5,1');
 Route::post('/payment/webhook', [PaymentWebhookController::class, 'handle']);
 Route::get('/payment/gateways', [CustomerPortalController::class, 'paymentGateways']);
 Route::post('/telegram/webhook', [TelegramWebhookController::class, 'handle']);
 
-// Hotspot Voucher purchase & confirmation (Public / Guest)
-Route::post('/public/voucher/order', [CustomerPortalController::class, 'voucherOrder']);
-Route::post('/public/voucher/order/{orderNumber}/confirm', [CustomerPortalController::class, 'voucherOrderConfirm']);
-Route::get('/public/voucher/history', [CustomerPortalController::class, 'voucherHistory']);
+// Hotspot Voucher purchase & status check (Public / Guest)
+Route::post('/public/voucher/order', [CustomerPortalController::class, 'voucherOrder'])->middleware('throttle:15,1');
+Route::post('/public/voucher/order/{orderNumber}/confirm', [CustomerPortalController::class, 'voucherOrderConfirm'])->middleware('throttle:20,1');
+Route::get('/public/voucher/history', [CustomerPortalController::class, 'voucherHistory'])->middleware('throttle:20,1');
 
 // Network Ping & Speedtest for Flutter
 Route::prefix('network')->group(function () {
@@ -62,9 +63,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/tickets/{id}', [CustomerPortalController::class, 'ticketDetail']);
         Route::post('/tickets/{id}/reply', [CustomerPortalController::class, 'replyTicket']);
 
-        // PPPoE Package Upgrade with Prorata
+        // PPPoE Package Upgrade with Prorata & Approval Requests
         Route::get('/package/upgrade-estimate', [CustomerPortalController::class, 'packageUpgradeEstimate']);
         Route::post('/package/upgrade', [CustomerPortalController::class, 'packageUpgrade']);
+        Route::get('/package-requests', [CustomerPortalController::class, 'packageRequests']);
 
         // Hotspot Voucher Order for Logged-In Customer
         Route::post('/voucher/order', [CustomerPortalController::class, 'voucherOrder']);
@@ -73,7 +75,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // Admin & Technician Endpoints for Flutter Admin App
-    Route::prefix('admin')->group(function () {
+    Route::middleware(EnsureAdminOrTechnicianApi::class)->prefix('admin')->group(function () {
         Route::get('/dashboard', [AdminApiController::class, 'dashboard']);
 
         // PPPoE Management
@@ -88,6 +90,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/hotspot/generate', [AdminApiController::class, 'hotspotGenerate']);
         Route::post('/hotspot/kick', [AdminApiController::class, 'hotspotKick']);
         Route::delete('/hotspot/voucher/{id}', [AdminApiController::class, 'hotspotDeleteVoucher']);
+        Route::post('/voucher-orders/{orderNumber}/approve', [AdminApiController::class, 'approveVoucherOrder']);
 
         // Customers & Invoices
         Route::get('/customers', [AdminApiController::class, 'customers']);
@@ -96,31 +99,10 @@ Route::middleware('auth:sanctum')->group(function () {
         // OneSignal Push Notification
         Route::post('/onesignal/send', [AdminApiController::class, 'onesignalSend']);
         Route::get('/onesignal/history', [AdminApiController::class, 'onesignalHistory']);
-    });
 
-    // Admin & Technician Endpoints for Flutter Admin App
-    Route::prefix('admin')->group(function () {
-        Route::get('/dashboard', [AdminApiController::class, 'dashboard']);
-
-        // PPPoE Management
-        Route::get('/pppoe', [AdminApiController::class, 'pppoeIndex']);
-        Route::post('/pppoe/secret', [AdminApiController::class, 'pppoeCreateSecret']);
-        Route::post('/pppoe/toggle-isolir', [AdminApiController::class, 'pppoeToggleIsolir']);
-        Route::post('/pppoe/kick', [AdminApiController::class, 'pppoeKick']);
-        Route::post('/pppoe/reset-fup', [AdminApiController::class, 'pppoeResetFup']);
-
-        // Hotspot Management
-        Route::get('/hotspot', [AdminApiController::class, 'hotspotIndex']);
-        Route::post('/hotspot/generate', [AdminApiController::class, 'hotspotGenerate']);
-        Route::post('/hotspot/kick', [AdminApiController::class, 'hotspotKick']);
-        Route::delete('/hotspot/voucher/{id}', [AdminApiController::class, 'hotspotDeleteVoucher']);
-
-        // Customers & Invoices
-        Route::get('/customers', [AdminApiController::class, 'customers']);
-        Route::get('/invoices', [AdminApiController::class, 'invoices']);
-
-        // OneSignal Push Notification
-        Route::post('/onesignal/send', [AdminApiController::class, 'onesignalSend']);
-        Route::get('/onesignal/history', [AdminApiController::class, 'onesignalHistory']);
+        // Package Registration & Upgrade Approval Requests
+        Route::get('/package-requests', [AdminApiController::class, 'packageRequests']);
+        Route::post('/package-requests/{id}/approve', [AdminApiController::class, 'approvePackageRequest']);
+        Route::post('/package-requests/{id}/reject', [AdminApiController::class, 'rejectPackageRequest']);
     });
 });

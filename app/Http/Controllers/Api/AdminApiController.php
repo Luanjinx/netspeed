@@ -6,11 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Models\HotspotVoucher;
 use App\Models\Invoice;
+use App\Models\PackageRequest;
 use App\Models\PushNotification;
 use App\Models\Router;
+use App\Models\VoucherOrder;
 use App\Services\Bandwidth\FupService;
 use App\Services\Hotspot\VoucherService;
 use App\Services\Notification\OneSignalService;
+use App\Services\PackageRequestApprovalService;
 use App\Services\Router\MikrotikApiService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -280,8 +283,10 @@ class AdminApiController extends Controller
 
         $voucherQuery = HotspotVoucher::query();
         if (! empty($search)) {
-            $voucherQuery->where('code', 'like', "%{$search}%")
-                ->orWhere('generated_batch', 'like', "%{$search}%");
+            $voucherQuery->where(function ($q) use ($search): void {
+                $q->where('code', 'like', "%{$search}%")
+                    ->orWhere('generated_batch', 'like', "%{$search}%");
+            });
         }
         if (! empty($status)) {
             $voucherQuery->where('status', $status);
@@ -408,6 +413,21 @@ class AdminApiController extends Controller
     }
 
     /**
+     * Manually approve and issue a hotspot voucher for a pending voucher order.
+     */
+    public function approveVoucherOrder(string $orderNumber): JsonResponse
+    {
+        $order = VoucherOrder::where('order_number', $orderNumber)->with(['package', 'router'])->firstOrFail();
+        $issued = PaymentWebhookController::issueVoucherForOrder($order);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Pesanan voucher {$issued->order_number} berhasil diverifikasi.",
+            'data' => $issued,
+        ]);
+    }
+
+    /**
      * List customers for admin.
      */
     public function customers(Request $request): JsonResponse
@@ -444,11 +464,13 @@ class AdminApiController extends Controller
 
         $query = Invoice::with(['customer', 'package']);
         if (! empty($search)) {
-            $query->where('invoice_number', 'like', "%{$search}%")
-                ->orWhereHas('customer', function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                        ->orWhere('customer_number', 'like', "%{$search}%");
-                });
+            $query->where(function ($outer) use ($search): void {
+                $outer->where('invoice_number', 'like', "%{$search}%")
+                    ->orWhereHas('customer', function ($q) use ($search): void {
+                        $q->where('name', 'like', "%{$search}%")
+                            ->orWhere('customer_number', 'like', "%{$search}%");
+                    });
+            });
         }
         if (! empty($status)) {
             $query->where('status', $status);
@@ -513,5 +535,98 @@ class AdminApiController extends Controller
             'success' => true,
             'data' => $history,
         ]);
+    }
+
+    /**
+     * List registration & package upgrade approval requests for Admin & Technician.
+     */
+    public function packageRequests(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        if (! $user || ! in_array($user->role, ['admin', 'technician'], true)) {
+            return response()->json(['success' => false, 'message' => 'Akses ditolak.'], 403);
+        }
+
+        $query = PackageRequest::with([
+            'customer:id,customer_number,name,phone,address,status,package_id',
+            'currentPackage:id,name,speed_rate,price',
+            'requestedPackage:id,name,speed_rate,price',
+            'invoice:id,invoice_number,total_amount,status',
+            'workOrder:id,order_number,status,scheduled_date',
+            'reviewer:id,name,role',
+        ])->latest();
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->query('status'));
+        }
+
+        if ($request->filled('type')) {
+            $query->where('type', $request->query('type'));
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $query->paginate(25),
+        ]);
+    }
+
+    /**
+     * Approve a pending registration or package upgrade request (Admin / Technician).
+     */
+    public function approvePackageRequest(Request $request, int $id, PackageRequestApprovalService $approvalService): JsonResponse
+    {
+        $user = $request->user();
+        if (! $user || ! in_array($user->role, ['admin', 'technician'], true)) {
+            return response()->json(['success' => false, 'message' => 'Hanya Admin atau Teknisi yang dapat menyetujui pengajuan.'], 403);
+        }
+
+        $packageRequest = PackageRequest::findOrFail($id);
+
+        try {
+            $updated = $approvalService->approve($packageRequest, $user, $request->input('notes'));
+
+            return response()->json([
+                'success' => true,
+                'message' => "Pengajuan {$updated->request_number} berhasil disetujui.",
+                'data' => $updated,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        }
+    }
+
+    /**
+     * Reject a pending registration or package upgrade request (Admin / Technician).
+     */
+    public function rejectPackageRequest(Request $request, int $id, PackageRequestApprovalService $approvalService): JsonResponse
+    {
+        $user = $request->user();
+        if (! $user || ! in_array($user->role, ['admin', 'technician'], true)) {
+            return response()->json(['success' => false, 'message' => 'Hanya Admin atau Teknisi yang dapat menolak pengajuan.'], 403);
+        }
+
+        $request->validate([
+            'reason' => 'required|string|max:1000',
+        ]);
+
+        $packageRequest = PackageRequest::findOrFail($id);
+
+        try {
+            $updated = $approvalService->reject($packageRequest, $user, (string) $request->input('reason'));
+
+            return response()->json([
+                'success' => true,
+                'message' => "Pengajuan {$updated->request_number} telah ditolak.",
+                'data' => $updated,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        }
     }
 }

@@ -118,6 +118,9 @@
                 <a href="{{ route('technician.pool-tickets') }}" class="px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 {{ request()->routeIs('technician.pool-tickets') ? 'bg-surface2 text-accent border border-border' : 'text-muted hover:text-white' }}">
                     <span>Pool Tiket</span>
                 </a>
+                <a href="{{ route('technician.package-requests') }}" class="px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 {{ request()->routeIs('technician.package-requests*') ? 'bg-surface2 text-accent border border-border' : 'text-muted hover:text-white' }}">
+                    <span>Persetujuan</span>
+                </a>
                 <a href="{{ route('technician.create-customer') }}" class="px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 {{ request()->routeIs('technician.create-customer') ? 'bg-surface2 text-accent border border-border' : 'text-muted hover:text-white' }}">
                     <span class="material-symbols-rounded text-sm text-accent">add_circle</span>
                     <span>Pasang Baru</span>

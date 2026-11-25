@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Models\InternetPackage;
+use App\Models\PackageRequest;
 use App\Models\User;
 use App\Models\WorkOrder;
 use App\Services\Notification\TelegramService;
@@ -207,6 +208,17 @@ class AuthController extends Controller
             'scheduled_date' => now()->addDays(1),
         ]);
 
+        // Create PackageRequest (Requires Admin/Technician Approval before activation)
+        $packageRequest = PackageRequest::create([
+            'customer_id' => $customer->id,
+            'type' => PackageRequest::TYPE_REGISTRATION,
+            'requested_package_id' => $package->id,
+            'work_order_id' => $workOrder->id,
+            'status' => PackageRequest::STATUS_PENDING,
+            'payment_status' => PackageRequest::PAYMENT_NOT_REQUIRED,
+            'customer_notes' => $request->input('notes'),
+        ]);
+
         // Send WhatsApp confirmation to Customer
         try {
             app(WhatsAppService::class)->sendNewRegistration($customer, $workOrder);
@@ -227,7 +239,7 @@ class AuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Pendaftaran berhasil! Tim teknisi kami akan segera menghubungi Anda.',
+            'message' => 'Pendaftaran berhasil dikirim! Menunggu persetujuan Admin/Teknisi.',
             'data' => [
                 'token' => $token,
                 'user' => [
@@ -243,6 +255,13 @@ class AuthController extends Controller
                     'status' => $workOrder->status,
                     'title' => $workOrder->title,
                     'scheduled_date' => $workOrder->scheduled_date?->format('Y-m-d'),
+                ],
+                'package_request' => [
+                    'id' => $packageRequest->id,
+                    'request_number' => $packageRequest->request_number,
+                    'type' => $packageRequest->type,
+                    'status' => $packageRequest->status,
+                    'payment_status' => $packageRequest->payment_status,
                 ],
             ],
         ], 201);

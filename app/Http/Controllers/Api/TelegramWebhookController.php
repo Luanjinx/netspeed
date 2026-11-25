@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\IspSetting;
 use App\Services\Notification\TelegramService;
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -16,6 +17,19 @@ class TelegramWebhookController extends Controller
      */
     public function handle(Request $request, TelegramService $telegramService): JsonResponse
     {
+        $configuredSecret = trim((string) IspSetting::get('telegram_webhook_secret', ''));
+        $providedSecret = (string) $request->header('X-Telegram-Bot-Api-Secret-Token', '');
+
+        if ($configuredSecret === '' && app()->environment('production')) {
+            return response()->json(['ok' => false, 'message' => 'Webhook secret not configured'], 403);
+        }
+
+        if ($configuredSecret !== '' && ! hash_equals($configuredSecret, $providedSecret)) {
+            Log::warning('Unauthorized Telegram webhook request rejected.', ['ip' => $request->ip()]);
+
+            return response()->json(['ok' => false, 'message' => 'Unauthorized'], 401);
+        }
+
         $payload = $request->all();
 
         if (empty($payload)) {
@@ -26,7 +40,7 @@ class TelegramWebhookController extends Controller
             $telegramService->handleUpdate($payload);
         } catch (Exception $e) {
             Log::error('Telegram webhook handler exception: '.$e->getMessage(), [
-                'payload' => $payload,
+                'update_id' => $payload['update_id'] ?? null,
             ]);
         }
 
