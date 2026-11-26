@@ -818,6 +818,28 @@ class MikrotikApiService
     }
 
     /**
+     * Get active logged in PPPoE sessions from Router.
+     */
+    public function getPppActive(Router $router): array
+    {
+        try {
+            if (! $this->connect($router)) {
+                return [];
+            }
+
+            $res = $this->comm('/ppp/active/print');
+
+            return $res['!re'] ?? [];
+        } catch (\Throwable $e) {
+            Log::error('Failed to fetch PPP active sessions: '.$e->getMessage());
+
+            return [];
+        } finally {
+            $this->disconnect();
+        }
+    }
+
+    /**
      * Sync profiles from MikroTik router into InternetPackages.
      */
     public function syncProfilesFromRouter(Router $router): array

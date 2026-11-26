@@ -23,6 +23,8 @@ use App\Services\PackageRequestApprovalService;
 use App\Services\Router\MikrotikApiService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 class AdminApiController extends Controller
 {
@@ -59,13 +61,21 @@ class AdminApiController extends Controller
         $unusedVouchers = HotspotVoucher::where('status', 'unused')->count();
 
         // Pending Approvals & Queues
-        $pendingPackageRequests = PackageRequest::where('status', PackageRequest::STATUS_PENDING)->count();
-        $pendingAgents = Agent::where('approval_status', Agent::STATUS_PENDING)->count();
-        $pendingAgentWithdrawals = AgentWithdrawal::where('status', AgentWithdrawal::STATUS_PENDING)->count();
+        $pendingPackageRequests = Schema::hasTable('package_requests')
+            ? PackageRequest::where('status', PackageRequest::STATUS_PENDING)->count()
+            : 0;
+        $pendingAgents = Schema::hasColumn('agents', 'approval_status')
+            ? Agent::where('approval_status', Agent::STATUS_PENDING)->count()
+            : 0;
+        $pendingAgentWithdrawals = Schema::hasTable('agent_withdrawals')
+            ? AgentWithdrawal::where('status', AgentWithdrawal::STATUS_PENDING)->count()
+            : 0;
         $openTickets = SupportTicket::whereIn('status', ['open', 'in_progress'])->count();
         $activeWorkOrders = WorkOrder::whereIn('status', ['pending', 'in_progress'])->count();
         $pendingPayments = Payment::where('is_verified', false)->count();
-        $pendingVoucherOrders = VoucherOrder::where('status', 'pending')->count();
+        $pendingVoucherOrders = Schema::hasTable('voucher_orders')
+            ? VoucherOrder::where('status', 'pending')->count()
+            : 0;
 
         // Active Sessions & Live Router Check
         $activePppoeCount = 0;
@@ -73,13 +83,17 @@ class AdminApiController extends Controller
         $defaultRouter = Router::where('is_active', true)->first();
 
         if ($defaultRouter) {
-            $service = app(MikrotikApiService::class);
-            if ($service->connect($defaultRouter)) {
-                $pppoeSessions = $service->getPppActive($defaultRouter);
-                $hotspotSessions = $service->getHotspotActive($defaultRouter);
-                $activePppoeCount = count($pppoeSessions);
-                $activeHotspotCount = count($hotspotSessions);
-                $service->disconnect();
+            try {
+                $service = app(MikrotikApiService::class);
+                if ($service->connect($defaultRouter)) {
+                    $pppoeSessions = $service->getPppActive($defaultRouter);
+                    $hotspotSessions = $service->getHotspotActive($defaultRouter);
+                    $activePppoeCount = count($pppoeSessions);
+                    $activeHotspotCount = count($hotspotSessions);
+                    $service->disconnect();
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Admin dashboard MikroTik live check failed: '.$e->getMessage());
             }
         }
 
@@ -440,7 +454,7 @@ class AdminApiController extends Controller
 
         $router = $voucher->router;
         if ($router) {
-            app(MikrotikApiService::class)->deleteHotspotUser($router, $voucher->code);
+            app(MikrotikApiService::class)->removeHotspotUser($router, $voucher->code);
         }
 
         $voucher->delete();
@@ -555,6 +569,9 @@ class AdminApiController extends Controller
             if ($customer) {
                 $params['target_label'] = "{$customer->name} ({$customer->customer_number})";
                 $params['external_ids'] = ["customer_{$customer->id}"];
+                if (! empty($customer->onesignal_id)) {
+                    $params['subscription_ids'] = [$customer->onesignal_id];
+                }
             }
         }
 

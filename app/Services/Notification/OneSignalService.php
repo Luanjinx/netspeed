@@ -9,6 +9,7 @@ use App\Models\Payment;
 use App\Models\PushNotification;
 use App\Models\SupportTicket;
 use Exception;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -167,6 +168,9 @@ class OneSignalService
         // Configure recipient targeting
         $targetLabel = $params['target_label'] ?? 'Semua Pengguna';
         $externalIds = $params['external_ids'] ?? [];
+        $subscriptionIds = array_values(array_unique(array_filter(
+            array_map('strval', $params['subscription_ids'] ?? [])
+        )));
 
         switch ($targetType) {
             case 'customer':
@@ -175,7 +179,9 @@ class OneSignalService
                     $stringIds = array_map('strval', $externalIds);
                     $payload['target_channel'] = 'push';
                     $payload['include_aliases'] = ['external_id' => $stringIds];
-                    $payload['include_external_user_ids'] = $stringIds;
+                } elseif (! empty($subscriptionIds)) {
+                    $payload['target_channel'] = 'push';
+                    $payload['include_subscription_ids'] = $subscriptionIds;
                 }
                 break;
 
@@ -207,25 +213,59 @@ class OneSignalService
         }
 
         try {
-            $response = Http::timeout(12)
-                ->withHeaders([
-                    'Authorization' => "Key {$apiKey}",
-                    'Content-Type' => 'application/json',
-                    'Accept' => 'application/json',
-                ])
-                ->post("{$this->apiUrl}/notifications", $payload);
+            $response = $this->postNotification($apiKey, $payload);
+            $resJson = $response->json() ?? [];
 
-            if ($response->status() === 401) {
-                $response = Http::timeout(12)
-                    ->withHeaders([
-                        'Authorization' => "Basic {$apiKey}",
-                        'Content-Type' => 'application/json',
-                        'Accept' => 'application/json',
-                    ])
-                    ->post("{$this->apiUrl}/notifications", $payload);
+            // Fallback for newer OneSignal User-model apps or unlinked aliases
+            if ($this->isNotSubscribedError($resJson)) {
+                if ($targetType === 'all') {
+                    $retryPayload = $payload;
+                    $retryPayload['included_segments'] = ['Total Subscriptions'];
+                    $retryResponse = $this->postNotification($apiKey, $retryPayload);
+                    $retryJson = $retryResponse->json() ?? [];
+
+                    if ($retryResponse->successful() && ! isset($retryJson['errors'])) {
+                        $response = $retryResponse;
+                        $resJson = $retryJson;
+                    } else {
+                        $fallbackSubIds = $this->getStoredSubscriptionIds(null);
+                        if (! empty($fallbackSubIds)) {
+                            $subPayload = $payload;
+                            unset($subPayload['included_segments']);
+                            $subPayload['target_channel'] = 'push';
+                            $subPayload['include_subscription_ids'] = $fallbackSubIds;
+                            $subResponse = $this->postNotification($apiKey, $subPayload);
+                            $subJson = $subResponse->json() ?? [];
+                            if ($subResponse->successful() && ! isset($subJson['errors'])) {
+                                $response = $subResponse;
+                                $resJson = $subJson;
+                            }
+                        }
+                    }
+                } elseif (in_array($targetType, ['customer', 'external_user_ids', 'active_customers', 'isolated_customers'], true)) {
+                    $fallbackSubIds = ! empty($subscriptionIds)
+                        ? $subscriptionIds
+                        : $this->getStoredSubscriptionIds(match ($targetType) {
+                            'active_customers' => 'active',
+                            'isolated_customers' => 'isolated',
+                            default => null,
+                        });
+
+                    if (! empty($fallbackSubIds)) {
+                        $subPayload = $payload;
+                        unset($subPayload['include_aliases'], $subPayload['include_external_user_ids'], $subPayload['filters']);
+                        $subPayload['target_channel'] = 'push';
+                        $subPayload['include_subscription_ids'] = $fallbackSubIds;
+                        $subResponse = $this->postNotification($apiKey, $subPayload);
+                        $subJson = $subResponse->json() ?? [];
+                        if ($subResponse->successful() && ! isset($subJson['errors'])) {
+                            $response = $subResponse;
+                            $resJson = $subJson;
+                        }
+                    }
+                }
             }
 
-            $resJson = $response->json();
             $isSuccess = $response->successful() && ! isset($resJson['errors']);
             $onesignalId = $resJson['id'] ?? null;
             $recipients = (int) ($resJson['recipients'] ?? 0);
@@ -259,6 +299,10 @@ class OneSignalService
             $errorMsg = is_array($resJson['errors'] ?? null)
                 ? implode(', ', $resJson['errors'])
                 : ($resJson['errors'] ?? "HTTP {$response->status()}");
+
+            if ($this->isNotSubscribedError($resJson)) {
+                $errorMsg = 'Belum ada perangkat pelanggan yang terdaftar/berlangganan push notification (All included players are not subscribed). Pastikan APK pelanggan sudah dibuka & mengizinkan notifikasi dengan OneSignal App ID yang sama, serta kredensial Firebase FCM sudah terpasang di Dashboard OneSignal.';
+            }
 
             return [
                 'success' => false,
@@ -297,7 +341,7 @@ class OneSignalService
         $externalId = "customer_{$customer->id}";
         $data['customer_id'] = $customer->id;
 
-        return $this->sendPushNotification([
+        $params = [
             'title' => $title,
             'message' => $message,
             'target_type' => 'customer',
@@ -306,7 +350,69 @@ class OneSignalService
             'action_url' => $url,
             'image_url' => $image,
             'data' => $data,
-        ]);
+        ];
+
+        if (! empty($customer->onesignal_id)) {
+            $params['subscription_ids'] = [$customer->onesignal_id];
+        }
+
+        return $this->sendPushNotification($params);
+    }
+
+    protected function postNotification(string $apiKey, array $payload): Response
+    {
+        $response = Http::timeout(12)
+            ->withHeaders([
+                'Authorization' => "Key {$apiKey}",
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
+            ])
+            ->post("{$this->apiUrl}/notifications", $payload);
+
+        if ($response->status() === 401) {
+            return Http::timeout(12)
+                ->withHeaders([
+                    'Authorization' => "Basic {$apiKey}",
+                    'Content-Type' => 'application/json',
+                    'Accept' => 'application/json',
+                ])
+                ->post("{$this->apiUrl}/notifications", $payload);
+        }
+
+        return $response;
+    }
+
+    protected function isNotSubscribedError(array $resJson): bool
+    {
+        $errors = $resJson['errors'] ?? null;
+        $text = is_array($errors) ? implode(' ', $errors) : (string) $errors;
+
+        return stripos($text, 'All included players are not subscribed') !== false
+            || stripos($text, 'not subscribed') !== false;
+    }
+
+    /**
+     * Fetch stored OneSignal subscription IDs from Customer records as a resilient fallback.
+     *
+     * @return list<string>
+     */
+    protected function getStoredSubscriptionIds(?string $status = null): array
+    {
+        $query = Customer::query()
+            ->whereNotNull('onesignal_id')
+            ->where('onesignal_id', '!=', '');
+
+        if ($status !== null) {
+            $query->where('status', $status);
+        }
+
+        return $query->limit(2000)
+            ->pluck('onesignal_id')
+            ->map(fn ($id): string => trim((string) $id))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
     }
 
     /**
@@ -367,7 +473,7 @@ class OneSignalService
             return ['success' => false, 'message' => 'Customer tidak ditemukan.'];
         }
 
-        $formattedAmount = 'Rp '.number_format($payment->amount, 0, ',', '.');
+        $formattedAmount = 'Rp '.number_format((float) ($payment->amount_paid ?? $payment->amount ?? 0), 0, ',', '.');
         $title = '✅ Pembayaran Berhasil Dikonfirmasi';
         $message = "Terima kasih {$customer->name}! Pembayaran tagihan internet sebesar {$formattedAmount} telah kami terima dan layanan aktif normal.";
 

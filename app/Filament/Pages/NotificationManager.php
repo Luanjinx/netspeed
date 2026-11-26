@@ -306,6 +306,7 @@ class NotificationManager extends Page implements HasForms
         $oneSignalId = null;
 
         // 1. Kirim via OneSignal (Aplikasi Mobile)
+        $mobileFailed = false;
         if ($sendToMobile) {
             $service = app(OneSignalService::class);
             if ($service->isEnabled()) {
@@ -326,18 +327,23 @@ class NotificationManager extends Page implements HasForms
                     if ($customer) {
                         $params['target_label'] = "{$customer->name} ({$customer->customer_number})";
                         $params['external_ids'] = ["customer_{$customer->id}"];
+                        if (! empty($customer->onesignal_id)) {
+                            $params['subscription_ids'] = [$customer->onesignal_id];
+                        }
                     }
                 }
 
                 $res = $service->sendPushNotification($params);
                 if (! empty($res['success'])) {
-                    $results[] = 'Push Mobile: Sukses';
-                    $oneSignalId = $res['onesignal_id'] ?? null;
-                    $totalSent++;
+                    $results[] = 'Push Mobile: '.($res['message'] ?? 'Sukses');
+                    $oneSignalId = $res['notification_id'] ?? null;
+                    $totalSent += max(1, (int) ($res['recipients'] ?? 1));
                 } else {
+                    $mobileFailed = true;
                     $results[] = 'Push Mobile: '.($res['message'] ?? 'Gagal');
                 }
             } else {
+                $mobileFailed = true;
                 $results[] = 'Push Mobile: Dilewati (OneSignal belum dikonfigurasi)';
             }
         }
@@ -417,14 +423,29 @@ class NotificationManager extends Page implements HasForms
             ],
         ]);
 
-        Notification::make()
-            ->title('🚀 Notifikasi Berhasil Disiarkan!')
-            ->body(implode(' | ', $results))
-            ->success()
-            ->send();
+        $notif = Notification::make();
+        if ($totalSent > 0 && ! $mobileFailed) {
+            $notif
+                ->title('🚀 Notifikasi Berhasil Disiarkan!')
+                ->body(implode(' | ', $results))
+                ->success()
+                ->send();
 
-        // Reset message input
-        $this->data['send_message'] = '';
+            // Reset message input
+            $this->data['send_message'] = '';
+        } elseif ($totalSent > 0 && $mobileFailed) {
+            $notif
+                ->title('⚠️ Notifikasi Terkirim Sebagian')
+                ->body(implode(' | ', $results))
+                ->warning()
+                ->send();
+        } else {
+            $notif
+                ->title('❌ Gagal Menyiarkan Notifikasi')
+                ->body(implode(' | ', $results))
+                ->danger()
+                ->send();
+        }
     }
 
     public function saveSettings(): void

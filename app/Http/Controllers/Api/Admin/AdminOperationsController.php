@@ -24,6 +24,7 @@ use App\Services\Router\MikrotikApiService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 
 class AdminOperationsController extends Controller
 {
@@ -561,7 +562,7 @@ class AdminOperationsController extends Controller
     {
         $query = Agent::with('user:id,name,email,role')->latest();
 
-        if ($request->filled('approval_status')) {
+        if ($request->filled('approval_status') && Schema::hasColumn('agents', 'approval_status')) {
             $query->where('approval_status', $request->query('approval_status'));
         }
         if ($request->filled('search')) {
@@ -745,6 +746,18 @@ class AdminOperationsController extends Controller
 
     public function agentWithdrawalsIndex(Request $request): JsonResponse
     {
+        if (! Schema::hasTable('agent_withdrawals')) {
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'data' => [],
+                    'current_page' => 1,
+                    'last_page' => 1,
+                    'total' => 0,
+                ],
+            ]);
+        }
+
         $query = AgentWithdrawal::with(['agent:id,agent_code,name,phone,balance', 'processor:id,name'])->latest();
 
         if ($request->filled('status')) {
