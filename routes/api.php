@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\Api\Admin\AdminCatalogNetworkController;
+use App\Http\Controllers\Api\Admin\AdminOperationsController;
+use App\Http\Controllers\Api\Admin\AdminSystemController;
 use App\Http\Controllers\Api\AdminApiController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CustomerAgentController;
@@ -8,6 +11,7 @@ use App\Http\Controllers\Api\NetworkTestController;
 use App\Http\Controllers\Api\PaymentWebhookController;
 use App\Http\Controllers\Api\TechnicianApiController;
 use App\Http\Controllers\Api\TelegramWebhookController;
+use App\Http\Middleware\EnsureAdminApi;
 use App\Http\Middleware\EnsureAdminOrTechnicianApi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -85,27 +89,63 @@ Route::middleware('auth:sanctum')->group(function () {
         });
     });
 
-    // Admin & Technician Endpoints for Flutter Admin App
-    Route::middleware(EnsureAdminOrTechnicianApi::class)->prefix('admin')->group(function () {
+    // Dedicated Admin-Only Endpoints for Flutter Admin App (role === 'admin')
+    Route::middleware(EnsureAdminApi::class)->prefix('admin')->group(function () {
         Route::get('/dashboard', [AdminApiController::class, 'dashboard']);
 
-        // PPPoE Management
+        // PPPoE & Auto-Isolir Management
         Route::get('/pppoe', [AdminApiController::class, 'pppoeIndex']);
         Route::post('/pppoe/secret', [AdminApiController::class, 'pppoeCreateSecret']);
         Route::post('/pppoe/toggle-isolir', [AdminApiController::class, 'pppoeToggleIsolir']);
         Route::post('/pppoe/kick', [AdminApiController::class, 'pppoeKick']);
         Route::post('/pppoe/reset-fup', [AdminApiController::class, 'pppoeResetFup']);
+        Route::post('/isolir/run', [AdminApiController::class, 'runAutoIsolir']);
 
-        // Hotspot Management
+        // Hotspot Management & Voucher Orders
         Route::get('/hotspot', [AdminApiController::class, 'hotspotIndex']);
         Route::post('/hotspot/generate', [AdminApiController::class, 'hotspotGenerate']);
         Route::post('/hotspot/kick', [AdminApiController::class, 'hotspotKick']);
         Route::delete('/hotspot/voucher/{id}', [AdminApiController::class, 'hotspotDeleteVoucher']);
+        Route::get('/voucher-orders', [AdminApiController::class, 'voucherOrders']);
         Route::post('/voucher-orders/{orderNumber}/approve', [AdminApiController::class, 'approveVoucherOrder']);
 
-        // Customers & Invoices
-        Route::get('/customers', [AdminApiController::class, 'customers']);
-        Route::get('/invoices', [AdminApiController::class, 'invoices']);
+        // Customers CRUD + Live / ONT Controls
+        Route::get('/customers/meta', [AdminOperationsController::class, 'customerMeta']);
+        Route::get('/customers', [AdminOperationsController::class, 'customersIndex']);
+        Route::post('/customers', [AdminOperationsController::class, 'customerStore']);
+        Route::get('/customers/{id}', [AdminOperationsController::class, 'customerShow']);
+        Route::put('/customers/{id}', [AdminOperationsController::class, 'customerUpdate']);
+        Route::delete('/customers/{id}', [AdminOperationsController::class, 'customerDestroy']);
+        Route::post('/customers/{id}/toggle-status', [AdminOperationsController::class, 'customerToggleStatus']);
+        Route::get('/customers/{id}/live-status', [AdminOperationsController::class, 'customerLiveStatus']);
+        Route::post('/customers/{id}/ont-reboot', [AdminOperationsController::class, 'customerOntReboot']);
+        Route::post('/customers/{id}/ont-wifi', [AdminOperationsController::class, 'customerOntWifi']);
+        Route::post('/customers/{id}/generate-invoice', [AdminOperationsController::class, 'customerGenerateInvoice']);
+
+        // Invoices & Payments Verification
+        Route::get('/invoices', [AdminOperationsController::class, 'invoicesIndex']);
+        Route::post('/invoices/generate-monthly', [AdminOperationsController::class, 'invoiceGenerateMonthly']);
+        Route::post('/invoices/{id}/mark-paid', [AdminOperationsController::class, 'invoiceMarkPaid']);
+        Route::get('/payments', [AdminOperationsController::class, 'paymentsIndex']);
+        Route::post('/payments/{id}/verify', [AdminOperationsController::class, 'paymentVerify']);
+
+        // Work Orders (SPK) & Support Tickets
+        Route::get('/work-orders', [AdminOperationsController::class, 'workOrdersIndex']);
+        Route::post('/work-orders', [AdminOperationsController::class, 'workOrderStore']);
+        Route::post('/work-orders/{id}/assign', [AdminOperationsController::class, 'workOrderAssign']);
+        Route::get('/tickets', [AdminOperationsController::class, 'ticketsIndex']);
+        Route::get('/tickets/{id}', [AdminOperationsController::class, 'ticketShow']);
+        Route::post('/tickets/{id}/reply', [AdminOperationsController::class, 'ticketReply']);
+
+        // Mitra Agents, Approval, Top-Up & Agent Payment Point
+        Route::get('/agents', [AdminOperationsController::class, 'agentsIndex']);
+        Route::post('/agents/{id}/approve', [AdminOperationsController::class, 'agentApprove']);
+        Route::post('/agents/{id}/reject', [AdminOperationsController::class, 'agentReject']);
+        Route::post('/agents/{id}/top-up', [AdminOperationsController::class, 'agentTopUp']);
+        Route::post('/agents/{id}/toggle-active', [AdminOperationsController::class, 'agentToggleActive']);
+        Route::get('/agents/{id}/transactions', [AdminOperationsController::class, 'agentTransactions']);
+        Route::get('/agent-payment/search', [AdminOperationsController::class, 'agentPaymentSearch']);
+        Route::post('/agent-payment/pay', [AdminOperationsController::class, 'agentPayInvoice']);
 
         // OneSignal Push Notification
         Route::post('/onesignal/send', [AdminApiController::class, 'onesignalSend']);
@@ -115,6 +155,62 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/package-requests', [AdminApiController::class, 'packageRequests']);
         Route::post('/package-requests/{id}/approve', [AdminApiController::class, 'approvePackageRequest']);
         Route::post('/package-requests/{id}/reject', [AdminApiController::class, 'rejectPackageRequest']);
+
+        // Catalog: Internet Packages & Promos
+        Route::get('/packages', [AdminCatalogNetworkController::class, 'packagesIndex']);
+        Route::post('/packages', [AdminCatalogNetworkController::class, 'packageStore']);
+        Route::put('/packages/{id}', [AdminCatalogNetworkController::class, 'packageUpdate']);
+        Route::delete('/packages/{id}', [AdminCatalogNetworkController::class, 'packageDestroy']);
+        Route::post('/packages/sync-mikrotik', [AdminCatalogNetworkController::class, 'packagesSyncMikrotik']);
+
+        Route::get('/promos', [AdminCatalogNetworkController::class, 'promosIndex']);
+        Route::post('/promos', [AdminCatalogNetworkController::class, 'promoStore']);
+        Route::put('/promos/{id}', [AdminCatalogNetworkController::class, 'promoUpdate']);
+        Route::delete('/promos/{id}', [AdminCatalogNetworkController::class, 'promoDestroy']);
+
+        // Infrastructure: Routers, GenieACS & ODPs / Map
+        Route::get('/routers', [AdminCatalogNetworkController::class, 'routersIndex']);
+        Route::post('/routers', [AdminCatalogNetworkController::class, 'routerStore']);
+        Route::put('/routers/{id}', [AdminCatalogNetworkController::class, 'routerUpdate']);
+        Route::delete('/routers/{id}', [AdminCatalogNetworkController::class, 'routerDestroy']);
+        Route::post('/routers/{id}/test', [AdminCatalogNetworkController::class, 'routerTestConnection']);
+        Route::post('/routers/{id}/sync-profiles', [AdminCatalogNetworkController::class, 'routerSyncProfiles']);
+
+        Route::get('/genieacs-servers', [AdminCatalogNetworkController::class, 'genieacsIndex']);
+        Route::post('/genieacs-servers', [AdminCatalogNetworkController::class, 'genieacsStore']);
+        Route::put('/genieacs-servers/{id}', [AdminCatalogNetworkController::class, 'genieacsUpdate']);
+        Route::delete('/genieacs-servers/{id}', [AdminCatalogNetworkController::class, 'genieacsDestroy']);
+        Route::post('/genieacs-servers/{id}/test', [AdminCatalogNetworkController::class, 'genieacsTest']);
+        Route::get('/genieacs-servers/{id}/devices', [AdminCatalogNetworkController::class, 'genieacsDevices']);
+        Route::post('/genieacs-servers/{serverId}/device-action', [AdminCatalogNetworkController::class, 'genieacsDeviceAction']);
+
+        Route::get('/odps', [AdminCatalogNetworkController::class, 'odpsIndex']);
+        Route::post('/odps', [AdminCatalogNetworkController::class, 'odpStore']);
+        Route::put('/odps/{id}', [AdminCatalogNetworkController::class, 'odpUpdate']);
+        Route::delete('/odps/{id}', [AdminCatalogNetworkController::class, 'odpDestroy']);
+        Route::get('/network-map', [AdminCatalogNetworkController::class, 'networkMapData']);
+
+        // System, Staff (Admin & Technicians), Site Pages, Gateways, Settings & Updates
+        Route::get('/staff', [AdminSystemController::class, 'staffIndex']);
+        Route::post('/staff', [AdminSystemController::class, 'staffStore']);
+        Route::put('/staff/{id}', [AdminSystemController::class, 'staffUpdate']);
+        Route::delete('/staff/{id}', [AdminSystemController::class, 'staffDestroy']);
+
+        Route::get('/pages', [AdminSystemController::class, 'pagesIndex']);
+        Route::post('/pages', [AdminSystemController::class, 'pageStore']);
+        Route::put('/pages/{id}', [AdminSystemController::class, 'pageUpdate']);
+        Route::delete('/pages/{id}', [AdminSystemController::class, 'pageDestroy']);
+
+        Route::get('/payment-gateways', [AdminSystemController::class, 'gatewaysIndex']);
+        Route::put('/payment-gateways/{id}', [AdminSystemController::class, 'gatewayUpdate']);
+
+        Route::get('/settings', [AdminSystemController::class, 'settingsGet']);
+        Route::post('/settings', [AdminSystemController::class, 'settingsUpdate']);
+        Route::post('/settings/test-whatsapp', [AdminSystemController::class, 'testWhatsApp']);
+        Route::post('/settings/test-telegram', [AdminSystemController::class, 'testTelegram']);
+
+        Route::get('/system-update', [AdminSystemController::class, 'systemUpdateStatus']);
+        Route::post('/system-update/run', [AdminSystemController::class, 'systemUpdateRun']);
     });
 
     // Dedicated Field Technician App Endpoints

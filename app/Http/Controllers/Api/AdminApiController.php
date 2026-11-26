@@ -3,14 +3,19 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Agent;
 use App\Models\Customer;
 use App\Models\HotspotVoucher;
 use App\Models\Invoice;
 use App\Models\PackageRequest;
+use App\Models\Payment;
 use App\Models\PushNotification;
 use App\Models\Router;
+use App\Models\SupportTicket;
 use App\Models\VoucherOrder;
+use App\Models\WorkOrder;
 use App\Services\Bandwidth\FupService;
+use App\Services\Billing\BillingService;
 use App\Services\Hotspot\VoucherService;
 use App\Services\Notification\OneSignalService;
 use App\Services\PackageRequestApprovalService;
@@ -44,10 +49,21 @@ class AdminApiController extends Controller
         // Router Status
         $totalRouters = Router::where('is_active', true)->count();
         $onlineRouters = Router::where('is_active', true)->where('status', 'online')->count();
+        $routersList = Router::select(['id', 'name', 'host', 'port', 'status', 'board_name', 'ros_version', 'cpu_load', 'uptime', 'is_active'])
+            ->orderBy('name')
+            ->get();
 
         // Hotspot Stats
         $totalVouchers = HotspotVoucher::count();
         $unusedVouchers = HotspotVoucher::where('status', 'unused')->count();
+
+        // Pending Approvals & Queues
+        $pendingPackageRequests = PackageRequest::where('status', PackageRequest::STATUS_PENDING)->count();
+        $pendingAgents = Agent::where('approval_status', Agent::STATUS_PENDING)->count();
+        $openTickets = SupportTicket::whereIn('status', ['open', 'in_progress'])->count();
+        $activeWorkOrders = WorkOrder::whereIn('status', ['pending', 'in_progress'])->count();
+        $pendingPayments = Payment::where('is_verified', false)->count();
+        $pendingVoucherOrders = VoucherOrder::where('status', 'pending')->count();
 
         // Active Sessions & Live Router Check
         $activePppoeCount = 0;
@@ -82,7 +98,14 @@ class AdminApiController extends Controller
                     'active_hotspot_sessions' => $activeHotspotCount,
                     'total_vouchers' => $totalVouchers,
                     'unused_vouchers' => $unusedVouchers,
+                    'pending_package_requests' => $pendingPackageRequests,
+                    'pending_agents' => $pendingAgents,
+                    'open_tickets' => $openTickets,
+                    'active_work_orders' => $activeWorkOrders,
+                    'pending_payments' => $pendingPayments,
+                    'pending_voucher_orders' => $pendingVoucherOrders,
                 ],
+                'routers' => $routersList,
                 'default_router' => $defaultRouter ? [
                     'id' => $defaultRouter->id,
                     'name' => $defaultRouter->name,
@@ -210,13 +233,21 @@ class AdminApiController extends Controller
         $currentProfile = $request->input('current_profile');
         $isIsolir = stripos($currentProfile, 'isolir') !== false;
 
-        $targetProfile = $isIsolir ? 'default' : 'PROFIL-ISOLIR';
-
         $service = app(MikrotikApiService::class);
-        $changed = $service->changePppProfile($router, $username, $targetProfile);
+        $customer = Customer::where('pppoe_username', $username)->with('package')->first();
 
-        if ($changed && ! $isIsolir) {
-            $service->kickPppActive($router, $username);
+        if ($isIsolir) {
+            $targetProfile = $customer?->package?->mikrotik_profile ?: 'default';
+            $changed = $service->activatePppCustomer($router, $username, $targetProfile);
+            if ($changed && $customer) {
+                $customer->update(['status' => 'active']);
+            }
+        } else {
+            $targetProfile = $customer?->package?->mikrotik_isolir_profile ?: 'PROFIL-ISOLIR';
+            $changed = $service->isolatePppCustomer($router, $username, $targetProfile);
+            if ($changed && $customer) {
+                $customer->update(['status' => 'isolated']);
+            }
         }
 
         return response()->json([
@@ -244,11 +275,16 @@ class AdminApiController extends Controller
         }
 
         $service = app(MikrotikApiService::class);
-        $kicked = $service->kickPppActive($router, $request->input('username'));
+        $kicked = false;
+        if ($service->connect($router)) {
+            $service->kickPppActive($request->input('username'));
+            $service->disconnect();
+            $kicked = true;
+        }
 
         return response()->json([
             'success' => $kicked,
-            'message' => $kicked ? 'Sesi koneksi PPPoE berhasil diputuskan.' : 'Gagal memutuskan sesi PPPoE.',
+            'message' => $kicked ? 'Sesi koneksi PPPoE berhasil diputuskan.' : 'Gagal menghubungkan ke router MikroTik.',
         ]);
     }
 
@@ -628,5 +664,35 @@ class AdminApiController extends Controller
                 'message' => $e->getMessage(),
             ], 422);
         }
+    }
+
+    /**
+     * List hotspot voucher orders (pending & completed) for admin verification.
+     */
+    public function voucherOrders(Request $request): JsonResponse
+    {
+        $query = VoucherOrder::with(['package:id,name,speed_rate,price', 'router:id,name'])->latest();
+        if ($request->filled('status')) {
+            $query->where('status', $request->query('status'));
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $query->paginate(25),
+        ]);
+    }
+
+    /**
+     * Trigger automatic isolir check for overdue customers.
+     */
+    public function runAutoIsolir(BillingService $billingService): JsonResponse
+    {
+        $count = $billingService->processAutoIsolir();
+
+        return response()->json([
+            'success' => true,
+            'message' => "{$count} pelanggan menunggak berhasil diisolir otomatis.",
+            'data' => ['isolated_count' => $count],
+        ]);
     }
 }
