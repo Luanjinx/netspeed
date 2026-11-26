@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Agent;
 use App\Models\AgentTransaction;
+use App\Models\AgentWithdrawal;
 use App\Models\Invoice;
 use App\Services\Agent\AgentService;
 use App\Services\Notification\TelegramService;
@@ -305,7 +306,7 @@ class CustomerAgentController extends Controller
             ->latest();
 
         $type = trim((string) $request->query('type', ''));
-        if ($type !== '' && in_array($type, ['deposit', 'pppoe_payment', 'commission', 'refund'], true)) {
+        if ($type !== '' && in_array($type, ['deposit', 'pppoe_payment', 'commission', 'refund', 'withdrawal'], true)) {
             $query->where('type', $type);
         }
 
@@ -318,6 +319,120 @@ class CustomerAgentController extends Controller
             'success' => true,
             'data' => $transactions,
         ]);
+    }
+
+    /**
+     * List withdrawal requests submitted by the authenticated customer's agent.
+     */
+    public function withdrawalsIndex(Request $request): JsonResponse
+    {
+        $agent = $request->user()?->agent;
+        if (! $agent) {
+            return response()->json([
+                'success' => true,
+                'data' => [],
+            ]);
+        }
+
+        $withdrawals = AgentWithdrawal::where('agent_id', $agent->id)
+            ->latest()
+            ->take(30)
+            ->get()
+            ->map(fn (AgentWithdrawal $w): array => $this->formatWithdrawal($w))
+            ->values();
+
+        return response()->json([
+            'success' => true,
+            'data' => $withdrawals,
+        ]);
+    }
+
+    /**
+     * Submit a balance withdrawal request (minimum Rp 10.000, balance held until Admin processes).
+     */
+    public function withdrawalsStore(Request $request): JsonResponse
+    {
+        $agent = $this->resolveOperationalAgent($request);
+        if (! $agent) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Akun Mitra Agen Anda belum aktif atau belum disetujui Admin.',
+            ], 403);
+        }
+
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:'.AgentWithdrawal::MIN_AMOUNT,
+            'method' => 'required|string|in:bank_transfer,ewallet,cash',
+            'bank_or_provider' => 'required_unless:method,cash|nullable|string|max:100',
+            'account_number' => 'required_unless:method,cash|nullable|string|max:100',
+            'account_name' => 'required_unless:method,cash|nullable|string|max:150',
+            'notes' => 'nullable|string|max:500',
+        ], [
+            'amount.min' => 'Nominal penarikan minimal Rp '.number_format(AgentWithdrawal::MIN_AMOUNT, 0, ',', '.').'.',
+            'bank_or_provider.required_unless' => 'Nama Bank / E-Wallet wajib diisi.',
+            'account_number.required_unless' => 'Nomor Rekening / No. HP wajib diisi.',
+            'account_name.required_unless' => 'Nama pemilik rekening / e-wallet wajib diisi.',
+        ]);
+
+        try {
+            $withdrawal = $this->agentService->requestWithdrawal($agent, $validated, $request->user());
+            $freshAgent = $agent->fresh();
+
+            try {
+                $targetInfo = $withdrawal->method === AgentWithdrawal::METHOD_CASH
+                    ? 'Tunai di Kantor'
+                    : trim(($withdrawal->bank_or_provider ?? '').' • '.($withdrawal->account_number ?? '').' ('.($withdrawal->account_name ?? '-').')');
+
+                $message = "💸 <b>PENGAJUAN TARIK SALDO AGEN</b>\n\n"
+                    ."Kode: <b>{$withdrawal->withdrawal_code}</b>\n"
+                    ."Agen: <b>{$agent->name}</b> ({$agent->agent_code})\n"
+                    ."Nominal: <b>{$withdrawal->formatted_amount}</b>\n"
+                    ."Tujuan: {$targetInfo}\n\n"
+                    .'Silakan tinjau & cairkan melalui menu <b>Billing → Tarik Saldo Agen</b> atau Aplikasi Admin.';
+
+                app(TelegramService::class)->sendToAdmin($message);
+            } catch (\Throwable $e) {
+                Log::warning('Gagal kirim notifikasi Telegram tarik saldo agen: '.$e->getMessage());
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => "Pengajuan tarik saldo {$withdrawal->withdrawal_code} berhasil dikirim. Menunggu pencairan Admin.",
+                'data' => [
+                    'withdrawal' => $this->formatWithdrawal($withdrawal),
+                    'agent' => $freshAgent ? $this->formatAgent($freshAgent) : null,
+                ],
+            ], 201);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        }
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function formatWithdrawal(AgentWithdrawal $withdrawal): array
+    {
+        return [
+            'id' => $withdrawal->id,
+            'withdrawal_code' => $withdrawal->withdrawal_code,
+            'amount' => (float) $withdrawal->amount,
+            'formatted_amount' => $withdrawal->formatted_amount,
+            'method' => $withdrawal->method,
+            'method_label' => $withdrawal->method_label,
+            'bank_or_provider' => $withdrawal->bank_or_provider,
+            'account_number' => $withdrawal->account_number,
+            'account_name' => $withdrawal->account_name,
+            'notes' => $withdrawal->notes,
+            'status' => $withdrawal->status,
+            'rejection_reason' => $withdrawal->rejection_reason,
+            'transfer_reference' => $withdrawal->transfer_reference,
+            'processed_at' => $withdrawal->processed_at?->format('d/m/Y H:i'),
+            'created_at' => $withdrawal->created_at?->format('d/m/Y H:i') ?? '',
+        ];
     }
 
     protected function resolveOperationalAgent(Request $request): ?Agent

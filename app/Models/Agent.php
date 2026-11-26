@@ -59,6 +59,11 @@ class Agent extends Model
         return $this->hasMany(AgentTransaction::class)->latest();
     }
 
+    public function withdrawals(): HasMany
+    {
+        return $this->hasMany(AgentWithdrawal::class)->latest();
+    }
+
     public function isPending(): bool
     {
         return $this->approval_status === self::STATUS_PENDING;

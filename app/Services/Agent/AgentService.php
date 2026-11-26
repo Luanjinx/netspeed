@@ -4,6 +4,7 @@ namespace App\Services\Agent;
 
 use App\Models\Agent;
 use App\Models\AgentTransaction;
+use App\Models\AgentWithdrawal;
 use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\User;
@@ -143,6 +144,137 @@ class AgentService
             );
 
             return $transaction;
+        });
+    }
+
+    /**
+     * Request a balance withdrawal by an operational agent, holding the requested balance immediately.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function requestWithdrawal(Agent $agent, array $data, ?User $creator = null): AgentWithdrawal
+    {
+        $amount = (float) ($data['amount'] ?? 0);
+        if ($amount < AgentWithdrawal::MIN_AMOUNT) {
+            throw new Exception('Nominal penarikan minimal Rp '.number_format(AgentWithdrawal::MIN_AMOUNT, 0, ',', '.').'.');
+        }
+
+        return DB::transaction(function () use ($agent, $amount, $data, $creator): AgentWithdrawal {
+            $lockedAgent = Agent::whereKey($agent->id)->lockForUpdate()->firstOrFail();
+
+            if (! $lockedAgent->canOperate()) {
+                throw new Exception('Akun Mitra Agen belum aktif atau belum disetujui Admin.');
+            }
+
+            if ((float) $lockedAgent->balance < $amount) {
+                throw new Exception('Saldo deposit agen tidak mencukupi (Saldo: '.$lockedAgent->formatted_balance.').');
+            }
+
+            $balanceBefore = (float) $lockedAgent->balance;
+            $lockedAgent->decrement('balance', $amount);
+            $balanceAfter = (float) $lockedAgent->fresh()->balance;
+
+            $code = AgentWithdrawal::generateNextCode();
+
+            $withdrawal = AgentWithdrawal::create([
+                'agent_id' => $lockedAgent->id,
+                'withdrawal_code' => $code,
+                'amount' => $amount,
+                'method' => (string) ($data['method'] ?? AgentWithdrawal::METHOD_BANK),
+                'bank_or_provider' => $data['bank_or_provider'] ?? null,
+                'account_number' => $data['account_number'] ?? null,
+                'account_name' => $data['account_name'] ?? null,
+                'notes' => $data['notes'] ?? null,
+                'status' => AgentWithdrawal::STATUS_PENDING,
+            ]);
+
+            $targetInfo = trim(implode(' ', array_filter([
+                $withdrawal->method_label,
+                $withdrawal->bank_or_provider,
+                $withdrawal->account_number,
+            ])));
+
+            AgentTransaction::create([
+                'agent_id' => $lockedAgent->id,
+                'invoice_id' => null,
+                'type' => 'withdrawal',
+                'amount' => $amount,
+                'fee' => 0,
+                'balance_before' => $balanceBefore,
+                'balance_after' => $balanceAfter,
+                'description' => "Tarik Saldo #{$code} ({$targetInfo})",
+                'payment_reference' => $code,
+                'created_by' => $creator?->id,
+            ]);
+
+            return $withdrawal;
+        });
+    }
+
+    /**
+     * Approve a pending agent withdrawal and record transfer reference.
+     */
+    public function approveWithdrawal(AgentWithdrawal $withdrawal, User $admin, ?string $transferReference = null): AgentWithdrawal
+    {
+        return DB::transaction(function () use ($withdrawal, $admin, $transferReference): AgentWithdrawal {
+            $locked = AgentWithdrawal::whereKey($withdrawal->id)->lockForUpdate()->firstOrFail();
+
+            if (! $locked->isPending()) {
+                throw new Exception('Pengajuan penarikan saldo ini sudah diproses sebelumnya.');
+            }
+
+            $locked->update([
+                'status' => AgentWithdrawal::STATUS_APPROVED,
+                'transfer_reference' => $transferReference ? trim($transferReference) : null,
+                'rejection_reason' => null,
+                'processed_by' => $admin->id,
+                'processed_at' => now(),
+            ]);
+
+            return $locked->fresh(['agent', 'processor']);
+        });
+    }
+
+    /**
+     * Reject a pending agent withdrawal and automatically refund held balance.
+     */
+    public function rejectWithdrawal(AgentWithdrawal $withdrawal, User $admin, string $reason): AgentWithdrawal
+    {
+        return DB::transaction(function () use ($withdrawal, $admin, $reason): AgentWithdrawal {
+            $locked = AgentWithdrawal::whereKey($withdrawal->id)->lockForUpdate()->firstOrFail();
+
+            if (! $locked->isPending()) {
+                throw new Exception('Pengajuan penarikan saldo ini sudah diproses sebelumnya.');
+            }
+
+            $lockedAgent = Agent::whereKey($locked->agent_id)->lockForUpdate()->firstOrFail();
+            $amount = (float) $locked->amount;
+
+            $locked->update([
+                'status' => AgentWithdrawal::STATUS_REJECTED,
+                'rejection_reason' => trim($reason),
+                'processed_by' => $admin->id,
+                'processed_at' => now(),
+            ]);
+
+            $balanceBefore = (float) $lockedAgent->balance;
+            $lockedAgent->increment('balance', $amount);
+            $balanceAfter = (float) $lockedAgent->fresh()->balance;
+
+            AgentTransaction::create([
+                'agent_id' => $lockedAgent->id,
+                'invoice_id' => null,
+                'type' => 'refund',
+                'amount' => $amount,
+                'fee' => 0,
+                'balance_before' => $balanceBefore,
+                'balance_after' => $balanceAfter,
+                'description' => "Pengembalian Tarik Saldo #{$locked->withdrawal_code} (Ditolak: ".trim($reason).')',
+                'payment_reference' => $locked->withdrawal_code,
+                'created_by' => $admin->id,
+            ]);
+
+            return $locked->fresh(['agent', 'processor']);
         });
     }
 }

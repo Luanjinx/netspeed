@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Agent;
+use App\Models\AgentWithdrawal;
 use App\Models\Customer;
 use App\Models\HotspotVoucher;
 use App\Models\Invoice;
@@ -60,6 +61,7 @@ class AdminApiController extends Controller
         // Pending Approvals & Queues
         $pendingPackageRequests = PackageRequest::where('status', PackageRequest::STATUS_PENDING)->count();
         $pendingAgents = Agent::where('approval_status', Agent::STATUS_PENDING)->count();
+        $pendingAgentWithdrawals = AgentWithdrawal::where('status', AgentWithdrawal::STATUS_PENDING)->count();
         $openTickets = SupportTicket::whereIn('status', ['open', 'in_progress'])->count();
         $activeWorkOrders = WorkOrder::whereIn('status', ['pending', 'in_progress'])->count();
         $pendingPayments = Payment::where('is_verified', false)->count();
@@ -100,6 +102,7 @@ class AdminApiController extends Controller
                     'unused_vouchers' => $unusedVouchers,
                     'pending_package_requests' => $pendingPackageRequests,
                     'pending_agents' => $pendingAgents,
+                    'pending_agent_withdrawals' => $pendingAgentWithdrawals,
                     'open_tickets' => $openTickets,
                     'active_work_orders' => $activeWorkOrders,
                     'pending_payments' => $pendingPayments,

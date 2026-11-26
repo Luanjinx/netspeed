@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Agent;
 use App\Models\AgentTransaction;
+use App\Models\AgentWithdrawal;
 use App\Models\Customer;
 use App\Models\GenieacsServer;
 use App\Models\InternetPackage;
@@ -733,6 +734,76 @@ class AdminOperationsController extends Controller
                     'transaction' => $tx,
                     'agent' => $agent->fresh(),
                 ],
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        }
+    }
+
+    public function agentWithdrawalsIndex(Request $request): JsonResponse
+    {
+        $query = AgentWithdrawal::with(['agent:id,agent_code,name,phone,balance', 'processor:id,name'])->latest();
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->query('status'));
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $query->paginate(25),
+        ]);
+    }
+
+    public function agentWithdrawalApprove(Request $request, int $id): JsonResponse
+    {
+        $validated = $request->validate([
+            'transfer_reference' => 'nullable|string|max:150',
+        ]);
+
+        $withdrawal = AgentWithdrawal::with('agent')->findOrFail($id);
+
+        try {
+            $updated = $this->agentService->approveWithdrawal(
+                $withdrawal,
+                $request->user(),
+                $validated['transfer_reference'] ?? null
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => "Penarikan {$updated->withdrawal_code} ({$updated->formatted_amount}) disetujui.",
+                'data' => $updated,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        }
+    }
+
+    public function agentWithdrawalReject(Request $request, int $id): JsonResponse
+    {
+        $validated = $request->validate([
+            'reason' => 'required|string|max:500',
+        ]);
+
+        $withdrawal = AgentWithdrawal::with('agent')->findOrFail($id);
+
+        try {
+            $updated = $this->agentService->rejectWithdrawal(
+                $withdrawal,
+                $request->user(),
+                $validated['reason']
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => "Penarikan {$updated->withdrawal_code} ditolak dan saldo {$updated->formatted_amount} dikembalikan ke agen.",
+                'data' => $updated,
             ]);
         } catch (\Throwable $e) {
             return response()->json([

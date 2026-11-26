@@ -86,6 +86,8 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/search-invoices', [CustomerAgentController::class, 'searchInvoices']);
             Route::post('/pay-invoice', [CustomerAgentController::class, 'payInvoice']);
             Route::get('/transactions', [CustomerAgentController::class, 'transactions']);
+            Route::get('/withdrawals', [CustomerAgentController::class, 'withdrawalsIndex']);
+            Route::post('/withdrawals', [CustomerAgentController::class, 'withdrawalsStore']);
         });
     });
 
@@ -146,6 +148,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/agents/{id}/transactions', [AdminOperationsController::class, 'agentTransactions']);
         Route::get('/agent-payment/search', [AdminOperationsController::class, 'agentPaymentSearch']);
         Route::post('/agent-payment/pay', [AdminOperationsController::class, 'agentPayInvoice']);
+        Route::get('/agent-withdrawals', [AdminOperationsController::class, 'agentWithdrawalsIndex']);
+        Route::post('/agent-withdrawals/{id}/approve', [AdminOperationsController::class, 'agentWithdrawalApprove']);
+        Route::post('/agent-withdrawals/{id}/reject', [AdminOperationsController::class, 'agentWithdrawalReject']);
 
         // OneSignal Push Notification
         Route::post('/onesignal/send', [AdminApiController::class, 'onesignalSend']);
