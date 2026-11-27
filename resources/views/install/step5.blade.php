@@ -37,6 +37,12 @@
                     <span class="text-slate-500 block">Status Keamanan:</span>
                     <strong class="text-emerald-400">Lock File Diaktifkan</strong>
                 </div>
+                @if(!empty($licenseData['purchase_code']))
+                    <div class="col-span-2">
+                        <span class="text-slate-500 block">Lisensi Aktif:</span>
+                        <strong class="text-emerald-400 font-mono">{{ $licenseData['purchase_code'] }} ({{ $licenseData['domain'] ?? '-' }})</strong>
+                    </div>
+                @endif
             </div>
         </div>
 

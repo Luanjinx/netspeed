@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Models\InternetPackage;
+use App\Models\IspSetting;
 use App\Models\PackageRequest;
 use App\Models\User;
 use App\Models\WorkOrder;
+use App\Services\Notification\OneSignalService;
 use App\Services\Notification\TelegramService;
 use App\Services\Notification\WhatsAppService;
 use Illuminate\Http\JsonResponse;
@@ -116,6 +118,9 @@ class AuthController extends Controller
                     'role' => $user->role,
                 ],
                 'customer' => $customer,
+                'app_config' => [
+                    'onesignal_app_id' => trim((string) IspSetting::get('onesignal_app_id', '')),
+                ],
             ],
         ]);
     }
@@ -233,6 +238,20 @@ class AuthController extends Controller
             Log::warning('Gagal kirim Telegram registrasi baru: '.$e->getMessage());
         }
 
+        // Send Push Notification to Admin & Technician Mobile Apps
+        try {
+            $oneSignal = app(OneSignalService::class);
+            $packageName = $package?->name ?? '-';
+            $oneSignal->notifyAdmins(
+                '📝 Pendaftaran PSB Baru',
+                "{$customer->name} mendaftar paket {$packageName}. Silakan tinjau pengajuan & jadwalkan teknisi.",
+                ['type' => 'package_request', 'customer_id' => $customer->id, 'work_order_id' => $workOrder->id]
+            );
+            $oneSignal->notifyWorkOrderAssigned($workOrder);
+        } catch (\Throwable $e) {
+            Log::warning('Gagal kirim push registrasi baru: '.$e->getMessage());
+        }
+
         // Generate Sanctum access token for instant session
         $token = $user->createToken('customer-app')->plainTextToken;
         $customer->load(['package']);
@@ -265,6 +284,43 @@ class AuthController extends Controller
                 ],
             ],
         ], 201);
+    }
+
+    /**
+     * Public app configuration (OneSignal App ID, etc.) for customer, technician, and admin apps.
+     */
+    public function appConfig(): JsonResponse
+    {
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'onesignal_app_id' => trim((string) IspSetting::get('onesignal_app_id', '')),
+            ],
+        ]);
+    }
+
+    /**
+     * Save OneSignal Subscription / Player ID for any authenticated user (customer, technician, admin).
+     */
+    public function updateOneSignalId(Request $request): JsonResponse
+    {
+        $request->validate([
+            'onesignal_id' => 'required|string|max:255',
+        ]);
+
+        $onesignalId = trim((string) $request->input('onesignal_id'));
+        $user = $request->user();
+        $user->update(['onesignal_id' => $onesignalId]);
+
+        if ($user->customer) {
+            $user->customer->update(['onesignal_id' => $onesignalId]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'OneSignal ID berhasil disinkronkan.',
+            'onesignal_id' => $onesignalId,
+        ]);
     }
 
     /**

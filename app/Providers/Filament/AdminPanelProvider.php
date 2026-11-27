@@ -6,6 +6,7 @@ use App\Filament\Pages\Auth\EditProfile;
 use App\Filament\Pages\Auth\Login;
 use App\Http\Middleware\AuthenticateAdminPanel;
 use App\Http\Middleware\BlockDemoMutations;
+use App\Http\Middleware\VerifyLicense;
 use App\Providers\DemoModeServiceProvider;
 use Filament\FontProviders\LocalFontProvider;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -108,6 +109,7 @@ class AdminPanelProvider extends PanelProvider
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
                 BlockDemoMutations::class,
+                VerifyLicense::class,
             ])
             ->authMiddleware([
                 AuthenticateAdminPanel::class,

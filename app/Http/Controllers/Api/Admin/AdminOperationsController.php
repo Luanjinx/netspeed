@@ -20,6 +20,7 @@ use App\Models\WorkOrder;
 use App\Services\Agent\AgentService;
 use App\Services\Billing\BillingService;
 use App\Services\Genieacs\GenieacsApiService;
+use App\Services\Notification\OneSignalService;
 use App\Services\Router\MikrotikApiService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -465,6 +466,8 @@ class AdminOperationsController extends Controller
             'scheduled_date' => $validated['scheduled_date'] ?? now()->addDay(),
         ]);
 
+        app(OneSignalService::class)->notifyWorkOrderAssigned($order);
+
         return response()->json([
             'success' => true,
             'message' => "SPK {$order->order_number} berhasil dibuat.",
@@ -481,7 +484,12 @@ class AdminOperationsController extends Controller
         ]);
 
         $order = WorkOrder::findOrFail($id);
+        $previousTechId = $order->technician_id;
         $order->update($validated);
+
+        if ($order->technician_id && (int) $order->technician_id !== (int) $previousTechId) {
+            app(OneSignalService::class)->notifyWorkOrderAssigned($order->fresh());
+        }
 
         return response()->json([
             'success' => true,

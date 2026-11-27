@@ -8,6 +8,8 @@ use App\Models\IspSetting;
 use App\Models\Payment;
 use App\Models\PushNotification;
 use App\Models\SupportTicket;
+use App\Models\User;
+use App\Models\WorkOrder;
 use Exception;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
@@ -174,6 +176,7 @@ class OneSignalService
 
         switch ($targetType) {
             case 'customer':
+            case 'user':
             case 'external_user_ids':
                 if (! empty($externalIds)) {
                     $stringIds = array_map('strval', $externalIds);
@@ -182,6 +185,20 @@ class OneSignalService
                 } elseif (! empty($subscriptionIds)) {
                     $payload['target_channel'] = 'push';
                     $payload['include_subscription_ids'] = $subscriptionIds;
+                }
+                break;
+
+            case 'staff_role':
+                $role = (string) ($params['role'] ?? 'admin');
+                $targetLabel = $params['target_label'] ?? ('Staf '.ucfirst($role));
+                if (! empty($externalIds)) {
+                    $stringIds = array_map('strval', $externalIds);
+                    $payload['target_channel'] = 'push';
+                    $payload['include_aliases'] = ['external_id' => $stringIds];
+                } else {
+                    $payload['filters'] = [
+                        ['field' => 'tag', 'key' => 'role', 'relation' => '=', 'value' => $role],
+                    ];
                 }
                 break;
 
@@ -240,6 +257,19 @@ class OneSignalService
                                 $response = $subResponse;
                                 $resJson = $subJson;
                             }
+                        }
+                    }
+                } elseif (in_array($targetType, ['user', 'staff_role'], true)) {
+                    if (! empty($subscriptionIds)) {
+                        $subPayload = $payload;
+                        unset($subPayload['include_aliases'], $subPayload['include_external_user_ids'], $subPayload['filters']);
+                        $subPayload['target_channel'] = 'push';
+                        $subPayload['include_subscription_ids'] = $subscriptionIds;
+                        $subResponse = $this->postNotification($apiKey, $subPayload);
+                        $subJson = $subResponse->json() ?? [];
+                        if ($subResponse->successful() && ! isset($subJson['errors'])) {
+                            $response = $subResponse;
+                            $resJson = $subJson;
                         }
                     }
                 } elseif (in_array($targetType, ['customer', 'external_user_ids', 'active_customers', 'isolated_customers'], true)) {
@@ -505,5 +535,142 @@ class OneSignalService
             'type' => 'ticket',
             'ticket_id' => $ticket->id,
         ]);
+    }
+
+    /**
+     * Send push notification to a specific staff user (admin or technician).
+     */
+    public function sendToUser(User $user, string $title, string $message, ?string $url = null, array $data = []): array
+    {
+        $externalId = "user_{$user->id}";
+        $data['user_id'] = $user->id;
+        $data['role'] = $user->role;
+
+        $params = [
+            'title' => $title,
+            'message' => $message,
+            'target_type' => 'user',
+            'target_label' => "{$user->name} ({$user->role})",
+            'external_ids' => [$externalId],
+            'action_url' => $url,
+            'data' => $data,
+        ];
+
+        if (! empty($user->onesignal_id)) {
+            $params['subscription_ids'] = [$user->onesignal_id];
+        }
+
+        return $this->sendPushNotification($params);
+    }
+
+    /**
+     * Send push notification to all active users matching a staff role ('admin' or 'technician').
+     */
+    public function sendToRole(string $role, string $title, string $message, ?string $url = null, array $data = []): array
+    {
+        $users = User::query()
+            ->where('role', $role)
+            ->where('is_active', true)
+            ->get(['id', 'onesignal_id']);
+
+        if ($users->isEmpty()) {
+            return ['success' => false, 'message' => "Tidak ada user aktif dengan role {$role}."];
+        }
+
+        $externalIds = $users->map(fn (User $u): string => "user_{$u->id}")->values()->all();
+        $subscriptionIds = $users->pluck('onesignal_id')
+            ->map(fn ($id): string => trim((string) $id))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        $data['target_role'] = $role;
+
+        return $this->sendPushNotification([
+            'title' => $title,
+            'message' => $message,
+            'target_type' => 'staff_role',
+            'role' => $role,
+            'target_label' => 'Staf '.ucfirst($role),
+            'external_ids' => $externalIds,
+            'subscription_ids' => $subscriptionIds,
+            'action_url' => $url,
+            'data' => $data,
+        ]);
+    }
+
+    public function sendToAdmins(string $title, string $message, ?string $url = null, array $data = []): array
+    {
+        return $this->sendToRole('admin', $title, $message, $url, $data);
+    }
+
+    public function sendToTechnicians(string $title, string $message, ?string $url = null, array $data = []): array
+    {
+        return $this->sendToRole('technician', $title, $message, $url, $data);
+    }
+
+    public function notifyAdmins(string $title, string $message, array $data = []): void
+    {
+        if (! $this->isEnabled()) {
+            return;
+        }
+
+        try {
+            $this->sendToAdmins($title, $message, null, $data);
+        } catch (\Throwable $e) {
+            Log::warning('notifyAdmins OneSignal error: '.$e->getMessage());
+        }
+    }
+
+    public function notifyTechnicians(string $title, string $message, array $data = []): void
+    {
+        if (! $this->isEnabled()) {
+            return;
+        }
+
+        try {
+            $this->sendToTechnicians($title, $message, null, $data);
+        } catch (\Throwable $e) {
+            Log::warning('notifyTechnicians OneSignal error: '.$e->getMessage());
+        }
+    }
+
+    public function notifyWorkOrderAssigned(WorkOrder $workOrder): void
+    {
+        if (! $this->isEnabled()) {
+            return;
+        }
+
+        try {
+            $workOrder->loadMissing(['customer:id,name,address', 'technician']);
+            $customerName = $workOrder->customer?->name ?? 'Pelanggan';
+            $payload = [
+                'type' => 'work_order',
+                'work_order_id' => $workOrder->id,
+                'order_number' => $workOrder->order_number,
+            ];
+
+            if ($workOrder->technician && $workOrder->technician->is_active) {
+                $this->sendToUser(
+                    $workOrder->technician,
+                    "🛠️ SPK Baru: {$workOrder->order_number}",
+                    "{$workOrder->title} • Pelanggan: {$customerName}",
+                    null,
+                    $payload
+                );
+
+                return;
+            }
+
+            $this->sendToTechnicians(
+                "🛠️ SPK Terbuka: {$workOrder->order_number}",
+                "{$workOrder->title} • Pelanggan: {$customerName}",
+                null,
+                $payload
+            );
+        } catch (\Throwable $e) {
+            Log::warning('notifyWorkOrderAssigned OneSignal error: '.$e->getMessage());
+        }
     }
 }

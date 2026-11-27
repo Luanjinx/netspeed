@@ -84,8 +84,8 @@
 
         <!-- Action Bottom -->
         <div class="pt-4 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <a href="{{ route('install.step1') }}" class="w-full sm:w-auto text-center px-4 py-2.5 rounded-xl border border-slate-700 hover:bg-slate-800 text-slate-300 text-sm font-semibold transition">
-                &larr; Kembali ke Langkah 1
+            <a href="{{ route('install.license') }}" class="w-full sm:w-auto text-center px-4 py-2.5 rounded-xl border border-slate-700 hover:bg-slate-800 text-slate-300 text-sm font-semibold transition">
+                &larr; Kembali ke Lisensi
             </a>
             
             <button type="submit" id="btnSubmitStep2" class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-obsidian-950 text-sm font-bold shadow-lg shadow-emerald-500/20 transition flex items-center justify-center gap-2">

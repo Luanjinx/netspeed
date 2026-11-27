@@ -8,6 +8,7 @@ use App\Models\AgentTransaction;
 use App\Models\AgentWithdrawal;
 use App\Models\Invoice;
 use App\Services\Agent\AgentService;
+use App\Services\Notification\OneSignalService;
 use App\Services\Notification\TelegramService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -155,6 +156,16 @@ class CustomerAgentController extends Controller
             app(TelegramService::class)->sendToAdmin($message);
         } catch (\Throwable $e) {
             Log::warning('Gagal kirim notifikasi Telegram pendaftaran agen: '.$e->getMessage());
+        }
+
+        try {
+            app(OneSignalService::class)->notifyAdmins(
+                '🏪 Pendaftaran Mitra Agen Baru',
+                "{$agent->name} ({$agent->agent_code}) mengajukan pendaftaran Mitra Agen. Menunggu persetujuan Admin.",
+                ['type' => 'agent_registration', 'agent_id' => $agent->id]
+            );
+        } catch (\Throwable $e) {
+            Log::warning('Gagal kirim push pendaftaran agen: '.$e->getMessage());
         }
 
         return response()->json([
@@ -393,6 +404,16 @@ class CustomerAgentController extends Controller
                 app(TelegramService::class)->sendToAdmin($message);
             } catch (\Throwable $e) {
                 Log::warning('Gagal kirim notifikasi Telegram tarik saldo agen: '.$e->getMessage());
+            }
+
+            try {
+                app(OneSignalService::class)->notifyAdmins(
+                    '💸 Tarik Saldo Agen Baru',
+                    "{$agent->name} ({$agent->agent_code}) mengajukan penarikan {$withdrawal->formatted_amount}.",
+                    ['type' => 'agent_withdrawal', 'withdrawal_id' => $withdrawal->id]
+                );
+            } catch (\Throwable $e) {
+                Log::warning('Gagal kirim push tarik saldo agen: '.$e->getMessage());
             }
 
             return response()->json([

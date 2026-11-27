@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Services\InstallationService;
+use App\Services\LicenseService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Throwable;
 
 class InstallController extends Controller
 {
@@ -55,7 +57,52 @@ class InstallController extends Controller
     }
 
     /**
-     * Step 2: Environment and Database configuration form.
+     * Step 2: License activation form.
+     */
+    public function license(): View|RedirectResponse
+    {
+        if (InstallationService::isInstalled()) {
+            return redirect('/admin');
+        }
+
+        $requirements = InstallationService::checkRequirements();
+        if (! $requirements['all_passed']) {
+            return redirect()->route('install.step1')
+                ->with('error', 'Harap lengkapi semua persyaratan server dan permission terlebih dahulu.');
+        }
+
+        return view('install.license', [
+            'currentStep' => 2,
+            'domain' => request()->getHost(),
+            'licenseData' => LicenseService::getLicenseData(),
+        ]);
+    }
+
+    /**
+     * Activate license via demo license API and persist certificate.
+     */
+    public function activateLicense(Request $request): RedirectResponse
+    {
+        if (InstallationService::isInstalled()) {
+            return redirect('/admin');
+        }
+
+        $validated = $request->validate([
+            'purchase_code' => 'required|string|max:255',
+        ]);
+
+        try {
+            LicenseService::activate($validated['purchase_code'], $request->getHost());
+        } catch (Throwable $e) {
+            return back()->withInput()->with('error', $e->getMessage());
+        }
+
+        return redirect()->route('install.step2')
+            ->with('success', 'Lisensi berhasil diaktivasi!');
+    }
+
+    /**
+     * Step 3: Environment and Database configuration form.
      */
     public function step2(): View|RedirectResponse
     {
@@ -69,13 +116,18 @@ class InstallController extends Controller
                 ->with('error', 'Harap lengkapi semua persyaratan server dan permission terlebih dahulu.');
         }
 
+        if (! LicenseService::isActivated()) {
+            return redirect()->route('install.license')
+                ->with('error', 'Harap aktivasi lisensi terlebih dahulu.');
+        }
+
         $forwardedProto = request()->header('x-forwarded-proto');
         $scheme = ($forwardedProto === 'https' || request()->isSecure()) ? 'https' : request()->getScheme();
         $appUrl = $scheme.'://'.request()->getHttpHost();
 
         return view('install.step2', [
             'appUrl' => $appUrl,
-            'currentStep' => 2,
+            'currentStep' => 3,
         ]);
     }
 
@@ -104,10 +156,15 @@ class InstallController extends Controller
     }
 
     /**
-     * Save Step 2 configuration to .env.
+     * Save Step 3 configuration to .env.
      */
     public function saveStep2(Request $request): RedirectResponse
     {
+        if (! LicenseService::isActivated()) {
+            return redirect()->route('install.license')
+                ->with('error', 'Harap aktivasi lisensi terlebih dahulu.');
+        }
+
         $validated = $request->validate([
             'app_name' => 'required|string|max:100',
             'app_url' => 'required|url',
@@ -149,7 +206,7 @@ class InstallController extends Controller
     }
 
     /**
-     * Step 3: Run Database Migrations.
+     * Step 4: Run Database Migrations.
      */
     public function step3(): View|RedirectResponse
     {
@@ -157,8 +214,13 @@ class InstallController extends Controller
             return redirect('/admin');
         }
 
+        if (! LicenseService::isActivated()) {
+            return redirect()->route('install.license')
+                ->with('error', 'Harap aktivasi lisensi terlebih dahulu.');
+        }
+
         return view('install.step3', [
-            'currentStep' => 3,
+            'currentStep' => 4,
         ]);
     }
 
@@ -167,6 +229,13 @@ class InstallController extends Controller
      */
     public function runMigrate(): JsonResponse
     {
+        if (! LicenseService::isActivated()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Harap aktivasi lisensi terlebih dahulu.',
+            ], 403);
+        }
+
         $result = InstallationService::runMigrations();
 
         return response()->json($result);
@@ -177,6 +246,11 @@ class InstallController extends Controller
      */
     public function runMigrateDirect(): RedirectResponse
     {
+        if (! LicenseService::isActivated()) {
+            return redirect()->route('install.license')
+                ->with('error', 'Harap aktivasi lisensi terlebih dahulu.');
+        }
+
         $result = InstallationService::runMigrations();
 
         if ($result['success']) {
@@ -189,7 +263,7 @@ class InstallController extends Controller
     }
 
     /**
-     * Step 4: Super Admin account and ISP profile setup.
+     * Step 5: Super Admin account and ISP profile setup.
      */
     public function step4(): View|RedirectResponse
     {
@@ -197,16 +271,26 @@ class InstallController extends Controller
             return redirect('/admin');
         }
 
+        if (! LicenseService::isActivated()) {
+            return redirect()->route('install.license')
+                ->with('error', 'Harap aktivasi lisensi terlebih dahulu.');
+        }
+
         return view('install.step4', [
-            'currentStep' => 4,
+            'currentStep' => 5,
         ]);
     }
 
     /**
-     * Save Step 4 (Create Super Admin & ISP Settings).
+     * Save Step 5 (Create Super Admin & ISP Settings).
      */
     public function saveStep4(Request $request): RedirectResponse
     {
+        if (! LicenseService::isActivated()) {
+            return redirect()->route('install.license')
+                ->with('error', 'Harap aktivasi lisensi terlebih dahulu.');
+        }
+
         $validated = $request->validate([
             'admin_name' => 'required|string|max:100',
             'admin_email' => 'required|email|max:150',
@@ -238,7 +322,7 @@ class InstallController extends Controller
     }
 
     /**
-     * Step 5: Finish & Security Lock.
+     * Step 6: Finish & Security Lock.
      */
     public function step5(): View|RedirectResponse
     {
@@ -246,8 +330,14 @@ class InstallController extends Controller
             return redirect('/admin');
         }
 
+        if (! LicenseService::isActivated()) {
+            return redirect()->route('install.license')
+                ->with('error', 'Harap aktivasi lisensi terlebih dahulu.');
+        }
+
         return view('install.step5', [
-            'currentStep' => 5,
+            'currentStep' => 6,
+            'licenseData' => LicenseService::getLicenseData(),
         ]);
     }
 
@@ -256,6 +346,11 @@ class InstallController extends Controller
      */
     public function finish(): RedirectResponse
     {
+        if (! LicenseService::isActivated()) {
+            return redirect()->route('install.license')
+                ->with('error', 'Harap aktivasi lisensi terlebih dahulu.');
+        }
+
         InstallationService::finalizeInstallation();
 
         return redirect('/admin')

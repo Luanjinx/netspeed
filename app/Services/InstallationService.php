@@ -439,10 +439,13 @@ class InstallationService
 
         // 4. Create lock file
         $lockFile = storage_path('installed');
+        $licenseData = LicenseService::getLicenseData();
         File::put($lockFile, json_encode([
             'installed_at' => now()->toIso8601String(),
             'app_version' => '1.0.0',
             'installed_by' => 'Web Installer Wizard',
+            'license_purchase_code' => $licenseData['purchase_code'] ?? null,
+            'license_domain' => $licenseData['domain'] ?? null,
         ], JSON_PRETTY_PRINT));
     }
 }

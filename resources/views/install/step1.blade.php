@@ -96,12 +96,12 @@
                     Cek Ulang
                 </a>
                 @if($requirements['all_passed'])
-                    <a href="{{ route('install.step2') }}" class="w-1/2 sm:w-auto text-center px-6 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-obsidian-950 text-sm font-bold shadow-lg shadow-emerald-500/20 transition">
-                        Lanjut ke Database &rarr;
+                    <a href="{{ route('install.license') }}" class="w-1/2 sm:w-auto text-center px-6 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-obsidian-950 text-sm font-bold shadow-lg shadow-emerald-500/20 transition">
+                        Lanjut ke Lisensi &rarr;
                     </a>
                 @else
                     <button disabled class="w-1/2 sm:w-auto text-center px-6 py-2.5 rounded-xl bg-slate-800 text-slate-500 text-sm font-bold cursor-not-allowed">
-                        Lanjut ke Database &rarr;
+                        Lanjut ke Lisensi &rarr;
                     </button>
                 @endif
             </div>

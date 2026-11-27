@@ -66,15 +66,16 @@
         @php
             $steps = [
                 1 => ['title' => 'Server & Izin', 'desc' => 'Requirements'],
-                2 => ['title' => 'Database', 'desc' => 'Koneksi & .env'],
-                3 => ['title' => 'Migrasi', 'desc' => 'Tabel & Struktur'],
-                4 => ['title' => 'Admin & Profil', 'desc' => 'Akun Pengelola'],
-                5 => ['title' => 'Selesai', 'desc' => 'Kunci Sistem'],
+                2 => ['title' => 'Lisensi', 'desc' => 'Aktivasi Kode'],
+                3 => ['title' => 'Database', 'desc' => 'Koneksi & .env'],
+                4 => ['title' => 'Migrasi', 'desc' => 'Tabel & Struktur'],
+                5 => ['title' => 'Admin & Profil', 'desc' => 'Akun Pengelola'],
+                6 => ['title' => 'Selesai', 'desc' => 'Kunci Sistem'],
             ];
             $current = $currentStep ?? 1;
         @endphp
         <div class="mb-8">
-            <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3">
+            <div class="grid grid-cols-2 sm:grid-cols-6 gap-2 sm:gap-2.5">
                 @foreach($steps as $stepNum => $step)
                     @php
                         $isActive = $current === $stepNum;

@@ -17,6 +17,7 @@ use App\Models\SupportTicket;
 use App\Models\TicketReply;
 use App\Models\VoucherOrder;
 use App\Services\Genieacs\GenieacsApiService;
+use App\Services\Notification\OneSignalService;
 use App\Services\Payment\QrisService;
 use Carbon\Carbon;
 use Exception;
@@ -547,6 +548,17 @@ class CustomerPortalController extends Controller
             'notes' => 'Bukti bayar diunggah oleh pelanggan via Aplikasi Mobile',
         ]);
 
+        try {
+            $formatted = 'Rp '.number_format((float) $invoice->total_amount, 0, ',', '.');
+            app(OneSignalService::class)->notifyAdmins(
+                '💰 Bukti Pembayaran Baru',
+                "{$customer->name} mengunggah bukti bayar {$invoice->invoice_number} ({$formatted}).",
+                ['type' => 'payment_proof', 'invoice_id' => $invoice->id]
+            );
+        } catch (\Throwable $e) {
+            // Non-blocking notification
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Bukti pembayaran berhasil diunggah. Menunggu verifikasi admin.',
@@ -601,6 +613,16 @@ class CustomerPortalController extends Controller
             'priority' => $request->input('priority', 'medium'),
             'status' => 'open',
         ]);
+
+        try {
+            $oneSignal = app(OneSignalService::class);
+            $payload = ['type' => 'ticket', 'ticket_id' => $ticket->id];
+            $msg = "{$customer->name} membuka tiket {$ticket->ticket_number}: {$ticket->subject}";
+            $oneSignal->notifyAdmins('🎫 Tiket Gangguan Baru', $msg, $payload);
+            $oneSignal->notifyTechnicians('🎫 Tiket Gangguan Baru (Pool)', $msg, $payload);
+        } catch (\Throwable $e) {
+            // Non-blocking notification
+        }
 
         return response()->json([
             'success' => true,
@@ -1033,6 +1055,16 @@ class CustomerPortalController extends Controller
                 'customer_notes' => $customerNotes,
             ])->load(['currentPackage:id,name,speed_rate,price', 'requestedPackage:id,name,speed_rate,price']);
 
+            try {
+                app(OneSignalService::class)->notifyAdmins(
+                    '📶 Pengajuan Upgrade Paket',
+                    "{$customer->name} mengajukan perubahan paket ke {$targetPackage->name}.",
+                    ['type' => 'package_request', 'package_request_id' => $packageRequest->id]
+                );
+            } catch (\Throwable $e) {
+                // Non-blocking notification
+            }
+
             return response()->json([
                 'success' => true,
                 'is_instant' => false,
@@ -1094,6 +1126,16 @@ class CustomerPortalController extends Controller
             'payment_status' => PackageRequest::PAYMENT_UNPAID,
             'customer_notes' => $customerNotes,
         ])->load(['currentPackage:id,name,speed_rate,price', 'requestedPackage:id,name,speed_rate,price']);
+
+        try {
+            app(OneSignalService::class)->notifyAdmins(
+                '📶 Pengajuan Upgrade Paket',
+                "{$customer->name} mengajukan upgrade paket ke {$targetPackage->name} (Invoice {$invoice->invoice_number}).",
+                ['type' => 'package_request', 'package_request_id' => $packageRequest->id, 'invoice_id' => $invoice->id]
+            );
+        } catch (\Throwable $e) {
+            // Non-blocking notification
+        }
 
         $invoiceData = $invoice->toArray();
         if (! empty($qrisPayload)) {

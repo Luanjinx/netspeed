@@ -20,6 +20,8 @@ Route::prefix('install')->name('install.')->group(function () {
     Route::get('/', [InstallController::class, 'index'])->name('index');
     Route::get('/step1', [InstallController::class, 'step1'])->name('step1');
     Route::post('/fix-permissions', [InstallController::class, 'fixPermissions'])->name('fix_permissions');
+    Route::get('/license', [InstallController::class, 'license'])->name('license');
+    Route::post('/license', [InstallController::class, 'activateLicense'])->name('license.activate');
     Route::get('/step2', [InstallController::class, 'step2'])->name('step2');
     Route::post('/test-db', [InstallController::class, 'testDb'])->name('test_db');
     Route::post('/step2', [InstallController::class, 'saveStep2'])->name('step2.save');

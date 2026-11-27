@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Route;
 
 // Public routes
 Route::get('/public/home', [CustomerPortalController::class, 'publicHome']);
+Route::get('/public/app-config', [AuthController::class, 'appConfig']);
 Route::get('/public/promos/{id}', [CustomerPortalController::class, 'publicPromoDetail']);
 Route::get('/public/pages', [CustomerPortalController::class, 'publicPages']);
 Route::get('/public/pages/{slug}', [CustomerPortalController::class, 'publicPageDetail']);
@@ -42,6 +43,7 @@ Route::prefix('network')->group(function () {
 // Authenticated customer & technician routes
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
+    Route::post('/auth/onesignal-id', [AuthController::class, 'updateOneSignalId']);
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
